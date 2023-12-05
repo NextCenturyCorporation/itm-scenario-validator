@@ -1,0 +1,8 @@
+# virtual environment
+validator
+
+# junk folder
+__pycache__
+
+# yamls
+*.yaml
