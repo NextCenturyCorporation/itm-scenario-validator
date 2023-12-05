@@ -4,8 +4,9 @@ from decouple import config
 class LogLevel(Enum):
     DEBUG = 1
     INFO = 2
-    WARN = 3
-    ERROR = 4
+    MINOR_WARN = 3
+    SEVERE_WARN = 4
+    ERROR = 5
     CRITICAL_INFO = float('inf')
 
 class Logger:
@@ -24,7 +25,9 @@ class Logger:
                 premsg = "\033[90mDebug (" + self.calling_class + "):\t"
             if (log_level == LogLevel.INFO):
                 premsg = "\033[37mInfo (" + self.calling_class + "):\t"
-            if (log_level == LogLevel.WARN):
+            if (log_level == LogLevel.MINOR_WARN):
+                premsg = "\033[35mWarn (" + self.calling_class + "):\t"
+            if (log_level == LogLevel.SEVERE_WARN):
                 premsg = "\033[93mWarn (" + self.calling_class + "):\t"
             if (log_level == LogLevel.ERROR):
                 premsg = "\033[91mError (" + self.calling_class + "):\t"

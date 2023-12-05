@@ -2,7 +2,6 @@ import argparse
 import yaml
 from api import TOP_LEVEL
 from logger import LogLevel, Logger
-# import json 
 
 class YamlValidator:
     logger = Logger("yamlValidator")
@@ -16,7 +15,6 @@ class YamlValidator:
         self.file = self.validate_file_location(filename)
         try:
             self.loadedYaml = yaml.load(self.file, Loader=yaml.CLoader)
-            # print(json.dumps(self.loadedYaml, indent=4))
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
     
@@ -44,11 +42,11 @@ class YamlValidator:
             try:
                 for key in to_validate:
                     if key in found_keys:
-                        self.logger.log(LogLevel.WARN, "'" + key + "' is duplicated at the " + level_name + " level of the yaml file")
+                        self.logger.log(LogLevel.SEVERE_WARN, "'" + key + "' is duplicated at the " + level_name + " level of the yaml file")
                         is_valid = False
                     # check if the key is expected
                     if key not in typed_keys:
-                        self.logger.log(LogLevel.WARN, "'" + key + "' is not a valid key at the " + level_name + " level of the yaml file. Allowed keys are " + str(typed_keys.keys()))
+                        self.logger.log(LogLevel.SEVERE_WARN, "'" + key + "' is not a valid key at the " + level_name + " level of the yaml file. Allowed keys are " + str(typed_keys.keys()))
                         is_valid = False
                     else:
                         # check type of object
@@ -56,15 +54,15 @@ class YamlValidator:
                             if not self.validate_sublevel(key, to_validate[key], typed_keys[key]):
                                 is_valid = False
                         # check basic type (string, int, etc)
-                        elif not (isinstance(to_validate[key], typed_keys[key]) or (type(typed_keys[key]) == type(float) and isinstance(to_validate[key], int))):
-                            self.logger.log(LogLevel.WARN, "'" + key + "' should be type " + str(typed_keys[key]) + " but is " + str(type(to_validate[key])) + " instead.")
+                        elif not (isinstance(to_validate[key], typed_keys[key]) or (typed_keys[key] == float and isinstance(to_validate[key], int))):
+                            self.logger.log(LogLevel.SEVERE_WARN, "'" + key + "' should be type " + str(typed_keys[key]) + " but is " + str(type(to_validate[key])) + " instead.")
                             is_valid = False
                     found_keys.append(key)
             except:
-                self.logger.log(LogLevel.WARN, "'" + key + "' does not have a defined type at the " + level_name + " level of the yaml file")
+                self.logger.log(LogLevel.SEVERE_WARN, "'" + key + "' does not have a defined type at the " + level_name + " level of the yaml file")
             for key in typed_keys:
                 if key not in found_keys:
-                    self.logger.log(LogLevel.WARN, "'" + key + "' is missing at the " + level_name + " level of the yaml file")
+                    self.logger.log(LogLevel.MINOR_WARN, "'" + key + "' is missing at the " + level_name + " level of the yaml file")
                     is_valid = False
         return is_valid
 
@@ -101,8 +99,9 @@ if __name__ == '__main__':
     validator = YamlValidator(file)
     # validate the field names in the valid
     field_names_valid = validator.validate_field_names()
-    # print the answer for validity
+    # print the answer for validity (after a new line for better readability)
+    print("")
     if field_names_valid:
-        validator.logger.log(LogLevel.CRITICAL_INFO, file + " is valid!")
+        validator.logger.log(LogLevel.CRITICAL_INFO, "\033[93m" + file + " is valid!")
     else:
-        validator.logger.log(LogLevel.CRITICAL_INFO, file + " is not valid.")
+        validator.logger.log(LogLevel.CRITICAL_INFO, "\033[91m" + file + " is not valid.")
