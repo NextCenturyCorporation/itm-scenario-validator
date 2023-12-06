@@ -934,6 +934,7 @@ components:
             - right face
             - left neck
             - right neck
+            - internal
             - unspecified
         severity:
           type: float
@@ -999,8 +1000,6 @@ components:
         - end_scenario_allowed
         - tagging
         - actions
-        - transition_semantics
-        - transitions
       type: object
       properties:
         index:
@@ -1059,14 +1058,10 @@ components:
         - id
         - type
         - unstructured
-        - repeatable
         - character_id
-        - parameters
         - probe_id
         - choice
         - kdma_association
-        - condition_semantics
-        - conditions
       type: object
       properties:
         id:
@@ -1113,7 +1108,7 @@ components:
         kdma_association:
           type: object
           additionalProperties:
-            type: string
+            type: float
           description: KDML associations with this action used in training
           example:
             - Mission: 0.8

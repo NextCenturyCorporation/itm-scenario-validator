@@ -21,7 +21,7 @@ state:
 
   environment: # normally many of these fields would be left unspecified. Some of these fields could use numerical (0.0-1.0) values if preferred
     sim-environment:
-      type: Jungle # controlled vocab includes jungle, submarine, urban, desert
+      type: jungle # controlled vocab includes jungle, submarine, urban, desert
       terrain: jungle # controlled vocab could include jungle, indoors, urban, dunes, forest, beach, mountain, plains, hills, swamp, flat, rough, extreme, etc.
       weather: rain # controlled vocab includes clear, wind, clouds, rain, fog, thunderstorm, hail, sleet, snow, etc.
       lighting: limited # controlled vocab includes includes none, limited, normal, bright, flashing, etc.
@@ -69,7 +69,6 @@ state:
     - { type: Epi Pen, quantity: 1, reusable: True }
     - { type: Vented Chest Seal, quantity: 2, reusable: False }
     - { type: Pain Medications, quantity: 2, reusable: False }
-    - { type: Splint, quantity: 2, reusable: False }
     - { type: Blood, quantity: 5, reusable: False } # quantity is in units; could add different types
 
   characters:

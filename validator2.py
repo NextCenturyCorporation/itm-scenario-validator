@@ -77,7 +77,7 @@ class YamlValidator:
         for key in to_validate:
             # make sure it is a valid key
             if key not in typed_keys:
-                self.logger.log(LogLevel.SEVERE_WARN, "'" + key + "' is not a valid key at the " + level_name + " level of the yaml file. Allowed keys are " + str(list(typed_keys.keys())))
+                self.logger.log(LogLevel.SEVERE_WARN, "'" + key + "' is not a valid key at the '" + level_name + "' level of the yaml file. Allowed keys are " + str(list(typed_keys.keys())))
                 self.invalid_keys += 1
                 is_valid = False
             else:
@@ -96,10 +96,10 @@ class YamlValidator:
                             if 'enum' in typed_keys[key]:
                                 allowed = typed_keys[key]['enum']
                                 if to_validate[key] not in allowed:
-                                    self.logger.log(LogLevel.MINOR_WARN, "'" + key + "' at level " + level_name + " must be one of the following values: " + str(allowed) + ". Instead received " + to_validate[key])
+                                    self.logger.log(LogLevel.MINOR_WARN, "'" + key + "' at the '" + level_name + "' level must be one of the following values: " + str(allowed) + ". Instead received " + to_validate[key])
                                     self.invalid_values += 1
                                     is_valid = False
-                                    
+
                     # check for objects (key:value pairs)
                     elif key_type == 'object':
                         if 'additionalProperties' in typed_keys[key]:
@@ -139,7 +139,7 @@ class YamlValidator:
                     self.missing_keys += 1
                     is_valid = False
                 else:
-                    self.logger.log(LogLevel.INFO, "Optional '" + key + "' is missing at the " + level_name + " level of the yaml file")
+                    self.logger.log(LogLevel.DEBUG, "Optional '" + key + "' is missing at the " + level_name + " level of the yaml file")
         return is_valid
 
     def validate_array(self, item, key, level, key_type, typed_keys):
@@ -213,14 +213,14 @@ if __name__ == '__main__':
     # print the answer for validity
     print("")
 
-    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[93m" if validator.missing_keys == 0 else "\033[91m") + "Missing Required Keys: " + str(validator.missing_keys))
-    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[93m" if validator.wrong_types == 0 else "\033[91m") + "Incorrect Data Type: " + str(validator.wrong_types))
-    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[93m" if validator.invalid_keys == 0 else "\033[91m") + "Invalid Keys: " + str(validator.invalid_keys))
-    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[93m" if validator.invalid_values == 0 else "\033[91m") + "Invalid Values (mismatched enum): " + str(validator.invalid_values))
-    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[93m" if validator.empty_levels == 0 else "\033[91m") + "Properties Missing Data (empty level): " + str(validator.empty_levels))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.missing_keys == 0 else "\033[91m") + "Missing Required Keys: " + str(validator.missing_keys))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.wrong_types == 0 else "\033[91m") + "Incorrect Data Type: " + str(validator.wrong_types))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_keys == 0 else "\033[91m") + "Invalid Keys: " + str(validator.invalid_keys))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_values == 0 else "\033[91m") + "Invalid Values (mismatched enum): " + str(validator.invalid_values))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.empty_levels == 0 else "\033[91m") + "Properties Missing Data (empty level): " + str(validator.empty_levels))
     total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels
-    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[93m" if total_errors == 0 else "\033[91m") + "Total Errors: " + str(total_errors))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if total_errors == 0 else "\033[91m") + "Total Errors: " + str(total_errors))
     if field_names_valid:
-        validator.logger.log(LogLevel.CRITICAL_INFO, "\033[93m" + file + " is valid!")
+        validator.logger.log(LogLevel.CRITICAL_INFO, "\033[92m" + file + " is valid!")
     else:
         validator.logger.log(LogLevel.CRITICAL_INFO, "\033[91m" + file + " is not valid.")
