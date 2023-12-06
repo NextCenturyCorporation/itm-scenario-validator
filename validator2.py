@@ -82,6 +82,11 @@ class YamlValidator:
                         if not (isinstance(to_validate[key], TYPE_MAP[key_type]) or (TYPE_MAP[key_type] == float and isinstance(to_validate[key], int))):
                             self.logger.log(LogLevel.SEVERE_WARN, "'" + key + "' should be type " + key_type + " but is " + str(type(to_validate[key])) + " instead.")
                             is_valid = False
+                        elif TYPE_MAP[key_type] == str:
+                            if 'enum' in typed_keys[key]:
+                                allowed = typed_keys[key]['enum']
+                                if to_validate[key] not in allowed:
+                                    self.logger.log(LogLevel.MINOR_WARN, "'" + key + "' at level " + level_name + " must be one of the following values: " + str(allowed) + ". Instead received " + to_validate[key])
                     elif key_type == 'array':
                         if not isinstance(to_validate[key], list):
                             self.logger.log(LogLevel.SEVERE_WARN, "'" + key + "' should be type " + key_type + " but is " + str(type(to_validate[key])) + " instead.")
