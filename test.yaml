@@ -1,0 +1,326 @@
+id: scene1-example-scenario-1
+name: IED Explosion
+state:
+  unstructured: >
+    You are a medic in a small unit of Marines on an isolated jungle island.
+    You just finished lunch with your friend Mike, a Marine in your unit.
+    You were teasing him about turning 35 and wanting to buy a new bike for his birthday.
+    The two vehicles carrying your unit hit an IED.
+    Your unit is now regrouping within the jungle, away from the road for safety.
+
+  mission:
+    unstructured: Unknown
+    mission_type: Security patrol # from controlled vocabulary; it's not clear how mission_type in itself impacts decision-making
+    critical_ids: # character ids of important personnel, with indicator of how mission-critical the character is
+      - Captain_01: important # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with character.mission_importance
+    civilian_presence: limited # controlled vocab includes none, limited, some, extensive, crowd
+    communication_capability: radio # current communication capability, controlled vocab includes all, satellite, radio, voice, visual, etc. (need SME input)
+    roe: TBD # Nothing comes to mind how to respresent Rules of Engagement in structured data.  Will have to be discussed/defined individually
+    political_climate: TBD # Nothing comes to mind how to respresent political climate in structured data.  Will have to be discussed/defined individually
+    medical_policies: TBD # Nothing comes to mind how to respresent medical policies in structured data.  Will have to be discussed/defined individually
+
+  environment: # normally many of these fields would be left unspecified. Some of these fields could use numerical (0.0-1.0) values if preferred
+    sim-environment:
+      type: Jungle # controlled vocab includes jungle, submarine, urban, desert
+      terrain: jungle # controlled vocab could include jungle, indoors, urban, dunes, forest, beach, mountain, plains, hills, swamp, flat, rough, extreme, etc.
+      weather: rain # controlled vocab includes clear, wind, clouds, rain, fog, thunderstorm, hail, sleet, snow, etc.
+      lighting: limited # controlled vocab includes includes none, limited, normal, bright, flashing, etc.
+      visibility: low # controlled vocab includes includes none, low, normal, good, excellent, variable, etc.; affected by time of day, lighting, weather, terrain, etc.
+      noise_ambient: normal # controlled vocab includes none, quiet, normal, noisy, extreme, etc.
+      noise_peak: noisy # controlled vocab includes none, quiet, normal, noisy, extreme, etc.
+      temperature: 92.5 # prefer controlled vocab?
+      humidity: 90 # prefer controlled vocab?
+      # hazardous flora (poisonous plants) and fauna (predators) should be mentioned in threats
+      flora: lush # descriptor of local vegetation; controlled vocab includes none, limited, normal, lush, extensive, etc.
+      fauna: high # descriptor of local animal/insect activity; controlled vocab includes none, limited, normal, high, pervasive, etc.
+    decision-environment:
+      unstructured: >
+        Isolated jungle island
+      aid_delay:
+        delay: 0 # CASEVAC or MEDEVAC timer, in minutes
+        type: helicopter # controlled vocab includes AMEV, truck, helicopter, unknown, etc.
+        max_transport: 1
+      movement_restriction: unrestricted # operational movement restrictions; controlled vocab includes unrestricted, minimal, moderate, severe, extreme
+      sound_restriction: unrestricted # operational sound restrictions; controlled vocab includes unrestricted, minimal, moderate, severe, extreme
+      oxygen_levels: normal # controlled vocab includes normal, limited, scarce, none
+      population_density: 25.3 # population per square mile
+      injury_triggers: explosion # controlled vocab includes explosion, firearm, fall, virus, animal, plant, water, collision, equipment, attack, fire, stress, chemical, etc.
+      air_quality: 60 # air quality index (see https://www.airnow.gov/aqi/aqi-basics/)
+      city_infrastructure: TBD # Nothing comes to mind how to represent in structured data; this refers to building/city infrastructure that should be noted and known (safe house, etc)
+
+  # It it under consideration to evolve threat_state from how it was in MVP (below).
+  # Where it might move and whether it should be numerical and/or a controlled vocabulary is TBD.
+  threat_state:
+    unstructured: Hostile gunfire can be heard in the distance.  The area has a history of IED placement.
+    threats:
+      - type: Gunfire # Controlled vocabulary of threat type could include "gunfire_threat", "gunfire_proximity", etc.
+        severity: 0.5 # Severity could be a controlled vocabulary, e.g.,
+      - type: ied
+        severity: 0.7
+
+  supplies: # If reusable is True, then quantity should always be 0 or 1
+    - { type: Hemostatic gauze, quantity: 5, reusable: False }
+    - { type: Tourniquet, quantity: 4, reusable: False }
+    - { type: Pressure bandage, quantity: 10, reusable: False }
+    - { type: Decompression Needle, quantity: 4, reusable: False }
+    - { type: Nasopharyngeal airway, quantity: 2, reusable: False }
+    - { type: Pulse Oximeter, quantity: 1, reusable: True }
+    - { type: Blanket, quantity: 2, reusable: False }
+    - { type: Epi Pen, quantity: 1, reusable: True }
+    - { type: Vented Chest Seal, quantity: 2, reusable: False }
+    - { type: Pain Medications, quantity: 2, reusable: False }
+    - { type: Splint, quantity: 2, reusable: False }
+    - { type: Blood, quantity: 5, reusable: False } # quantity is in units; could add different types
+
+  characters:
+    - id: Mike # ID auto-generated based on template (e.g., Marine_white_male_01, can be overridden)
+      name: Mike # Name used in display/speech
+      unstructured: >
+        A 34 year-old male Marine hit by an IED. 
+        No obvious external injuries.
+      rapport: 9 # A measure of closeness or affinity towards the player/medic. 0 represents strong dislike, 10 represents very close relationships like family.
+      demographics:
+        age: 34
+        sex: M
+        race: White # controlled vocab to be informed by research, TA4.
+        military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
+        military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
+        rank: E-4 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        rank_title: Corporal # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        skills: # Describes abilities a character can have
+          skill_type: Combat # controlled vocab including Medical, Combat, Specialist, Communications, Command
+          level: 5 # A skill level from 0 to 10
+        role: Infantry # The primary role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
+        mission_importance: normal # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with character.mission_importance
+      vitals:
+        conscious: true
+        avpu: UNRESPONSIVE # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        mental_status: UNRESPONSIVE # controlled vocab includes AGONY, CALM, CONFUSED, UPSET, UNRESPONSIVE
+        breathing: FAST # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
+        hrpmin: 130 # prefer controlled vocab?
+        Spo2: 92 # prefer controlled vocab?
+      injuries:
+        - name: Internal # Controlled vocab TBD based on final injury list
+          location: internal # Controlled vocab TBD based on final injury list and their valid locations
+          severity: 0
+          hidden: true
+    - id: Marine_burns_01
+      name: Bob
+      unstructured: >
+        A 25 year-old male Marine hit by an IED. 
+        No obvious external injuries.
+      unstructured_postassess:
+        > # Unstructured text can change after assessment to reflect hidden injuries
+        A 25 year-old male Marine hit by an IED. 
+        No obvious external injuries, but burns over 50% of body.
+      rapport: 6 # A measure of closeness or affinity towards the player/medic. 0 represents strong dislike, 10 represents very close relationships like family.
+      demographics:
+        age: 25
+        sex: M
+        race: White # controlled vocab to be informed by research, TA4.
+        military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
+        military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
+        rank: E-2 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        rank_title: Private First Class # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        skills: # Describes abilities a person can have
+          skill_type: Combat # controlled vocab including Medicine, Combat
+          level: 5 # A skill level from 0 to 10
+        role: Infantry # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
+        mission_importance: normal # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with character.mission_importance
+      vitals:
+        conscious: true
+        avpu: ALERT # level of response; controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        mental_status: AGONY # controlled vocab includes AGONY, CALM, CONFUSED, UPSET, UNRESPONSIVE
+        breathing: FAST # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
+        hrpmin: 120
+        Spo2: 97
+      injuries:
+        - name: Burn
+          location: unspecified
+          severity: 0.5
+          hidden: true
+    - id: Civilian_01
+      name: Unknown civilian
+      unstructured: >
+        A 30-40 YO male civilian hit by an IED.
+        No obvious external injuries.
+      rapport: 4 # A measure of closeness or affinity towards the player/medic. 0 represents strong dislike, 10 represents very close relationships like family.
+      demographics:
+        age: 40
+        sex: M
+        race: Asian
+        military_disposition: Civilian
+        mission_importance: none # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with character.mission_importance
+      vitals:
+        conscious: true
+        avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        mental_status: CONFUSED # Like unresponsive, but could be an indication of non-English speaking
+        breathing: NORMAL # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
+        hrpmin: 40
+        Spo2: 94
+    - id: Captain_01
+      name: Katie
+      unstructured: >
+        An uninjuried 30-40 YO female who escaped harm.
+        No obvious external injuries.
+      rapport: 8 # A measure of closeness or affinity towards the player/medic. 0 represents strong dislike, 10 represents very close relationships like family.
+      demographics:
+        age: 35
+        sex: F
+        race: White # controlled vocab to be informed by research, TA4.
+        military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
+        military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
+        rank: O-3 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        rank_title: Captain # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        skills: # Describes abilities a person can have
+          skill_type: Combat # controlled vocab including Medicine, Combat
+          level: 7 # A skill level from 0 to 10
+        role: Command # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
+        mission_importance: important # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with character.mission_importance
+      vitals:
+        conscious: true
+        avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        mental_status: CALM # Like unresponsive, but could be an indication of non-English speaking
+        breathing: NORMAL # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
+        hrpmin: 100
+        Spo2: 99
+
+# - Each scene has associated state, including mission parameters, environment, characters, etc.
+# - Each scene has a set of available actions
+#   - Selecting non-repeatable actions removes that action from the available actions
+#     - By default, actions are not repeatable
+#   - Tagging and ending the scenario can be configured at the scene level
+# - Each action in a scene MAY have an associated probe response(s)
+#   - Those responses may have other conditions (e.g., certain amount of time passed, treatments already done, etc.)
+#   - Taking an action may change character vitals and supplies, but not other state (other than elapsed time)
+#   - If an action requires a change in other state, then that action starts a new scene
+# - Each scene has parameters/conditions for what ends the scene, e.g.:
+#   - a list of actions are taken (ideally with Boolean logic)
+#   - a given list of probes is responded to (ideally with Boolean logic)
+#   - an amount of time that has passed
+#   - a given supply reaches a threshhold
+#   - a given character's vitals reach a level (e.g., hrpmin = 0, breathing = NONE, etc.)
+#   - combination of the above, with and/or
+scenes:
+  - index: 0
+    state: # Either move the above state here, or assume that state with index = 0 has the state defined at the scenario level
+    end_scenario_allowed: false
+    tagging:
+      enabled: true # If false, then TAG_CHARACTER will not be an available action to ADMs unless added explicitly in actions block
+      repeatable: true # Indicates that you should keep responding to the appropriate tagging probe if the character is re-tagged
+      probe_responses:
+        - {
+            character_id: Mike,
+            probe_id: adept-september-demo-probe-3,
+            minimal: s1-p3-choice1,
+            delayed: s1-p3-choice2,
+            immediate: s1-p3-choice3,
+            expectant: s1-p3-choice4,
+          }
+        - {
+            character_id: Civilian_01,
+            probe_id: adept-september-demo-probe-4,
+            minimal: s1-p4-choice1,
+            delayed: s1-p4-choice2,
+            immediate: s1-p4-choice3,
+            expectant: s1-p4-choice4,
+          }
+    actions:
+      - id: action1
+        type: SITREP
+        unstructured: Ask Mike to provide SITREP # Roughly corresponds to ProbeOption's "value" field
+        character_id: Mike
+        probe_id: adept-september-demo-probe-1
+        choice: s1-p1-choice1
+        kdma_association: # available only in kdma_traning mode, of course
+          Fairness: 5
+        conditions:
+          # Action conditions are configured just like scene transitions below.  If the condition is met, the probe response is sent.
+      - id: action2
+        type: CHECK_ALL_VITALS
+        unstructured: Check Mike's vital signs
+        character_id: Mike
+        probe_id: adept-september-demo-probe-1
+        choice: s1-p1-choice1
+        kdma_association:
+          Fairness: 3
+      - id: action3
+        type: APPLY_TREATMENT
+        unstructured: Treat Mike's injury
+        character_id: Mike
+        parameters: { "treatment": "Tourniquet", "location": "right forearm" }
+        probe_id: adept-september-demo-probe-1
+        choice: s1-p1-choice1
+        kdma_association:
+          Fairness: 1
+      - id: action4
+        type: SITREP
+        unstructured: Ask Civilian to provide SITREP
+        character_id: Civilian_01
+        probe_id: adept-september-demo-probe-1
+        choice: s1-p1-choice2
+        kdma_association:
+          Fairness: 6
+      - id: action5
+        type: CHECK_ALL_VITALS
+        unstructured: Check Civilian's vital signs
+        character_id: Civilian_01
+        probe_id: adept-september-demo-probe-1
+        choice: s1-p1-choice2
+        kdma_association:
+          Fairness: 7
+      - id: action6
+        type: APPLY_TREATMENT
+        unstructured: Treat Civilian's injury
+        character_id: Civilian_01
+        parameters: { "treatment": "Tourniquet", "location": "right forearm" }
+        probe_id: adept-september-demo-probe-1
+        choice: s1-p1-choice2
+        kdma_association:
+          Fairness: 9
+    transition_semantics: "and" # Can be "and", "or", or "not"
+    transitions: # This example shows different types of transitions; it's unlikely you'd use all of these in one scene
+      elapsed_time_lt: 120 # Ideally a UI would warn if you specified something like "elapsed_time_lt: 30" and "elapsed_time_gt: 40"
+      elapsed_time_gt: 30
+      actions: # multiple lists have "or" semantics
+        - ["action1", action2", "action3"] # actions within a list have "and" semantics
+        - ["action4", action5", "action6"]
+      probes:
+        - adept-september-demo-probe-1 # Specifying this would mean that the scene would end when the specified probe_id(s) are answered
+      probe_responses:
+        - adept-september-demo-probe-1-choice2
+      character_vitals:
+        - character_id: Mike
+        - vitals: # Or semantics; specify another character_vitals if you want a conjunction of vital criteria
+          conscious: true
+          breathing: NONE
+          hrpmin: 0
+          mental_status: UNRESPONSIVE
+        - supply: # Specifying this would mean that the scene would end when the specified supply reaches the specified quantity
+        - { type: Tourniquet, quantity: 1 } # Only 1 tourniquet left
+  - index: 1
+    end_scenario_allowed: true
+    tagging:
+      reference: 0 # Re-use the tagging configuration from the specified scene index
+    state: # can contain any state, including mission parameters, environment, characters, etc.
+      environment:
+        unstructured: >
+          EVAC is 5 minutes out but can only take one patient.
+        aid_delay: 5
+    actions:
+      - id: action1
+        type: MOVE_TO_EVAC
+        unstructured: Move Mike to the road for transport
+        character_id: Mike
+        probe_id: adept-september-demo-probe-2
+        choice: s1-p2-choice1
+        kdma_association:
+          Fairness: 2
+      - id: action2
+        type: MOVE_TO_EVAC
+        unstructured: Move Unknown Civilian to the road for transport
+        character_id: Civilian_01
+        probe_id: adept-september-demo-probe-2
+        choice: s1-p2-choice2
+        kdma_association:
+          Fairness: 7

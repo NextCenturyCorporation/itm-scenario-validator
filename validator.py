@@ -6,7 +6,7 @@ from logger import LogLevel, Logger
 class YamlValidator:
     logger = Logger("yamlValidator")
     file = None
-    loadedYaml = None
+    loaded_yaml = None
 
     def __init__(self, filename):
         '''
@@ -14,7 +14,7 @@ class YamlValidator:
         '''
         self.file = self.validate_file_location(filename)
         try:
-            self.loadedYaml = yaml.load(self.file, Loader=yaml.CLoader)
+            self.loaded_yaml = yaml.load(self.file, Loader=yaml.CLoader)
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
     
@@ -23,7 +23,7 @@ class YamlValidator:
         Ensures all fields are supported by the API
         '''
         # start by checking the top level
-        return self.validate_sublevel('top', self.loadedYaml, TOP_LEVEL)
+        return self.validate_sublevel('top', self.loaded_yaml, TOP_LEVEL)
     
     def validate_sublevel(self, level_name, to_validate, typed_keys):
         '''
@@ -35,7 +35,8 @@ class YamlValidator:
         # eventually we will probably want to check that if it's a list, we are expecting a list. for now, just leave this
         if isinstance(to_validate, list):
             for x in to_validate:
-                is_valid = is_valid and self.validate_sublevel(level_name, x, typed_keys)
+                if not self.validate_sublevel(level_name, x, typed_keys):
+                    is_valid = False
         else:
             is_valid = True
             found_keys = []
@@ -81,7 +82,7 @@ class YamlValidator:
         '''
         if not filename:
             self.logger.log(LogLevel.ERROR, "No filename received. To run, please use 'python3 validator.py -f [filename]'")
-        if filename.strip()[-5:] != '.yaml':
+        if not filename.strip().endswith('.yaml'):
             self.logger.log(LogLevel.ERROR, "File must be a yaml file.")
         try:
             f = open(filename, 'r')
