@@ -9,6 +9,7 @@ PRIMITIVE_TYPE_MAP = {
     'string': str,
     'boolean': bool,
     'number': float,
+    'float': float,
     'int': int
 }
 
@@ -39,6 +40,7 @@ class YamlValidator:
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
     
+
     def __del__(self):
         '''
         Basic cleanup closing the file loaded in on close.
@@ -49,6 +51,7 @@ class YamlValidator:
         if (self.api_file):
             self.api_file.close()
 
+
     def validate_field_names(self):
         '''
         Ensures all fields are supported by the API
@@ -58,6 +61,7 @@ class YamlValidator:
         top_level = schema['Scenario']['properties']
         required = schema['Scenario']['required'] if 'required' in schema['Scenario'] else []
         return self.validate_one_level('top', self.loaded_yaml, top_level, required)
+
 
     def validate_one_level(self, level_name, to_validate, typed_keys, required):
         '''
@@ -132,8 +136,16 @@ class YamlValidator:
                     ref_loc = self.api_yaml
                     for x in location:
                         ref_loc = ref_loc[x]
-                    if isinstance(to_validate[key], dict):
-                        if not self.validate_one_level(key, to_validate[key], ref_loc['properties'], ref_loc['required'] if 'required' in ref_loc else []):
+                    if 'enum' in ref_loc:
+                        # we are expecting a string here
+                        if isinstance(to_validate[key], str):
+                                allowed = ref_loc['enum']
+                                if to_validate[key] not in allowed:
+                                    self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level_name + "' must be one of the following values: " + str(allowed) + " but is '" + to_validate[key] + "' instead.")
+                                    self.invalid_values += 1
+                                    is_valid = False
+                    elif isinstance(to_validate[key], dict):
+                        if not self.validate_object(to_validate[key], ref_loc, key, level_name, typed_keys):
                             is_valid = False
                     else:
                         self.log_wrong_type(key, level_name, location[len(location)-1], type(to_validate[key]))
@@ -152,6 +164,46 @@ class YamlValidator:
                     self.logger.log(LogLevel.DEBUG, "Optional key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
         return is_valid
 
+
+    def validate_object(self, item, location, key, level, typed_keys):
+        '''
+        Checks if an item matches the reference location. The reference location
+        may reference a full object, small object, or enum. Checks all 3 possibilities.
+        '''
+        is_valid = True
+        if 'properties' in location:
+            if not self.validate_one_level(key, item, location['properties'], location['required'] if 'required' in location else []):
+                is_valid = False
+        elif 'additionalProperties' in location:
+                val_type = location['additionalProperties']['type']
+                # two types of objects exist: 1. list of key-value 
+                if isinstance(item, list):
+                    for pair_set in item:
+                        for k in pair_set:
+                            if not self.do_types_match(pair_set[k], PRIMITIVE_TYPE_MAP[val_type]):
+                                self.log_wrong_type(k, level, val_type, type(pair_set[k]))
+                                is_valid = False
+                # 2. object with key-value
+                else:
+                    if isinstance(item, dict):
+                        for k in item:
+                            if not self.do_types_match(item[k], PRIMITIVE_TYPE_MAP[val_type]):
+                                self.log_wrong_type(k, level, val_type, type(item[k]))
+                                is_valid = False
+                    else:
+                        self.log_wrong_type(key, level, 'object', type(item))
+                        is_valid = False 
+        elif 'enum' in location:
+            allowed = location['enum']
+            if item not in allowed:
+                self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' must be one of the following values: " + str(allowed) + " but is '" + item + "' instead.")
+                self.invalid_values += 1
+                is_valid = False
+        else:
+            self.logger.log(LogLevel.ERROR, "API missing enum, property, or additional properties for '" + typed_keys[key]['$ref'] + "'. Cannot parse.")
+        return is_valid
+
+
     def validate_array(self, item, key, level, key_type, typed_keys):
         '''
         Looks at an array and ensures that each item in the array matches expectations
@@ -169,8 +221,8 @@ class YamlValidator:
                 ref_loc = self.api_yaml
                 for x in location:
                     ref_loc = ref_loc[x]
-                for item in item:
-                    if not self.validate_one_level(key, item, ref_loc['properties'], ref_loc['required'] if 'required' in ref_loc else []):
+                for i in item:
+                    if not self.validate_object(i, ref_loc, key, level, typed_keys):
                         is_valid = False
             # check basic types
             elif 'type' in item_type:
@@ -182,11 +234,13 @@ class YamlValidator:
                             is_valid = False
         return is_valid
     
+
     def do_types_match(self, item, type):
         '''
-        Checks the basic data types, allowing integers in place of floats
+        Checks the basic data types, allowing integers in place of floats and ints and floats in place of strings (think stringified numbers)
         '''
-        return isinstance(item, type) or (type == float and isinstance(item, int))
+        return isinstance(item, type) or (type == float and isinstance(item, int)) or (type == str and (isinstance(item, float) or isinstance(item, int)))
+
 
     def log_wrong_type(self, key, level, expected, actual):
         '''
@@ -195,6 +249,7 @@ class YamlValidator:
         self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' should be type '" + expected + "' but is " + str(actual) + " instead.")
         self.wrong_types += 1
     
+
     def validate_file_location(self, filename):
         '''
         Try to load in the yaml file. Checks that a path has been given, that the path leads to a yaml file,
@@ -209,6 +264,7 @@ class YamlValidator:
             return f
         except:
             self.logger.log(LogLevel.ERROR, "Could not open file " + filename + ". Please make sure the path is valid and the file exists.")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator')

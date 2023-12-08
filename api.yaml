@@ -19,7 +19,7 @@ paths:
       summary: Start a new session
       description:
         Get unique session id for grouping answers from a collection of
-        scenarios/probes together
+        scenarios together
       operationId: start_session
       parameters:
         - name: adm_name
@@ -32,13 +32,13 @@ paths:
             type: string
         - name: session_type
           in: query
-          description: "the type of session to start (`test`, `eval`, or a TA1 name)"
+          description: "the type of session to start (`eval` or a TA1 name)"
           required: true
           style: form
           explode: true
           schema:
             type: string
-            example: test
+            example: eval
         - name: kdma_training
           in: query
           description: whether or not this is a training session with TA2
@@ -51,8 +51,8 @@ paths:
         - name: max_scenarios
           in: query
           description:
-            "the maximum number of scenarios requested, supported only in\
-            \ `test` sessions"
+            "the maximum number of scenarios requested, not supported in\
+            \ `eval` sessions"
           required: false
           style: form
           explode: true
@@ -115,10 +115,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Scenario"
+        "400":
+          description: Invalid Session ID or there is already an active scenario
         "403":
           description: Specifying a scenario ID is unauthorized
         "404":
-          description: Session or Scenario ID not found
+          description: Scenario ID not found
         "500":
           description: An exception occurred on the server; see returned error string.
           content:
@@ -159,9 +161,52 @@ paths:
               schema:
                 $ref: "#/components/schemas/AlignmentTarget"
         "400":
-          description: Scenario Complete
+          description: Scenario Complete or Invalid Session ID
         "404":
-          description: Session or Scenario ID not found
+          description: Scenario ID not found
+        "500":
+          description: An exception occurred on the server; see returned error string.
+          content:
+            text/plain:
+              schema:
+                type: string
+                x-content-type: text/plain
+      x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
+  /ta2/getSessionAlignment:
+    get:
+      tags:
+        - itm-ta2-eval
+      summary: Retrieve session alignment from TA1
+      description: Retrieve the current session alignment for the session with the specified id
+      operationId: get_session_alignment
+      parameters:
+        - name: session_id
+          in: query
+          description: "a unique session_id, as returned by /ta2/startSession"
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+        - name: target_id
+          in: query
+          description: alignment target id
+          required: true
+          style: form
+          explode: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/AlignmentResults"
+        "400":
+          description: Session ID not found
+        "403":
+          description: Session alignment can only be requested during a training session
         "500":
           description: An exception occurred on the server; see returned error string.
           content:
@@ -180,7 +225,7 @@ paths:
       parameters:
         - name: session_id
           in: query
-          description: "a unique session_id, as returned by /ta2/startSession"
+          description: a unique session_id, as returned by /ta2/startSession
           required: true
           style: form
           explode: true
@@ -201,8 +246,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/State"
+        "400":
+          description: Invalid Session ID
         "404":
-          description: Invalid scenario ID supplied
+          description: Scenario ID not found
         "500":
           description: An exception occurred on the server; see returned error string.
           content:
@@ -223,7 +270,7 @@ paths:
       parameters:
         - name: session_id
           in: query
-          description: "a unique session_id, as returned by /ta2/startSession"
+          description: a unique session_id, as returned by /ta2/startSession
           required: true
           style: form
           explode: true
@@ -231,7 +278,7 @@ paths:
             type: string
         - name: scenario_id
           in: path
-          description: The ID of the scenario for which to retrieve avaialble actions
+          description: The ID of the scenario for which to retrieve available actions
           required: true
           style: simple
           explode: false
@@ -248,9 +295,9 @@ paths:
                   $ref: "#/components/schemas/Action"
                 x-content-type: application/json
         "400":
-          description: Scenario Complete
+          description: Scenario Complete or Invalid Session ID
         "404":
-          description: Invalid scenario ID supplied
+          description: Scenario ID not found
         "500":
           description: An exception occurred on the server; see returned error string.
           content:
@@ -269,7 +316,7 @@ paths:
       parameters:
         - name: session_id
           in: query
-          description: "a unique session_id, as returned by /ta2/startSession"
+          description: a unique session_id, as returned by /ta2/startSession
           required: true
           style: form
           explode: true
@@ -291,7 +338,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/State"
         "400":
-          description: Invalid action or session_id
+          description: Invalid action or Session ID
         "500":
           description: An exception occurred on the server; see returned error string.
           content:
@@ -400,7 +447,7 @@ components:
             $ref: "#/components/schemas/Character"
       description:
         the current tactical & environmental state of the scenario and
-        of its casualties.
+        of its characters.
     Mission:
       required:
         - mission_type
@@ -412,23 +459,7 @@ components:
           description: natural language description of current mission
           example: Place sensors in and around the jungle base
         mission_type:
-          type: string
-          description: enumeration of possible mission types
-          enum:
-            - Listening/Observation
-            - Direct Action
-            - Hostage rescue
-            - Asset transport
-            - Sensor emplacement
-            - Intelligence gathering
-            - Civil affairs
-            - Training
-            - Sabotage
-            - Security patrol
-            - Fire support
-            - Nuclear deterrence
-            - Extraction
-            - Unknown
+          $ref: "#/components/schemas/MissionType"
         critical_ids:
           type: object
           additionalProperties:
@@ -679,7 +710,7 @@ components:
           description: Maximum number of casualties that can be transported
     ThreatState:
       required:
-      - unstructured
+        - unstructured
       type: object
       properties:
         unstructured:
@@ -690,15 +721,15 @@ components:
           type: array
           description: An array of threats
           items:
-            $ref: '#/components/schemas/Threat'
+            $ref: "#/components/schemas/Threat"
       description: encapsulation of the state of threat for participants in the scenario
       example:
         unstructured: No additional threats are detected
         threats:
-        - type: Gunfire
-          severity: 0.5
-        - type: Gunfire
-          severity: 0.5
+          - type: Gunfire
+            severity: 0.5
+          - type: Gunfire
+            severity: 0.5
     Threat:
       type: object
       additionalProperties:
@@ -717,22 +748,10 @@ components:
       type: object
       properties:
         type:
-          type: string
-          description: an enumeration of available supply types
-          example: Tourniquet
-          enum:
-            - Tourniquet
-            - Pressure bandage
-            - Hemostatic gauze
-            - Decompression Needle
-            - Nasopharyngeal airway
-            - Pulse Oximeter
-            - Blanket
-            - Epi Pen
-            - Vented Chest Seal
-            - Pain Medications
-            - Splint
-            - Blood
+          $ref: "#/components/schemas/SupplyType"
+        reusable:
+          type: boolean
+          description: Whether or not item is consumable/reusable
         quantity:
           type: integer
           description:
@@ -740,10 +759,11 @@ components:
             present time
           format: int32
           example: 4
-        reusable:
-          type: boolean
-          description: whether or not item is consumable/reusable
       description: a single type of medical supply available to the medic
+      example:
+        quantity: 4
+        type: Tourniquet
+
     Character:
       required:
         - id
@@ -779,7 +799,7 @@ components:
             $ref: "#/components/schemas/Injury"
         vitals:
           $ref: "#/components/schemas/Vitals"
-      description: encapulation of a single casualty in the scenario
+      description: encapulation of a single character in the scenario
     Demographics:
       required:
         - age
@@ -789,12 +809,12 @@ components:
       properties:
         age:
           type: integer
-          description: the age of the casualty, omit if unknown
+          description: the age of the character, omit if unknown
           format: int16
           example: 32
         sex:
           type: string
-          description: the sex of the casualty, omit if unknown/indeterminate
+          description: the sex of the character, omit if unknown/indeterminate
           example: F
           enum:
             - M
@@ -823,7 +843,7 @@ components:
           description: Branch of the US military.
         rank:
           type: string
-          description: the military status of the casualty, omit if unknown
+          description: the military status of the character, omit if unknown
           enum:
             - Marine
             - FMF Corpsman
@@ -858,7 +878,7 @@ components:
             - important
             - priority
             - vip
-      description: demographic profile of a casualty
+      description: demographic profile of a character
     SkillType:
       required:
         - skill_type
@@ -900,7 +920,7 @@ components:
             - Internal
         location:
           type: string
-          description: the injury location on the casualty's body
+          description: the injury location on the character's body
           example: right forearm
           enum:
             - right forearm
@@ -1046,17 +1066,17 @@ components:
             - END_SCENARIO
             - MOVE_TO_EVAC
             - SITREP
-            - TAG_CASUALTY
+            - TAG_CHARACTER
         unstructured:
           type: string
           description: a plain text unstructured description of the action
-          example: "Check pulse of casualty [1234]."
+          example: "Check pulse of character [1234]."
         repeatable:
           type: boolean
           description: Whether or not this action should remain after it’s selected by an ADM.
         character_id:
           type: string
-          description: The ID of the casualty being acted upon
+          description: The ID of the character being acted upon
         parameters:
           type: object
           additionalProperties:
@@ -1074,10 +1094,10 @@ components:
         kdma_association:
           type: object
           additionalProperties:
-            type: string
+            type: float
           description: KDMA associations with this action used in training
           example:
-          - Mission: 0.8
+            - Mission: 0.8
         condition_semantics:
           description: Whether multiple conditions use and, or, or not semantics
           type: string
@@ -1098,7 +1118,7 @@ components:
           type: integer
           description: True if the scenario elapsed time (in seconds) is greater than the specified value
         actions:
-          description: multiple action ID lists have "or" semantics; multiple action IDs within a list have "and" semantics 
+          description: multiple action ID lists have "or" semantics; multiple action IDs within a list have "and" semantics
           type: array
           items:
             type: array
@@ -1169,7 +1189,34 @@ components:
         expectant:
           type: string
           description: The probe response to send for a EXPECTANT tag
-
+    MissionType:
+      type: string
+      description: enumeration of possible mission types
+      enum:
+        - Listening/Observation
+        - Direct Action
+        - Hostage rescue
+        - Asset transport
+        - Sensor emplacement
+        - Intelligence gathering
+        - Civil affairs
+        - Training
+        - Sabotage
+        - Security patrol
+        - Fire support
+        - Nuclear deterrence
+        - Extraction
+        - Unknown
+    SupplyType:
+      type: string
+      description: an enumeration of available supply types
+      example: Tourniquet
+      enum:
+        - Tourniquet
+        - Pressure bandage
+        - Hemostatic gauze
+        - Decompression Needle
+        - Nasopharyngeal airway
   responses:
     server_error:
       description: An exception occurred on the server; see returned error string.
