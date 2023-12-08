@@ -113,10 +113,14 @@ class YamlValidator:
                                             is_valid = False
                             # 2. object with key-value
                             else:
-                                for k in to_validate[key]:
-                                    if not self.do_types_match(to_validate[key][k], PRIMITIVE_TYPE_MAP[val_type]):
-                                        self.log_wrong_type(k, level_name, val_type, type(to_validate[key][k]))
-                                        is_valid = False
+                                if isinstance(to_validate[key], dict):
+                                    for k in to_validate[key]:
+                                        if not self.do_types_match(to_validate[key][k], PRIMITIVE_TYPE_MAP[val_type]):
+                                            self.log_wrong_type(k, level_name, val_type, type(to_validate[key][k]))
+                                            is_valid = False
+                                else:
+                                    self.log_wrong_type(key, level_name, 'object', type(to_validate[key]))
+                                    is_valid = False 
                     elif key_type == 'array':
                         if not self.validate_array(to_validate[key], key, level_name, key_type, typed_keys):
                             is_valid = False
@@ -128,8 +132,14 @@ class YamlValidator:
                     ref_loc = self.api_yaml
                     for x in location:
                         ref_loc = ref_loc[x]
-                    if not self.validate_one_level(key, to_validate[key], ref_loc['properties'], ref_loc['required'] if 'required' in ref_loc else []):
-                        is_valid = False
+                    if isinstance(to_validate[key], dict):
+                        if not self.validate_one_level(key, to_validate[key], ref_loc['properties'], ref_loc['required'] if 'required' in ref_loc else []):
+                            is_valid = False
+                    else:
+                        self.log_wrong_type(key, level_name, location[len(location)-1], type(to_validate[key]))
+                        is_valid = False 
+                else:
+                    self.logger.log(LogLevel.ERROR, "No type found for key '" + key + "' at the '" + level_name + "' level in the api")
             found_keys.append(key)
         # check for missing keys
         for key in typed_keys:
@@ -182,7 +192,7 @@ class YamlValidator:
         '''
         Logs when an incorrect type is found for a key
         '''
-        self.logger.log(LogLevel.WARN, "Key '" + key + "' at level " + level + " should be type " + expected + " but is " + str(actual) + " instead.")
+        self.logger.log(LogLevel.WARN, "Key '" + key + "' at level " + level + " should be type '" + expected + "' but is " + str(actual) + " instead.")
         self.wrong_types += 1
     
     def validate_file_location(self, filename):

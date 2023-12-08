@@ -303,9 +303,10 @@ scenes:
       reference: 0 # Re-use the tagging configuration from the specified scene index
     state: # can contain any state, including mission parameters, environment, characters, etc.
       environment:
-        unstructured: >
-          EVAC is 5 minutes out but can only take one patient.
-        aid_delay: 5
+        decision-environment:
+          unstructured: >
+            EVAC is 5 minutes out but can only take one patient.
+          aid_delay: 5
     actions:
       - id: action1
         type: MOVE_TO_EVAC

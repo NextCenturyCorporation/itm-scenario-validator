@@ -855,13 +855,9 @@ components:
           type: string
           description: Branch-specific military rank
         skills:
-          type: object
-          additionalProperties:
-            type: float
-          description: A list of pairs of skill_type and numeric skill_level
-          example:
-            - Medical: 3.6
-            - Combat: 4
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillType"
         role:
           type: string
           description: The primary role a character has in the mission, in terms of the skills they possess
@@ -883,6 +879,21 @@ components:
             - priority
             - vip
       description: demographic profile of a casualty
+    SkillType:
+      required:
+        - skill_type
+        - level
+      type: object
+      properties:
+        skill_type:
+          type: string
+          enum:
+            - Medicine
+            - Combat
+          description: the type of skill the character has
+        level:
+          type: float
+          description: the level of expertise the character has in their skill
     Injury:
       required:
         - location
