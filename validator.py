@@ -56,7 +56,7 @@ class YamlValidator:
         # start by checking the top level
         schema = self.api_yaml['components']['schemas']
         top_level = schema['Scenario']['properties']
-        required = schema['Scenario']['required']
+        required = schema['Scenario']['required'] if 'required' in schema['Scenario'] else []
         return self.validate_one_level('top', self.loaded_yaml, top_level, required)
 
     def validate_one_level(self, level_name, to_validate, typed_keys, required):
@@ -128,7 +128,7 @@ class YamlValidator:
                     ref_loc = self.api_yaml
                     for x in location:
                         ref_loc = ref_loc[x]
-                    if not self.validate_one_level(key, to_validate[key], ref_loc['properties'], ref_loc['required']):
+                    if not self.validate_one_level(key, to_validate[key], ref_loc['properties'], ref_loc['required'] if 'required' in ref_loc else []):
                         is_valid = False
             found_keys.append(key)
         # check for missing keys
@@ -160,7 +160,7 @@ class YamlValidator:
                 for x in location:
                     ref_loc = ref_loc[x]
                 for item in item:
-                    if not self.validate_one_level(key, item, ref_loc['properties'], ref_loc['required']):
+                    if not self.validate_one_level(key, item, ref_loc['properties'], ref_loc['required'] if 'required' in ref_loc else []):
                         is_valid = False
             # check basic types
             elif 'type' in item_type:
