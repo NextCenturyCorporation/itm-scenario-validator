@@ -20,7 +20,7 @@ state:
     medical_policies: TBD # Nothing comes to mind how to respresent medical policies in structured data.  Will have to be discussed/defined individually
 
   environment: # normally many of these fields would be left unspecified. Some of these fields could use numerical (0.0-1.0) values if preferred
-    sim-environment:
+    sim_environment:
       type: jungle # controlled vocab includes jungle, submarine, urban, desert
       terrain: jungle # controlled vocab could include jungle, indoors, urban, dunes, forest, beach, mountain, plains, hills, swamp, flat, rough, extreme, etc.
       weather: rain # controlled vocab includes clear, wind, clouds, rain, fog, thunderstorm, hail, sleet, snow, etc.
@@ -33,7 +33,7 @@ state:
       # hazardous flora (poisonous plants) and fauna (predators) should be mentioned in threats
       flora: lush # descriptor of local vegetation; controlled vocab includes none, limited, normal, lush, extensive, etc.
       fauna: high # descriptor of local animal/insect activity; controlled vocab includes none, limited, normal, high, pervasive, etc.
-    decision-environment:
+    decision_environment:
       unstructured: >
         Isolated jungle island
       aid_delay:
@@ -69,6 +69,7 @@ state:
     - { type: Epi Pen, quantity: 1, reusable: True }
     - { type: Vented Chest Seal, quantity: 2, reusable: False }
     - { type: Pain Medications, quantity: 2, reusable: False }
+    - { type: Splint, quantity: 2, reusable: False }
     - { type: Blood, quantity: 5, reusable: False } # quantity is in units; could add different types
 
   characters:
@@ -87,8 +88,8 @@ state:
         rank: E-4 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         rank_title: Corporal # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         skills: # Describes abilities a character can have
-          skill_type: Combat # controlled vocab including Medical, Combat, Specialist, Communications, Command
-          level: 5 # A skill level from 0 to 10
+          - skill_type: Combat # controlled vocab including Medical, Combat, Specialist, Communications, Command
+            level: 5 # A skill level from 0 to 10
         role: Infantry # The primary role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
         mission_importance: normal # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with character.mission_importance
       vitals:
@@ -101,8 +102,7 @@ state:
       injuries:
         - name: Internal # Controlled vocab TBD based on final injury list
           location: internal # Controlled vocab TBD based on final injury list and their valid locations
-          severity: 0
-          hidden: true
+          hidden: true # Could need three states: hidden, discoverable, unhidden
     - id: Marine_burns_01
       name: Bob
       unstructured: >
@@ -122,8 +122,8 @@ state:
         rank: E-2 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         rank_title: Private First Class # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         skills: # Describes abilities a person can have
-          skill_type: Combat # controlled vocab including Medicine, Combat
-          level: 5 # A skill level from 0 to 10
+          - skill_type: Combat # controlled vocab including Medicine, Combat
+            level: 5 # A skill level from 0 to 10
         role: Infantry # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
         mission_importance: normal # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with character.mission_importance
       vitals:
@@ -172,8 +172,8 @@ state:
         rank: O-3 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         rank_title: Captain # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         skills: # Describes abilities a person can have
-          skill_type: Combat # controlled vocab including Medicine, Combat
-          level: 7 # A skill level from 0 to 10
+          - skill_type: Combat # controlled vocab including Medicine, Combat
+            level: 7 # A skill level from 0 to 10
         role: Command # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
         mission_importance: important # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with character.mission_importance
       vitals:
@@ -197,7 +197,7 @@ state:
 #   - a list of actions are taken (ideally with Boolean logic)
 #   - a given list of probes is responded to (ideally with Boolean logic)
 #   - an amount of time that has passed
-#   - a given supply reaches a threshhold
+#   - a given supply (or supplies) reaches a threshhold
 #   - a given character's vitals reach a level (e.g., hrpmin = 0, breathing = NONE, etc.)
 #   - combination of the above, with and/or
 scenes:
@@ -235,6 +235,7 @@ scenes:
           Fairness: 5
         conditions:
           # Action conditions are configured just like scene transitions below.  If the condition is met, the probe response is sent.
+          elapsed_time_gt: 30
       - id: action2
         type: CHECK_ALL_VITALS
         unstructured: Check Mike's vital signs
@@ -287,26 +288,27 @@ scenes:
       probes:
         - adept-september-demo-probe-1 # Specifying this would mean that the scene would end when the specified probe_id(s) are answered
       probe_responses:
-        - adept-september-demo-probe-1-choice2
+        - adept-september-demo-probe-1-choice2 # Specifying this would mean that the scene would end when the specified probe repoonse was given
       character_vitals:
         - character_id: Mike
-        - vitals: # Or semantics; specify another character_vitals if you want a conjunction of vital criteria
-          conscious: true
-          breathing: NONE
-          hrpmin: 0
-          mental_status: UNRESPONSIVE
-        - supply: # Specifying this would mean that the scene would end when the specified supply reaches the specified quantity
-        - { type: Tourniquet, quantity: 1 } # Only 1 tourniquet left
+          vitals: # Or semantics; specify another character_vitals if you want a conjunction of vital criteria
+            conscious: true
+            breathing: NONE
+            hrpmin: 0
+            mental_status: UNRESPONSIVE
+      supplies: # Specifying this would mean that the scene would end when the specified supply reaches the specified quantity
+        - { type: Tourniquet, quantity: 1, reusable: False } # Only 1 tourniquet left
   - index: 1
     end_scenario_allowed: true
     tagging:
       reference: 0 # Re-use the tagging configuration from the specified scene index
     state: # can contain any state, including mission parameters, environment, characters, etc.
       environment:
-        decision-environment:
+        decision_environment:
           unstructured: >
             EVAC is 5 minutes out but can only take one patient.
-          aid_delay: 5
+          aid_delay:
+            delay: 5
     actions:
       - id: action1
         type: MOVE_TO_EVAC

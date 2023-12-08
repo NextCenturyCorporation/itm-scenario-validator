@@ -8,7 +8,7 @@ API_YAML = config('API_YAML')
 PRIMITIVE_TYPE_MAP = {
     'string': str,
     'boolean': bool,
-    'float': float,
+    'number': float,
     'int': int
 }
 
@@ -96,7 +96,7 @@ class YamlValidator:
                             if 'enum' in typed_keys[key]:
                                 allowed = typed_keys[key]['enum']
                                 if to_validate[key] not in allowed:
-                                    self.logger.log(LogLevel.WARN, "'" + key + "' at the '" + level_name + "' level must be one of the following values: " + str(allowed) + ". Instead received '" + to_validate[key] + "'")
+                                    self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level_name + "' must be one of the following values: " + str(allowed) + " but is '" + to_validate[key] + "' instead.")
                                     self.invalid_values += 1
                                     is_valid = False
 
@@ -139,17 +139,17 @@ class YamlValidator:
                         self.log_wrong_type(key, level_name, location[len(location)-1], type(to_validate[key]))
                         is_valid = False 
                 else:
-                    self.logger.log(LogLevel.ERROR, "No type found for key '" + key + "' at the '" + level_name + "' level in the api")
+                    self.logger.log(LogLevel.ERROR, "Key '" + key + "' at level '" + level_name + "' has no type.")
             found_keys.append(key)
         # check for missing keys
         for key in typed_keys:
             if key not in found_keys:
                 if (key in required):
-                    self.logger.log(LogLevel.WARN, "Required key '" + key + "' is missing at the '" + level_name + "' level of the yaml file")
+                    self.logger.log(LogLevel.WARN, "Required key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
                     self.missing_keys += 1
                     is_valid = False
                 else:
-                    self.logger.log(LogLevel.DEBUG, "Optional '" + key + "' is missing at the '" + level_name + "' level of the yaml file")
+                    self.logger.log(LogLevel.DEBUG, "Optional key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
         return is_valid
 
     def validate_array(self, item, key, level, key_type, typed_keys):
@@ -192,7 +192,7 @@ class YamlValidator:
         '''
         Logs when an incorrect type is found for a key
         '''
-        self.logger.log(LogLevel.WARN, "Key '" + key + "' at level " + level + " should be type '" + expected + "' but is " + str(actual) + " instead.")
+        self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' should be type '" + expected + "' but is " + str(actual) + " instead.")
         self.wrong_types += 1
     
     def validate_file_location(self, filename):

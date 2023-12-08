@@ -371,9 +371,7 @@ components:
     State:
       required:
         - unstructured
-        - mission
         - environment
-        - threat_state
         - supplies
         - characters
       type: object
@@ -407,12 +405,6 @@ components:
       required:
         - mission_type
         - unstructured
-        - critical_ids
-        - civilian_presence
-        - communication_capability
-        - roe
-        - political_climate
-        - medical_policies
       type: object
       properties:
         unstructured:
@@ -481,30 +473,20 @@ components:
       description: encapsulates the scenario's strategic mission
     Environment:
       required:
-        - sim-environment
-        - decision-environment
+        - sim_environment
+        - decision_environment
       type: object
       properties:
-        sim-environment:
+        sim_environment:
           $ref: "#/components/schemas/SimEnvironment"
           description: Elements that impact simulation configuration
-        decision-environment:
+        decision_environment:
           $ref: "#/components/schemas/DecisionEnvironment"
           description: Elements that impact decision-making
 
     SimEnvironment:
       required:
         - type
-        - terrain
-        - weather
-        - lighting
-        - visibility
-        - noise_ambient
-        - noise_peak
-        - temperature
-        - humidity
-        - flora
-        - fauna
       type: object
       properties:
         type:
@@ -564,11 +546,13 @@ components:
             - high
             - pervasive
         temperature:
-          type: float
+          type: number
+          format: float
           description: numerical temperature in degrees Fahrenheit
           example: 82.5
         humidity:
-          type: float
+          type: number
+          format: float
           description: percentage of relative humidity
           example: 80
         lighting:
@@ -613,14 +597,6 @@ components:
     DecisionEnvironment:
       required:
         - unstructured
-        - aid_delay
-        - movement_restriction
-        - sound_restriction
-        - oxygen_levels
-        - population_density
-        - injury_triggers
-        - air_quality
-        - city_infrastructure
       type: object
       properties:
         unstructured:
@@ -684,12 +660,11 @@ components:
     AidDelay:
       required:
         - delay
-        - type
-        - max_transport
       type: object
       properties:
         delay:
-          type: float
+          type: number
+          format: float
           description: CASEVAC or MEDEVAC timer, in minutes
         type:
           type: string
@@ -704,8 +679,7 @@ components:
           description: Maximum number of casualties that can be transported
     ThreatState:
       required:
-        - unstructured
-        - threats
+      - unstructured
       type: object
       properties:
         unstructured:
@@ -713,14 +687,28 @@ components:
           description: text description of current threat state
           example: No additional threats are detected
         threats:
-          type: object
-          additionalProperties:
-            type: float
-          description: A list of pairs of threat types with a numeric severity indicator
-          example:
-            - gunfire: 7
-            - flora: 3
+          type: array
+          description: An array of threats
+          items:
+            $ref: '#/components/schemas/Threat'
       description: encapsulation of the state of threat for participants in the scenario
+      example:
+        unstructured: No additional threats are detected
+        threats:
+        - type: Gunfire
+          severity: 0.5
+        - type: Gunfire
+          severity: 0.5
+    Threat:
+      type: object
+      additionalProperties:
+        type: string
+      description: |-
+        list of pairs of type (enum like IED, Gunshots, fire, etc)
+        and severity (float 0 (no threat) - 1 (max severity))
+      example:
+        type: Gunfire
+        severity: 0.5
     Supplies:
       required:
         - quantity
@@ -743,6 +731,7 @@ components:
             - Epi Pen
             - Vented Chest Seal
             - Pain Medications
+            - Splint
             - Blood
         quantity:
           type: integer
@@ -760,11 +749,8 @@ components:
         - id
         - name
         - unstructured
-        - unstructured_postassess
-        - rapport
         - demographics
         - vitals
-        - injuries
       type: object
       properties:
         id:
@@ -780,7 +766,8 @@ components:
           type: string
           description: Natural language, plain text description of the character, including injuries, demographics, and rapport
         rapport:
-          type: float
+          type: number
+          format: float
           description: A measure of closeness or affinity towards the player/medic
         demographics:
           description: Basic properties about the character
@@ -798,13 +785,6 @@ components:
         - age
         - sex
         - race
-        - military_disposition
-        - military_branch
-        - rank
-        - rank_title
-        - skills
-        - role
-        - mission_importance
       type: object
       properties:
         age:
@@ -892,13 +872,13 @@ components:
             - Combat
           description: the type of skill the character has
         level:
-          type: float
+          type: number
+          format: float
           description: the level of expertise the character has in their skill
     Injury:
       required:
         - location
         - name
-        - severity
         - hidden
       type: object
       properties:
@@ -948,7 +928,8 @@ components:
             - internal
             - unspecified
         severity:
-          type: float
+          type: number
+          format: float
           description: the apparent severity of the injury from 0 (low) to 1.0 (high)
           example: 0.8
         hidden:
@@ -997,10 +978,12 @@ components:
             - RESTRICTED
             - NONE
         hrpmin:
-          type: float
+          type: integer
+          format: int16
           description: heart rate in beats per minute
         Spo2:
-          type: float
+          type: number
+          format: float
           description: blood oxygen level
       description: "vital levels for a character, omit properties if unknown"
 
@@ -1009,7 +992,6 @@ components:
         - index
         - state
         - end_scenario_allowed
-        - tagging
         - actions
       type: object
       properties:
@@ -1031,7 +1013,7 @@ components:
           items:
             $ref: "#/components/schemas/Action"
         transition_semantics:
-          description: Whether multiple transitions use and, or, or not semantics
+          description: Whether multiple transition conditions use and, or, or not semantics
           type: string
           enum:
             - and
@@ -1039,40 +1021,13 @@ components:
             - not
         transitions:
           description: Conditions that specify how and when to transition to the next scene
-          type: array
-          items:
-            $ref: "#/components/schemas/Condition"
-    TriageCategory:
-      type: object
-      properties:
-        tagLabel:
-          type: string
-          example: MINIMAL
-          enum:
-            - MINIMAL
-            - DELAYED
-            - IMMEDIATE
-            - EXPECTANT
-        description:
-          type: string
-          description: a one-line description of the tagLabel category
-        criteria:
-          type: string
-          description: detailed criteria for the tagLabel category
-      description: The type of supported triage categories for this scenario
-      example:
-        criteria: criteria
-        description: description
-        tagLabel: MINIMAL
+          $ref: "#/components/schemas/Conditions"
     Action:
       required:
         - id
         - type
         - unstructured
         - character_id
-        - probe_id
-        - choice
-        - kdma_association
       type: object
       properties:
         id:
@@ -1119,10 +1074,10 @@ components:
         kdma_association:
           type: object
           additionalProperties:
-            type: float
-          description: KDML associations with this action used in training
+            type: string
+          description: KDMA associations with this action used in training
           example:
-            - Mission: 0.8
+          - Mission: 0.8
         condition_semantics:
           description: Whether multiple conditions use and, or, or not semantics
           type: string
@@ -1131,20 +1086,9 @@ components:
             - or
             - not
         conditions:
-          description: Conditions that specify how and when to transition to the next scene
-          type: array
-          items:
-            $ref: "#/components/schemas/Condition"
+          $ref: "#/components/schemas/Conditions"
       description: An encapulation of a single action taken by a DM
-    Condition:
-      required:
-        - elapsed_time_lt
-        - elapsed_time_gt
-        - actions
-        - probes
-        - probe_responses
-        - character_vitals
-        - supplies
+    Conditions:
       type: object
       properties:
         elapsed_time_lt:
@@ -1154,21 +1098,37 @@ components:
           type: integer
           description: True if the scenario elapsed time (in seconds) is greater than the specified value
         actions:
-          type: string
+          description: multiple action ID lists have "or" semantics; multiple action IDs within a list have "and" semantics 
+          type: array
+          items:
+            type: array
+            items:
+              type: string
         probes:
-          type: string
+          type: array
+          items:
+            type: string
         probe_responses:
-          type: string
+          type: array
+          items:
+            type: string
         character_vitals:
-          type: string
+          type: array
+          items:
+            type: object
+            properties:
+              character_id:
+                type: string
+                description: The ID of the character in question
+              vitals:
+                $ref: "#/components/schemas/Vitals"
+                description: The minimum vitals of the specified character
         supplies:
-          type: string
+          type: array
+          description: a list of medical supplies available to the DM
+          items:
+            $ref: "#/components/schemas/Supplies"
     Tagging:
-      required:
-        - enabled
-        - repeatable
-        - probe_responses
-        - reference
       type: object
       properties:
         enabled:
@@ -1176,9 +1136,11 @@ components:
         repeatable:
           type: boolean
         probe_responses:
-          type: string
+          type: array
+          items:
+            $ref: "#/components/schemas/Probe"
         reference:
-          type: string
+          type: integer
     Probe:
       required:
         - character_id
