@@ -374,6 +374,58 @@ components:
           items:
             $ref: "#/components/schemas/Scene"
       description: a tactical scenario
+    AlignmentResults:
+      title: AlignmentResults
+      required:
+      - alignment_source
+      - alignment_target_id
+      - score
+      - kdma_values
+      type: object
+      properties:
+        alignment_source:
+          title: Alignment Source
+          type: array
+          items:
+            "$ref": "#/components/schemas/AlignmentSource"
+        alignment_target_id:
+          title: Alignment Target Id
+          type: string
+          description: ID of desired profile to align responses to.
+        score:
+          title: Score
+          maximum: 1
+          minimum: 0
+          type: number
+          description: Measured alignment, 0 (completely unaligned) - 1 (completely aligned).
+        kdma_values:
+          title: Kdma Values
+          type: array
+          items:
+            "$ref": "#/components/schemas/KDMA_Value"
+          description: Computed KDMA profile from results
+      description: Computed KDMA profile and alignment score for a set of decisions.
+    AlignmentSource:
+      title: AlignmentSource
+      required:
+      - scenario_id
+      - probes
+      type: object
+      properties:
+        scenario_id:
+          title: Scenario Id
+          type: string
+          description: Unique ID for user session.
+        probes:
+          title: Probes
+          type: array
+          items:
+            type: string
+          description: List of ID's of probes used to compute alignment.
+      description: |-
+        Describes which session/probe responses were used to
+        compute an alignment score, allowing for lots
+        of flexibility.
     AlignmentTarget:
       required:
         - id
@@ -1094,7 +1146,8 @@ components:
         kdma_association:
           type: object
           additionalProperties:
-            type: float
+            type: number
+            format: float
           description: KDMA associations with this action used in training
           example:
             - Mission: 0.8
@@ -1217,6 +1270,13 @@ components:
         - Hemostatic gauze
         - Decompression Needle
         - Nasopharyngeal airway
+        - Pulse Oximeter
+        - Blanket
+        - Epi Pen
+        - Vented Chest Seal
+        - Pain Medications
+        - Splint
+        - Blood
   responses:
     server_error:
       description: An exception occurred on the server; see returned error string.
