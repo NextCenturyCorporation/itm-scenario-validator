@@ -84,7 +84,7 @@ state:
         race: White # controlled vocab to be informed by research, TA4.
         military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
         military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
-        rank: E-4 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        rank: Marine # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         rank_title: Corporal # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         skills: # Describes abilities a character can have
           - skill_type: Combat # controlled vocab including Medical, Combat, Specialist, Communications, Command
@@ -118,7 +118,7 @@ state:
         race: White # controlled vocab to be informed by research, TA4.
         military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
         military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
-        rank: E-2 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        rank: Civilian # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         rank_title: Private First Class # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         skills: # Describes abilities a person can have
           - skill_type: Combat # controlled vocab including Medicine, Combat
@@ -168,7 +168,7 @@ state:
         race: White # controlled vocab to be informed by research, TA4.
         military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
         military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
-        rank: O-3 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        rank: SEAL # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         rank_title: Captain # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
         skills: # Describes abilities a person can have
           - skill_type: Combat # controlled vocab including Medicine, Combat

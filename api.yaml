@@ -600,7 +600,8 @@ components:
         oxygen_levels:
           $ref: "#/components/enums/OxygenLevels"
         population_density:
-          type: integer
+          type: number
+          format: float
           description: Population per square mile
         injury_triggers:
           $ref: "#/components/enums/InjuryTrigger"

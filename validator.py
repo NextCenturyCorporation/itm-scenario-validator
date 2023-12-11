@@ -9,7 +9,8 @@ PRIMITIVE_TYPE_MAP = {
     'string': str,
     'boolean': bool,
     'number': float,
-    'int': int
+    'int': int,
+    'integer': int
 }
 
 class YamlValidator:
@@ -42,7 +43,7 @@ class YamlValidator:
 
     def __del__(self):
         '''
-        Basic cleanup closing the file loaded in on close.
+        Basic cleanup: closing the file loaded in on close.
         '''
         self.logger.log(LogLevel.DEBUG, "Program closing...")
         if (self.file):
@@ -62,13 +63,14 @@ class YamlValidator:
         return self.validate_one_level('top', self.loaded_yaml, top_level, required)
 
 
-    def validate_one_level(self, level_name, to_validate, typed_keys, required):
+    def validate_one_level(self, level_name, to_validate, type_obj, required):
         '''
-        Takes in an object to validate and the yaml schema describing the 
-        expected types
+        Takes in an object to validate (to_validate) and the yaml schema describing the 
+        expected types (type_obj)
         '''
         is_valid = True
         found_keys = []
+
         # see if an object is empty (and if it's allowed to be)
         if to_validate == None and len(required) == 0:
             return True
@@ -76,91 +78,63 @@ class YamlValidator:
             self.logger.log(LogLevel.WARN, "Level '" + level_name + "' is empty but must contain keys " + str(required))
             self.empty_levels += 1
             return False
+        
         # loop through keys to check each value against expectations
         for key in to_validate:
             # make sure it is a valid key
-            if key not in typed_keys:
-                self.logger.log(LogLevel.WARN, "'" + key + "' is not a valid key at the '" + level_name + "' level of the yaml file. Allowed keys are " + str(list(typed_keys.keys())))
+            if key not in type_obj:
+                self.logger.log(LogLevel.WARN, "'" + key + "' is not a valid key at the '" + level_name + "' level of the yaml file. Allowed keys are " + str(list(type_obj.keys())))
                 self.invalid_keys += 1
                 is_valid = False
             else:
                 # begin type-checking
-                this_key_data = typed_keys[key]
+                this_key_data = type_obj[key]
+                # check for the 'type' property - otherwise it might only have a $ref
                 if 'type' in this_key_data:
-                    key_type = typed_keys[key]['type']
+                    key_type = type_obj[key]['type']
                     # Basic types listed in PRIMITIVE_TYPE_MAP
                     if key_type in PRIMITIVE_TYPE_MAP:
-                        # allow ints to take the place of floats, but not the other way around
-                        if not self.do_types_match(to_validate[key], PRIMITIVE_TYPE_MAP[key_type]):
-                            self.log_wrong_type(key, level_name, key_type, type(to_validate[key]))
+                        if not self.validate_primitive(to_validate[key], key_type, key, level_name, type_obj[key]):
                             is_valid = False
-                        # check for enums
-                        elif PRIMITIVE_TYPE_MAP[key_type] == str:
-                            if 'enum' in typed_keys[key]:
-                                allowed = typed_keys[key]['enum']
-                                if to_validate[key] not in allowed:
-                                    self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level_name + "' must be one of the following values: " + str(allowed) + " but is '" + to_validate[key] + "' instead.")
-                                    self.invalid_values += 1
-                                    is_valid = False
-
                     # check for objects (key:value pairs)
                     elif key_type == 'object':
-                        if 'additionalProperties' in typed_keys[key]:
-                            if 'type' in typed_keys[key]['additionalProperties']:
-                                val_type = typed_keys[key]['additionalProperties']['type']
-                                # two types of objects exist: 1. list of key-value 
-                                if isinstance(to_validate[key], list):
-                                    for pair_set in to_validate[key]:
-                                        for k in pair_set:
-                                            if not self.do_types_match(pair_set[k], PRIMITIVE_TYPE_MAP[val_type]):
-                                                self.log_wrong_type(k, level_name, val_type, type(pair_set[k]))
-                                                is_valid = False
-                                # 2. object with key-value
-                                else:
-                                    if isinstance(to_validate[key], dict):
-                                        for k in to_validate[key]:
-                                            if not self.do_types_match(to_validate[key][k], PRIMITIVE_TYPE_MAP[val_type]):
-                                                self.log_wrong_type(k, level_name, val_type, type(to_validate[key][k]))
-                                                is_valid = False
-                                    else:
-                                        self.log_wrong_type(key, level_name, 'object', type(to_validate[key]))
-                                        is_valid = False 
-                            elif '$ref' in typed_keys[key]['additionalProperties']:
-                                self.logger.log(LogLevel.CRITICAL_INFO, "TODO: implement additionalProperties: ref")
-                            else:
-                                self.logger.log(LogLevel.WARN, "Additional Properties must either have a type or ref, but at level '" + level_name + "' for property '" + key + "' it does not.")
-                                self.empty_levels += 1
+                        if 'additionalProperties' in type_obj[key]:
+                            if not self.validate_additional_properties(type_obj[key], to_validate[key], key, level_name):
                                 is_valid = False
+                        else:
+                            self.logger.log(LogLevel.ERROR, "API error: Missing additionalProperties on '" + key + "' object at the '" + level_name + "' level")
+                            return False
+                        
                     elif key_type == 'array':
-                        if not self.validate_array(to_validate[key], key, level_name, key_type, typed_keys):
+                        if not self.validate_array(to_validate[key], key, level_name, key_type, type_obj):
                             is_valid = False
+                    else:
+                        self.logger.log(LogLevel.ERROR, "API error: Unhandled validation for type '" +  key_type + "' at the " + level_name + "' level")
+                        return False
                         
                 # check deep objects (more than simple key-value)
                 elif '$ref' in this_key_data:
-                    # get the ref type and check that (skip starting hashtag)
-                    location = typed_keys[key]['$ref'].split('/')[1:]
+                    # get the ref type and check that location (skip starting hashtag)
+                    location = type_obj[key]['$ref'].split('/')[1:]
                     ref_loc = self.api_yaml
+                    # access the currect location to get the type map
                     for x in location:
                         ref_loc = ref_loc[x]
                     if 'enum' in ref_loc:
-                        # we are expecting a string here
-                        if isinstance(to_validate[key], str):
-                                allowed = ref_loc['enum']
-                                if to_validate[key] not in allowed:
-                                    self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level_name + "' must be one of the following values: " + str(allowed) + " but is '" + to_validate[key] + "' instead.")
-                                    self.invalid_values += 1
-                                    is_valid = False
+                        if not self.validate_enum(ref_loc, key, level_name, to_validate[key]):
+                            is_valid = False
                     elif isinstance(to_validate[key], dict):
-                        if not self.validate_object(to_validate[key], ref_loc, key, level_name, typed_keys):
+                        if not self.validate_object(to_validate[key], ref_loc, key, level_name, type_obj[key]['$ref']):
                             is_valid = False
                     else:
                         self.log_wrong_type(key, level_name, location[len(location)-1], type(to_validate[key]))
                         is_valid = False 
                 else:
-                    self.logger.log(LogLevel.ERROR, "Key '" + key + "' at level '" + level_name + "' has no type.")
+                    self.logger.log(LogLevel.ERROR, "API Error: Key '" + key + "' at level '" + level_name + "' has no defined type or reference.")
+                    return False
             found_keys.append(key)
         # check for missing keys
-        for key in typed_keys:
+        for key in type_obj:
             if key not in found_keys:
                 if (key in required):
                     self.logger.log(LogLevel.WARN, "Required key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
@@ -171,49 +145,89 @@ class YamlValidator:
         return is_valid
 
 
-    def validate_object(self, item, location, key, level, typed_keys):
+    def validate_enum(self, type_obj, key, level, item):
+        is_valid = True
+        # we are expecting a string here (will this ever be an int/float?)
+        if isinstance(item, str):
+                allowed = type_obj['enum']
+                if item not in allowed:
+                    self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' must be one of the following values: " + str(allowed) + " but is '" + item + "' instead.")
+                    self.invalid_values += 1
+                    is_valid = False
+        else:
+            self.log_wrong_type(key, level, str(str), type(item))
+            is_valid = False 
+        return is_valid
+
+
+    def validate_object(self, item, location, key, level, ref_name):
         '''
         Checks if an item matches the reference location. The reference location
         may reference a full object, small object, or enum. Checks all 3 possibilities.
         '''
         is_valid = True
+        # check large object
         if 'properties' in location:
             if not self.validate_one_level(key, item, location['properties'], location['required'] if 'required' in location else []):
                 is_valid = False
+        # check small object
         elif 'additionalProperties' in location:
-            if 'type' in location['additionalProperties']:
-                val_type = location['additionalProperties']['type']
-                # two types of objects exist: 1. list of key-value 
-                if isinstance(item, list):
-                    for pair_set in item:
-                        for k in pair_set:
-                            if not self.do_types_match(pair_set[k], PRIMITIVE_TYPE_MAP[val_type]):
-                                self.log_wrong_type(k, level, val_type, type(pair_set[k]))
-                                is_valid = False
-                # 2. object with key-value
-                else:
-                    if isinstance(item, dict):
-                        for k in item:
-                            if not self.do_types_match(item[k], PRIMITIVE_TYPE_MAP[val_type]):
-                                self.log_wrong_type(k, level, val_type, type(item[k]))
-                                is_valid = False
-                    else:
-                        self.log_wrong_type(key, level, 'object', type(item))
-                        is_valid = False 
-            elif '$ref' in location['additionalProperties']:
-                self.logger.log(LogLevel.CRITICAL_INFO, "TODO: implement additionalProperties: ref")
-            else:
-                self.logger.log(LogLevel.WARN, "Additional Properties must either have a type or ref, but at level '" + level + "' for property '" + key + "' it does not.")
-                self.empty_levels += 1
+            if not self.validate_additional_properties(location, item, key, level):
                 is_valid = False
+        # check enum
         elif 'enum' in location:
-            allowed = location['enum']
-            if item not in allowed:
-                self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' must be one of the following values: " + str(allowed) + " but is '" + item + "' instead.")
-                self.invalid_values += 1
+            if not self.validate_enum(location, key, level, item):
                 is_valid = False
         else:
-            self.logger.log(LogLevel.ERROR, "API missing enum, property, or additional properties for '" + typed_keys[key]['$ref'] + "'. Cannot parse.")
+            self.logger.log(LogLevel.ERROR, "API missing enum, property, or additional properties for '" + ref_name + "'. Cannot parse.")
+        return is_valid
+    
+
+    def validate_additional_properties(self, type_obj, item, key, level):
+        '''
+        Accepts an object that describes the type we're looking for and an item to validate
+        '''
+        is_valid = True
+        if 'type' in type_obj['additionalProperties']:
+            val_type = type_obj['additionalProperties']['type']
+            # two types of objects exist: 1. list of key-value 
+            if isinstance(item, list):
+                for pair_set in item:
+                    for k in pair_set:
+                        if not self.do_types_match(pair_set[k], PRIMITIVE_TYPE_MAP[val_type]):
+                            self.log_wrong_type(k, level, val_type, type(pair_set[k]))
+                            is_valid = False
+            # 2. object with key-value
+            else:
+                if isinstance(item, dict):
+                    for k in item:
+                        if not self.do_types_match(item[k], PRIMITIVE_TYPE_MAP[val_type]):
+                            self.log_wrong_type(k, level, val_type, type(item[k]))
+                            is_valid = False
+                else:
+                    self.log_wrong_type(key, level, 'object', type(item))
+                    is_valid = False 
+        elif '$ref' in type_obj['additionalProperties']:
+            location = type_obj['additionalProperties']['$ref'].split('/')[1:]
+            ref_loc = self.api_yaml
+            for x in location:
+                ref_loc = ref_loc[x]
+            if isinstance(item, list):
+                for pair_set in item:
+                    for k in pair_set:
+                        if not self.validate_object(pair_set[k], ref_loc, key, level, type_obj['additionalProperties']['$ref']):
+                            is_valid = False
+            else:
+                if isinstance(item, dict):
+                    for k in item:
+                        if not self.validate_object(item[k], ref_loc, key, level, type_obj['additionalProperties']['$ref']):
+                            is_valid = False
+                else:
+                    self.log_wrong_type(key, level, 'object', type(item))
+                    is_valid = False      
+        else:
+            self.logger.log(LogLevel.ERROR, "API Error: Additional Properties must either have a type or ref, but at level '" + level + "' for property '" + key + "' it does not.")
+            return False
         return is_valid
 
 
@@ -235,18 +249,37 @@ class YamlValidator:
                 for x in location:
                     ref_loc = ref_loc[x]
                 for i in item:
-                    if not self.validate_object(i, ref_loc, key, level, typed_keys):
+                    if not self.validate_object(i, ref_loc, key, level, typed_keys[key]['items']['$ref']):
                         is_valid = False
             # check basic types
             elif 'type' in item_type:
                 expected = item_type['type']
                 if expected in PRIMITIVE_TYPE_MAP:
-                    for item in item:
-                        if not self.do_types_match(item, PRIMITIVE_TYPE_MAP[expected]):
-                            self.log_wrong_type(key, level, expected, type(item))
+                    for i in item:
+                        if not self.validate_primitive(i, expected, key, level, item_type):
                             is_valid = False
+            else:
+                self.logger.log(LogLevel.ERROR, "API Error: Missing type definition or reference at level '" + level + "' for property '" + key + "'.")
+                return False
         return is_valid
     
+
+    def validate_primitive(self, item, expected_type, key, level, type_obj):
+        '''
+        Looks at an object against an expected primitive type to see if it matches
+        '''
+        is_valid = True 
+        # first validate enums
+        if PRIMITIVE_TYPE_MAP[expected_type] == str and 'enum' in type_obj:
+            if not self.validate_enum(type_obj, key, level, item):
+                is_valid = False
+        # then validate the rest
+        elif not self.do_types_match(item, PRIMITIVE_TYPE_MAP[expected_type]):
+            self.log_wrong_type(key, level, expected_type, type(item))
+            is_valid = False
+
+        return is_valid
+
 
     def do_types_match(self, item, type):
         '''
