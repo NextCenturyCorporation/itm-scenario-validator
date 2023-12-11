@@ -366,7 +366,6 @@ components:
           description: human-readable scenario name, not necessarily unique
           example: IED Explosion
         state:
-          description: initial scenario state
           $ref: "#/components/schemas/State"
         scenes:
           type: array
@@ -479,13 +478,10 @@ components:
           type: string
           description: text description of current state
         mission:
-          description: Mission parameters that impact decision-making
           $ref: "#/components/schemas/Mission"
         environment:
-          description: Environmental parameters that impact either decision-making, the simulation environment, or both
           $ref: "#/components/schemas/Environment"
         threat_state:
-          description: Description of the current threat to the characters, including the medic
           $ref: "#/components/schemas/ThreatState"
         supplies:
           type: array
@@ -533,19 +529,18 @@ components:
         medical_policies:
           type: string
           description: Medical policies in effect in a mission, to inform decision-making
-      description: encapsulates the scenario's strategic mission
+      description: Mission parameters that impact decision-making
     Environment:
       required:
         - sim_environment
         - decision_environment
       type: object
+      description: Environmental parameters that impact either decision-making, the simulation environment, or both
       properties:
         sim_environment:
           $ref: "#/components/schemas/SimEnvironment"
-          description: Elements that impact simulation configuration
         decision_environment:
           $ref: "#/components/schemas/DecisionEnvironment"
-          description: Elements that impact decision-making
 
     SimEnvironment:
       required:
@@ -580,19 +575,19 @@ components:
           $ref: "#/components/schemas/AmbientNoiseEnum"
         noise_peak:
           $ref: "#/components/schemas/PeakNoiseEnum"
-      description: an encapsulation of environmental factors at the scenario location
+      description: Elements that impact simulation configuration
 
     DecisionEnvironment:
       required:
         - unstructured
       type: object
+      description: Elements that impact decision-making
       properties:
         unstructured:
           type: string
           description: Natural language, plain text description of decision-impacting environmental factors
         aid_delay:
           $ref: "#/components/schemas/AidDelay"
-          description: Properties related to CASEVAC or MEDEVAC
         movement_restriction:
           $ref: "#/components/schemas/MovementRestrictionEnum"
         sound_restriction:
@@ -615,6 +610,7 @@ components:
       required:
         - delay
       type: object
+      description: Properties related to CASEVAC or MEDEVAC
       properties:
         delay:
           type: number
@@ -639,7 +635,7 @@ components:
           description: An array of threats
           items:
             $ref: "#/components/schemas/Threat"
-      description: encapsulation of the state of threat for participants in the scenario
+      description: Description of the current threat to the characters, including the medic
       example:
         unstructured: No additional threats are detected
         threats:
@@ -707,7 +703,6 @@ components:
           format: float
           description: A measure of closeness or affinity towards the player/medic
         demographics:
-          description: Basic properties about the character
           $ref: "#/components/schemas/Demographics"
         injuries:
           type: array
@@ -750,7 +745,7 @@ components:
           $ref: "#/components/schemas/CharacterRoleEnum"
         mission_importance:
           $ref: "#/components/schemas/CharacterImportanceEnum"
-      description: demographic profile of a character
+      description: Basic properties about the character
     Skills:
       required:
         - skill_type
@@ -826,12 +821,10 @@ components:
           description: The order the scene appears in the scenario
         state:
           $ref: "#/components/schemas/State"
-          description: The beginning state for the current scene
         end_scenario_allowed:
           type: boolean
           description: Whether ADMs can end the scenario during this scene
         tagging:
-          description: Scene-level tagging configuration
           $ref: "#/components/schemas/Tagging"
         actions:
           description: List of available actions
@@ -841,7 +834,6 @@ components:
         transition_semantics:
           $ref: "#/components/schemas/SemanticTypeEnum"
         transitions:
-          description: Conditions that specify how and when to transition to the next scene
           $ref: "#/components/schemas/Conditions"
     Action:
       required:
@@ -862,7 +854,7 @@ components:
           example: "Check pulse of character [1234]."
         repeatable:
           type: boolean
-          description: Whether or not this action should remain after it’s selected by an ADM.
+          description: Whether or not this action should remain after it's selected by an ADM.
         character_id:
           type: string
           description: The ID of the character being acted upon
@@ -895,6 +887,7 @@ components:
       description: An encapulation of a single action taken by a DM
     Conditions:
       type: object
+      description: Conditions that specify whether to transition to the next scene or send a probe response
       properties:
         elapsed_time_lt:
           type: integer
@@ -921,13 +914,13 @@ components:
           type: array
           items:
             type: object
+            description: The minimum vitals of the specified character
             properties:
               character_id:
                 type: string
                 description: The ID of the character in question
               vitals:
                 $ref: "#/components/schemas/Vitals"
-                description: The minimum vitals of the specified character
         supplies:
           type: array
           description: a list of medical supplies available to the DM
@@ -935,6 +928,7 @@ components:
             $ref: "#/components/schemas/Supplies"
     Tagging:
       type: object
+      description: Scene-level tagging configuration
       properties:
         enabled:
           type: boolean
