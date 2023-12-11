@@ -102,14 +102,14 @@ class YamlValidator:
                             if not self.validate_additional_properties(type_obj[key], to_validate[key], key, level_name):
                                 is_valid = False
                         else:
-                            self.logger.log(LogLevel.ERROR, "API error: Missing additionalProperties on '" + key + "' object at the '" + level_name + "' level. Please contact T3 for assistance.")
+                            self.logger.log(LogLevel.ERROR, "API error: Missing additionalProperties on '" + key + "' object at the '" + level_name + "' level. Please contact TA3 for assistance.")
                             return False
                         
                     elif key_type == 'array':
                         if not self.validate_array(to_validate[key], key, level_name, key_type, type_obj):
                             is_valid = False
                     else:
-                        self.logger.log(LogLevel.ERROR, "API error: Unhandled validation for type '" +  key_type + "' at the " + level_name + "' level. Please contact T3 for assistance.")
+                        self.logger.log(LogLevel.ERROR, "API error: Unhandled validation for type '" +  key_type + "' at the " + level_name + "' level. Please contact TA3 for assistance.")
                         return False
                         
                 # check deep objects (more than simple key-value)
@@ -130,7 +130,7 @@ class YamlValidator:
                         self.log_wrong_type(key, level_name, location[len(location)-1], type(to_validate[key]))
                         is_valid = False 
                 else:
-                    self.logger.log(LogLevel.ERROR, "API Error: Key '" + key + "' at level '" + level_name + "' has no defined type or reference. Please contact T3 for assistance.")
+                    self.logger.log(LogLevel.ERROR, "API Error: Key '" + key + "' at level '" + level_name + "' has no defined type or reference. Please contact TA3 for assistance.")
                     return False
             found_keys.append(key)
         # check for missing keys
@@ -179,7 +179,7 @@ class YamlValidator:
             if not self.validate_enum(location, key, level, item):
                 is_valid = False
         else:
-            self.logger.log(LogLevel.ERROR, "API missing enum, property, or additional properties for '" + ref_name + "'. Cannot parse. Please contact T3 for assistance.")
+            self.logger.log(LogLevel.ERROR, "API missing enum, property, or additional properties for '" + ref_name + "'. Cannot parse. Please contact TA3 for assistance.")
         return is_valid
     
 
@@ -226,7 +226,7 @@ class YamlValidator:
                     self.log_wrong_type(key, level, 'object', type(item))
                     is_valid = False      
         else:
-            self.logger.log(LogLevel.ERROR, "API Error: Additional Properties must either have a type or ref, but at level '" + level + "' for property '" + key + "' it does not. Please contact T3 for assistance.")
+            self.logger.log(LogLevel.ERROR, "API Error: Additional Properties must either have a type or ref, but at level '" + level + "' for property '" + key + "' it does not. Please contact TA3 for assistance.")
             return False
         return is_valid
 
@@ -259,7 +259,7 @@ class YamlValidator:
                         if not self.validate_primitive(i, expected, key, level, item_type):
                             is_valid = False
             else:
-                self.logger.log(LogLevel.ERROR, "API Error: Missing type definition or reference at level '" + level + "' for property '" + key + "'. Please contact T3 for assistance.")
+                self.logger.log(LogLevel.ERROR, "API Error: Missing type definition or reference at level '" + level + "' for property '" + key + "'. Please contact TA3 for assistance.")
                 return False
         return is_valid
     
