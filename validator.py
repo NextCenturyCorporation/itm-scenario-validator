@@ -9,7 +9,6 @@ PRIMITIVE_TYPE_MAP = {
     'string': str,
     'boolean': bool,
     'number': float,
-    'float': float,
     'int': int
 }
 
@@ -107,24 +106,31 @@ class YamlValidator:
                     # check for objects (key:value pairs)
                     elif key_type == 'object':
                         if 'additionalProperties' in typed_keys[key]:
-                            val_type = typed_keys[key]['additionalProperties']['type']
-                            # two types of objects exist: 1. list of key-value 
-                            if isinstance(to_validate[key], list):
-                                for pair_set in to_validate[key]:
-                                    for k in pair_set:
-                                        if not self.do_types_match(pair_set[k], PRIMITIVE_TYPE_MAP[val_type]):
-                                            self.log_wrong_type(k, level_name, val_type, type(pair_set[k]))
-                                            is_valid = False
-                            # 2. object with key-value
-                            else:
-                                if isinstance(to_validate[key], dict):
-                                    for k in to_validate[key]:
-                                        if not self.do_types_match(to_validate[key][k], PRIMITIVE_TYPE_MAP[val_type]):
-                                            self.log_wrong_type(k, level_name, val_type, type(to_validate[key][k]))
-                                            is_valid = False
+                            if 'type' in typed_keys[key]['additionalProperties']:
+                                val_type = typed_keys[key]['additionalProperties']['type']
+                                # two types of objects exist: 1. list of key-value 
+                                if isinstance(to_validate[key], list):
+                                    for pair_set in to_validate[key]:
+                                        for k in pair_set:
+                                            if not self.do_types_match(pair_set[k], PRIMITIVE_TYPE_MAP[val_type]):
+                                                self.log_wrong_type(k, level_name, val_type, type(pair_set[k]))
+                                                is_valid = False
+                                # 2. object with key-value
                                 else:
-                                    self.log_wrong_type(key, level_name, 'object', type(to_validate[key]))
-                                    is_valid = False 
+                                    if isinstance(to_validate[key], dict):
+                                        for k in to_validate[key]:
+                                            if not self.do_types_match(to_validate[key][k], PRIMITIVE_TYPE_MAP[val_type]):
+                                                self.log_wrong_type(k, level_name, val_type, type(to_validate[key][k]))
+                                                is_valid = False
+                                    else:
+                                        self.log_wrong_type(key, level_name, 'object', type(to_validate[key]))
+                                        is_valid = False 
+                            elif '$ref' in typed_keys[key]['additionalProperties']:
+                                self.logger.log(LogLevel.CRITICAL_INFO, "TODO: implement additionalProperties: ref")
+                            else:
+                                self.logger.log(LogLevel.WARN, "Additional Properties must either have a type or ref, but at level '" + level_name + "' for property '" + key + "' it does not.")
+                                self.empty_levels += 1
+                                is_valid = False
                     elif key_type == 'array':
                         if not self.validate_array(to_validate[key], key, level_name, key_type, typed_keys):
                             is_valid = False
@@ -175,6 +181,7 @@ class YamlValidator:
             if not self.validate_one_level(key, item, location['properties'], location['required'] if 'required' in location else []):
                 is_valid = False
         elif 'additionalProperties' in location:
+            if 'type' in location['additionalProperties']:
                 val_type = location['additionalProperties']['type']
                 # two types of objects exist: 1. list of key-value 
                 if isinstance(item, list):
@@ -193,6 +200,12 @@ class YamlValidator:
                     else:
                         self.log_wrong_type(key, level, 'object', type(item))
                         is_valid = False 
+            elif '$ref' in location['additionalProperties']:
+                self.logger.log(LogLevel.CRITICAL_INFO, "TODO: implement additionalProperties: ref")
+            else:
+                self.logger.log(LogLevel.WARN, "Additional Properties must either have a type or ref, but at level '" + level + "' for property '" + key + "' it does not.")
+                self.empty_levels += 1
+                is_valid = False
         elif 'enum' in location:
             allowed = location['enum']
             if item not in allowed:

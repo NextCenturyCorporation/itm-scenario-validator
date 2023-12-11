@@ -459,39 +459,19 @@ components:
           description: natural language description of current mission
           example: Place sensors in and around the jungle base
         mission_type:
-          $ref: "#/components/schemas/MissionType"
+          $ref: "#/components/enums/MissionType"
         critical_ids:
           type: object
           additionalProperties:
-            type: string
-            enum:
-              - none
-              - normal
-              - important
-              - priority
-              - vip
+            $ref: "#/components/enums/CriticalLevel"
           example:
             - 123: none
             - 456: priority
           description: A list of pairs of character ids with an indicator of how mission-critical the character is
         civilian_presence:
-          type: string
-          enum:
-            - none
-            - limited
-            - some
-            - extensive
-            - crowd
-          description: Indicator of how many civilians are present in the mission
+          $ref: "#/components/enums/CivilianPresence"
         communication_capability:
-          type: string
-          enum:
-            - all
-            - satellite
-            - radio
-            - voice
-            - visual
-          description: current operational communication capability and limitations
+          $ref: "#/components/enums/CommunicationCapability"
         roe:
           type: string
           description: rules of engagement to inform decision-making, but not to restrict decision space
@@ -521,61 +501,15 @@ components:
       type: object
       properties:
         type:
-          type: string
-          enum:
-            - jungle
-            - submarine
-            - urban
-            - desert
-          description: Basic setting for the entire scenario
+          $ref: "#/components/enums/SimEnvironmentType"
         weather:
-          type: string
-          description: a natural language description of local weather conditions
-          enum:
-            - clear
-            - wind
-            - clouds
-            - rain
-            - fog
-            - thunderstorm
-            - hail
-            - sleet
-            - snow
+          $ref: "#/components/enums/WeatherType"
         terrain:
-          type: string
-          description: a natural language description of the local terrain
-          enum:
-            - jungle
-            - indoors
-            - urban
-            - dunes
-            - forest
-            - beach
-            - mountain
-            - plains
-            - hills
-            - swamp
-            - flat
-            - rough
-            - extreme
+          $ref: "#/components/enums/TerrainType"
         flora:
-          type: string
-          description: a natural language description of the local vegetation
-          enum:
-            - none
-            - limited
-            - normal
-            - lush
-            - extensive
+          $ref: "#/components/enums/FloraType"
         fauna:
-          type: string
-          description: a natural language description of the local animals/insects
-          enum:
-            - none
-            - limited
-            - normal
-            - high
-            - pervasive
+          $ref: "#/components/enums/FaunaType"
         temperature:
           type: number
           format: float
@@ -587,42 +521,13 @@ components:
           description: percentage of relative humidity
           example: 80
         lighting:
-          type: string
-          description: Descriptor of available natural or man-made lighting
-          enum:
-            - none
-            - limited
-            - normal
-            - bright
-            - flashing
+          $ref: "#/components/enums/LightingType"
         visibility:
-          type: string
-          description: Descriptor for operational visibility; affected by time of day, lighting, weather, terrain, etc.
-          enum:
-            - none
-            - low
-            - normal
-            - good
-            - excellent
-            - variable
+          $ref: "#/components/enums/VisibilityType"
         noise_ambient:
-          type: string
-          description: Descriptor for background noise level
-          enum:
-            - none
-            - quiet
-            - normal
-            - noisy
-            - extreme
+          $ref: "#/components/enums/AmbientNoise"
         noise_peak:
-          type: string
-          description: Descriptor for peak noise level due to gunfire, vehicles, helicopters, etc.
-          enum:
-            - none
-            - quiet
-            - normal
-            - noisy
-            - extreme
+          $ref: "#/components/enums/PeakNoise"
       description: an encapsulation of environmental factors at the scenario location
 
     DecisionEnvironment:
@@ -637,51 +542,16 @@ components:
           $ref: "#/components/schemas/AidDelay"
           description: Properties related to CASEVAC or MEDEVAC
         movement_restriction:
-          type: string
-          enum:
-            - unrestricted
-            - minimal
-            - moderate
-            - severe
-            - extreme
-          description: Operational movement restrictions due to any factor including terrain, weather, enemy activity, etc.
+          $ref: "#/components/enums/MovementRestriction"
         sound_restriction:
-          type: string
-          enum:
-            - unrestricted
-            - minimal
-            - moderate
-            - severe
-            - extreme
-          description: Operational sound restrictions due to any factor
+          $ref: "#/components/enums/SoundRestriction"
         oxygen_levels:
-          type: string
-          enum:
-            - normal
-            - limited
-            - scarce
-            - none
-          description: Oxygen levels due to any factor that may impact decision-making
+          $ref: "#/components/enums/OxygenLevels"
         population_density:
           type: integer
           description: Population per square mile
         injury_triggers:
-          type: string
-          enum:
-            - explosion
-            - firearm
-            - fall
-            - pathogen
-            - animal
-            - plant
-            - water
-            - collision
-            - equipment
-            - attack
-            - fire
-            - stress
-            - chemical
-          description: What source(s) caused character injuries.
+          $ref: "#/components/enums/InjuryTrigger"
         air_quality:
           type: integer
           description: Air Quality Index (AQI)
@@ -698,13 +568,7 @@ components:
           format: float
           description: CASEVAC or MEDEVAC timer, in minutes
         type:
-          type: string
-          enum:
-            - AMEV
-            - truck
-            - helicopter
-            - unknown
-          description: Means of evacuation
+          $ref: "#/components/enums/AidType"
         max_transport:
           type: integer
           description: Maximum number of casualties that can be transported
@@ -748,7 +612,7 @@ components:
       type: object
       properties:
         type:
-          $ref: "#/components/schemas/SupplyType"
+          $ref: "#/components/enums/SupplyType"
         reusable:
           type: boolean
           description: Whether or not item is consumable/reusable
@@ -813,44 +677,16 @@ components:
           format: int16
           example: 32
         sex:
-          type: string
-          description: the sex of the character, omit if unknown/indeterminate
-          example: F
-          enum:
-            - M
-            - F
+          $ref: "#/components/enums/DemographicSex"
         race:
           type: string
           description: Race or ethnicity
         military_disposition:
-          type: string
-          enum:
-            - Allied US
-            - Allied
-            - Civilian
-            - Military Adversary
-            - Non-Military Adversary
-          description: How the character is to be treated in a military context
+          $ref: "#/components/enums/MilitaryDisposition"
         military_branch:
-          type: string
-          enum:
-            - US Army
-            - US Navy
-            - US Air Force
-            - US Marine Corps
-            - US Space Force
-            - US Coast Guard
-          description: Branch of the US military.
+          $ref: "#/components/enums/MilitaryBranch"
         rank:
-          type: string
-          description: the military status of the character, omit if unknown
-          enum:
-            - Marine
-            - FMF Corpsman
-            - Sailor
-            - Civilian
-            - SEAL
-            - Intel Officer
+          $ref: "#/components/enums/MilitaryRank"
         rank_title:
           type: string
           description: Branch-specific military rank
@@ -859,25 +695,9 @@ components:
           items:
             $ref: "#/components/schemas/SkillType"
         role:
-          type: string
-          description: The primary role a character has in the mission, in terms of the skills they possess
-          enum:
-            - Infantry
-            - SEAL
-            - Command
-            - Intelligence
-            - Medical
-            - Specialist
-            - Communications
+          $ref: "#/components/enums/CharacterRole"
         mission_importance:
-          type: string
-          description: How important the character is to the mission
-          enum:
-            - none
-            - normal
-            - important
-            - priority
-            - vip
+          $ref: "#/components/enums/CharacterImportance"
       description: demographic profile of a character
     SkillType:
       required:
@@ -886,11 +706,7 @@ components:
       type: object
       properties:
         skill_type:
-          type: string
-          enum:
-            - Medicine
-            - Combat
-          description: the type of skill the character has
+          $ref: "#/components/enums/SkillType"
         level:
           type: number
           format: float
@@ -903,50 +719,9 @@ components:
       type: object
       properties:
         name:
-          type: string
-          description: a brief label for the type of injury
-          example: Laceration
-          enum:
-            - Forehead Scrape
-            - Ear Bleed
-            - Asthmatic
-            - Laceration
-            - Puncture
-            - Shrapnel
-            - Chest Collapse
-            - Amputation
-            - Burn
-            - Abrasion
-            - Internal
+          $ref: "#/components/enums/InjuryType"
         location:
-          type: string
-          description: the injury location on the character's body
-          example: right forearm
-          enum:
-            - right forearm
-            - left forearm
-            - right calf
-            - left calf
-            - right thigh
-            - left thigh
-            - right stomach
-            - left stomach
-            - right bicep
-            - left bicep
-            - right shoulder
-            - left shoulder
-            - right side
-            - left side
-            - right chest
-            - left chest
-            - right wrist
-            - left wrist
-            - left face
-            - right face
-            - left neck
-            - right neck
-            - internal
-            - unspecified
+          $ref: "#/components/enums/InjuryLocation"
         severity:
           type: number
           format: float
@@ -971,32 +746,11 @@ components:
           description: whether or not the character is conscious
           example: true
         avpu:
-          type: string
-          description: Character level of response
-          enum:
-            - ALERT
-            - VOICE
-            - PAIN
-            - UNRESPONSIVE
+          $ref: "#/components/enums/AvpuLevel"
         mental_status:
-          type: string
-          description: description of the character's overall demeanor
-          example: CALM
-          enum:
-            - AGONY
-            - CALM
-            - CONFUSED
-            - UPSET
-            - UNRESPONSIVE
+          $ref: "#/components/enums/MentalStatus"
         breathing:
-          type: string
-          description: a descriptor for the character's breathing
-          example: NORMAL
-          enum:
-            - NORMAL
-            - FAST
-            - RESTRICTED
-            - NONE
+          $ref: "#/components/enums/BreathingLevel"
         hrpmin:
           type: integer
           format: int16
@@ -1033,12 +787,7 @@ components:
           items:
             $ref: "#/components/schemas/Action"
         transition_semantics:
-          description: Whether multiple transition conditions use and, or, or not semantics
-          type: string
-          enum:
-            - and
-            - or
-            - not
+          $ref: "#/components/enums/SemanticType"
         transitions:
           description: Conditions that specify how and when to transition to the next scene
           $ref: "#/components/schemas/Conditions"
@@ -1054,19 +803,7 @@ components:
           type: string
           description: action ID
         type:
-          type: string
-          description: The action type taken from a controlled vocabulary
-          example: APPLY_TREATMENT
-          enum:
-            - APPLY_TREATMENT
-            - CHECK_ALL_VITALS
-            - CHECK_PULSE
-            - CHECK_RESPIRATION
-            - DIRECT_MOBILE_CASUALTIES
-            - END_SCENARIO
-            - MOVE_TO_EVAC
-            - SITREP
-            - TAG_CHARACTER
+          $ref: "#/components/enums/ActionType"
         unstructured:
           type: string
           description: a plain text unstructured description of the action
@@ -1094,17 +831,12 @@ components:
         kdma_association:
           type: object
           additionalProperties:
-            type: float
+            type: number
           description: KDMA associations with this action used in training
           example:
             - Mission: 0.8
         condition_semantics:
-          description: Whether multiple conditions use and, or, or not semantics
-          type: string
-          enum:
-            - and
-            - or
-            - not
+          $ref: "#/components/enums/SemanticType"
         conditions:
           $ref: "#/components/schemas/Conditions"
       description: An encapulation of a single action taken by a DM
@@ -1189,6 +921,8 @@ components:
         expectant:
           type: string
           description: The probe response to send for a EXPECTANT tag
+
+  enums:
     MissionType:
       type: string
       description: enumeration of possible mission types
@@ -1207,6 +941,176 @@ components:
         - Nuclear deterrence
         - Extraction
         - Unknown
+    CriticalLevel:
+      type: string
+      enum:
+        - none
+        - normal
+        - important
+        - priority
+        - vip
+    SimEnvironmentType:
+      type: string
+      description: Basic setting for the entire scenario
+      enum:
+        - jungle
+        - submarine
+        - urban
+        - desert
+    CivilianPresence:
+      type: string
+      description: Indicator of how many civilians are present in the mission
+      enum:
+        - none
+        - limited
+        - some
+        - extensive
+        - crowd
+    CommunicationCapability:
+      type: string
+      description: current operational communication capability and limitations
+      enum:
+        - all
+        - satellite
+        - radio
+        - voice
+        - visual
+    WeatherType:
+      type: string
+      description: a natural language description of local weather conditions
+      enum:
+        - clear
+        - wind
+        - clouds
+        - rain
+        - fog
+        - thunderstorm
+        - hail
+        - sleet
+        - snow
+    TerrainType:
+      type: string
+      description: a natural language description of the local terrain
+      enum:
+        - jungle
+        - indoors
+        - urban
+        - dunes
+        - forest
+        - beach
+        - mountain
+        - plains
+        - hills
+        - swamp
+        - flat
+        - rough
+        - extreme
+    FloraType:
+      type: string
+      description: a natural language description of the local vegetation
+      enum:
+        - none
+        - limited
+        - normal
+        - lush
+        - extensive
+    FaunaType:
+      type: string
+      description: a natural language description of the local animals/insects
+      enum:
+        - none
+        - limited
+        - normal
+        - high
+        - pervasive
+    LightingType:
+      type: string
+      description: Descriptor of available natural or man-made lighting
+      enum:
+        - none
+        - limited
+        - normal
+        - bright
+        - flashing
+    VisibilityType:
+      type: string
+      description: Descriptor for operational visibility; affected by time of day, lighting, weather, terrain, etc.
+      enum:
+        - none
+        - low
+        - normal
+        - good
+        - excellent
+        - variable
+    AmbientNoise:
+      type: string
+      description: Descriptor for background noise level
+      enum:
+        - none
+        - quiet
+        - normal
+        - noisy
+        - extreme
+    PeakNoise:
+      type: string
+      description: Descriptor for peak noise level due to gunfire, vehicles, helicopters, etc.
+      enum:
+        - none
+        - quiet
+        - normal
+        - noisy
+        - extreme
+    MovementRestriction:
+      type: string
+      description: Operational movement restrictions due to any factor including terrain, weather, enemy activity, etc.
+      enum:
+        - unrestricted
+        - minimal
+        - moderate
+        - severe
+        - extreme
+    SoundRestriction:
+      type: string
+      description: Operational sound restrictions due to any factor
+      enum:
+        - unrestricted
+        - minimal
+        - moderate
+        - severe
+        - extreme
+    OxygenLevels:
+      type: string
+      description: Oxygen levels due to any factor that may impact decision-making
+      enum:
+        - normal
+        - limited
+        - scarce
+        - none
+    InjuryTrigger:
+      type: string
+      description: What source(s) caused character injuries.
+      enum:
+        - explosion
+        - firearm
+        - fall
+        - pathogen
+        - animal
+        - plant
+        - water
+        - collision
+        - equipment
+        - attack
+        - fire
+        - stress
+        - chemical
+    AidType:
+      type: string
+      description: Means of evacuation
+      enum:
+        - AMEV
+        - truck
+        - helicopter
+        - unknown
     SupplyType:
       type: string
       description: an enumeration of available supply types
@@ -1217,6 +1121,161 @@ components:
         - Hemostatic gauze
         - Decompression Needle
         - Nasopharyngeal airway
+    DemographicSex:
+      type: string
+      description: the sex of the character, omit if unknown/indeterminate
+      example: F
+      enum:
+        - M
+        - F
+    MilitaryDisposition:
+      type: string
+      description: How the character is to be treated in a military context
+      enum:
+        - Allied US
+        - Allied
+        - Civilian
+        - Military Adversary
+        - Non-Military Adversary
+    MilitaryBranch:
+      type: string
+      description: Branch of the US military.
+      enum:
+        - US Army
+        - US Navy
+        - US Air Force
+        - US Marine Corps
+        - US Space Force
+        - US Coast Guard
+    MilitaryRank:
+      type: string
+      description: the military status of the character, omit if unknown
+      enum:
+        - Marine
+        - FMF Corpsman
+        - Sailor
+        - Civilian
+        - SEAL
+        - Intel Officer
+    CharacterRole:
+      type: string
+      description: The primary role a character has in the mission, in terms of the skills they possess
+      enum:
+        - Infantry
+        - SEAL
+        - Command
+        - Intelligence
+        - Medical
+        - Specialist
+        - Communications
+    CharacterImportance:
+      type: string
+      description: How important the character is to the mission
+      enum:
+        - none
+        - normal
+        - important
+        - priority
+        - vip
+    SkillType:
+      type: string
+      description: the type of skill the character has
+      enum:
+        - Medicine
+        - Combat
+    InjuryType:
+      type: string
+      description: a brief label for the type of injury
+      example: Laceration
+      enum:
+        - Forehead Scrape
+        - Ear Bleed
+        - Asthmatic
+        - Laceration
+        - Puncture
+        - Shrapnel
+        - Chest Collapse
+        - Amputation
+        - Burn
+        - Abrasion
+        - Internal
+    InjuryLocation:
+      type: string
+      description: the injury location on the character's body
+      example: right forearm
+      enum:
+        - right forearm
+        - left forearm
+        - right calf
+        - left calf
+        - right thigh
+        - left thigh
+        - right stomach
+        - left stomach
+        - right bicep
+        - left bicep
+        - right shoulder
+        - left shoulder
+        - right side
+        - left side
+        - right chest
+        - left chest
+        - right wrist
+        - left wrist
+        - left face
+        - right face
+        - left neck
+        - right neck
+        - internal
+        - unspecified
+    AvpuLevel:
+      type: string
+      description: Character level of response
+      enum:
+        - ALERT
+        - VOICE
+        - PAIN
+        - UNRESPONSIVE
+    MentalStatus:
+      type: string
+      description: description of the character's overall demeanor
+      example: CALM
+      enum:
+        - AGONY
+        - CALM
+        - CONFUSED
+        - UPSET
+        - UNRESPONSIVE
+    BreathingLevel:
+      type: string
+      description: a descriptor for the character's breathing
+      example: NORMAL
+      enum:
+        - NORMAL
+        - FAST
+        - RESTRICTED
+        - NONE
+    SemanticType:
+      description: Whether multiple transition conditions use and, or, or not semantics
+      type: string
+      enum:
+        - and
+        - or
+        - not
+    ActionType:
+      type: string
+      description: The action type taken from a controlled vocabulary
+      example: APPLY_TREATMENT
+      enum:
+        - APPLY_TREATMENT
+        - CHECK_ALL_VITALS
+        - CHECK_PULSE
+        - CHECK_RESPIRATION
+        - DIRECT_MOBILE_CASUALTIES
+        - END_SCENARIO
+        - MOVE_TO_EVAC
+        - SITREP
+        - TAG_CHARACTER
   responses:
     server_error:
       description: An exception occurred on the server; see returned error string.
