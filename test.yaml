@@ -65,7 +65,12 @@ state:
     - { type: Decompression Needle, quantity: 4, reusable: False }
     - { type: Nasopharyngeal airway, quantity: 2, reusable: False }
     - { type: Pulse Oximeter, quantity: 1, reusable: True }
-
+    - { type: Blanket, quantity: 2, reusable: False }
+    - { type: Epi Pen, quantity: 1, reusable: True }
+    - { type: Vented Chest Seal, quantity: 2, reusable: False }
+    - { type: Pain Medications, quantity: 2, reusable: False }
+    - { type: Splint, quantity: 2, reusable: False }
+    - { type: Blood, quantity: 5, reusable: False } # quantity is in units; could add different types
   characters:
     - id: Mike # ID auto-generated based on template (e.g., Marine_white_male_01, can be overridden)
       name: Mike # Name used in display/speech
