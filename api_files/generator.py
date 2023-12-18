@@ -61,13 +61,14 @@ class ApiGenerator:
         required_actions.append('choice')
         
         # validator requires all vitals properties to be specified
-        required_vitals = new_api['components']['schemas']['Vitals']['required']
+        required_vitals = new_api['components']['schemas']['Vitals']['required'] if 'required' in new_api['components']['schemas']['Vitals'] else []
         required_vitals.append('conscious')
         required_vitals.append('avpu')
         required_vitals.append('mental_status')
         required_vitals.append('breathing')
         required_vitals.append('hrpmin')
         required_vitals.append('Spo2')
+        new_api['components']['schemas']['Vitals']['required'] = required_vitals
 
         # validator does not allow justification in action
         try:

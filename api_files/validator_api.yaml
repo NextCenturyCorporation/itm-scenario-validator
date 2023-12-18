@@ -15,8 +15,14 @@ components:
       description: Successful operation, scenario state returned
   schemas:
     Action:
-      description: An encapulation of a single action taken by a DM
+      description: Details for how a given action maps to a probe response
       properties:
+        action_id:
+          description: A unique action ID within the scenario
+          example: action_01
+          type: string
+        action_type:
+          $ref: '#/components/schemas/ActionTypeEnum'
         character_id:
           description: The ID of the character being acted upon
           type: string
@@ -27,21 +33,20 @@ components:
           $ref: '#/components/schemas/SemanticTypeEnum'
         conditions:
           $ref: '#/components/schemas/Conditions'
-        id:
-          description: action ID
-          type: string
         kdma_association:
           additionalProperties:
             format: float
+            maximum: 1.0
+            minimum: 0.0
             type: number
-          description: KDMA associations with this action used in training
+          description: KDMA associations for this choice, if provided by TA1
           example:
           - Mission: 0.8
           type: object
         parameters:
           additionalProperties:
             type: string
-          description: key-value pairs containing additional action-specific parameters
+          description: key-value pairs containing additional [action-specific parameters](https://github.com/NextCenturyCorporation/itm-evaluation-client?tab=readme-ov-file#available-actions)
           example:
           - treatment: Tourniquet
           - location: right forearm
@@ -51,35 +56,31 @@ components:
           type: string
         repeatable:
           description: Whether or not this action should remain after it's selected
-            by an ADM.
+            by an ADM
           type: boolean
-        type:
-          $ref: '#/components/schemas/ActionTypeEnum'
         unstructured:
-          description: a plain text unstructured description of the action
-          example: Check pulse of character [1234].
+          description: Natural language, plain text description of the action
+          example: Check Mike's pulse.
           type: string
       required:
-      - id
-      - type
+      - action_id
+      - action_type
       - unstructured
-      - character_id
       - probe_id
       - choice
       type: object
     ActionTypeEnum:
-      description: The action type taken from a controlled vocabulary
+      description: An action type [recognized by the ADM Server](https://github.com/NextCenturyCorporation/itm-evaluation-client?tab=readme-ov-file#available-actions)
       enum:
       - APPLY_TREATMENT
       - CHECK_ALL_VITALS
       - CHECK_PULSE
       - CHECK_RESPIRATION
-      - DIRECT_MOBILE_CASUALTIES
+      - DIRECT_MOBILE_CHARACTERS
       - END_SCENARIO
       - MOVE_TO_EVAC
       - SITREP
       - TAG_CHARACTER
-      example: APPLY_TREATMENT
       type: string
     AidDelay:
       description: Properties related to CASEVAC or MEDEVAC
@@ -87,9 +88,11 @@ components:
         delay:
           description: CASEVAC or MEDEVAC timer, in minutes
           format: float
+          minimum: 1.0
           type: number
         max_transport:
           description: Maximum number of casualties that can be transported
+          minimum: 1
           type: integer
         type:
           $ref: '#/components/schemas/AidTypeEnum'
@@ -139,9 +142,7 @@ components:
     AlignmentSource:
       description: 'Describes which session/probe responses were used to
 
-        compute an alignment score, allowing for lots
-
-        of flexibility.'
+        compute an alignment score, allowing for lots of flexibility.'
       properties:
         probes:
           description: List of ID's of probes used to compute alignment.
@@ -165,8 +166,8 @@ components:
         kdma_values:
         - kdma: mission
           value: 0.8
-        - kdma: mission
-          value: 0.8
+        - kdma: fairness
+          value: 0.5
       properties:
         id:
           description: globally unique alignment target id
@@ -190,7 +191,8 @@ components:
       - extreme
       type: string
     AvpuLevelEnum:
-      description: Character level of response
+      description: Character level of response.  See [Levels of Response](https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response)
+        for details
       enum:
       - ALERT
       - VOICE
@@ -198,40 +200,49 @@ components:
       - UNRESPONSIVE
       type: string
     BreathingLevelEnum:
-      description: a descriptor for the character's breathing
+      description: Descriptive breathing level
       enum:
       - NORMAL
       - FAST
       - RESTRICTED
       - NONE
-      example: NORMAL
       type: string
     Character:
-      description: encapulation of a single character in the scenario
+      description: a character in the scene, including injured patients, civilians,
+        medics, etc.
       properties:
         demographics:
           $ref: '#/components/schemas/Demographics'
         id:
-          description: string, globally unique character identifier
+          description: A unique character ID throughout the scenario
+          example: Soldier_01
           type: string
         injuries:
-          description: an array of character injuries
+          description: A list of Injuries for the character
           items:
             $ref: '#/components/schemas/Injury'
           type: array
         name:
           description: display name, as in a dashboard
+          example: Mike
           type: string
         rapport:
-          description: A measure of closeness or affinity towards the player/medic
+          description: A measure of closeness or affinity towards the player/medic;
+            0 represents strong dislike, 10 represents very close relationships like
+            family
           format: float
+          maximum: 10.0
+          minimum: 0.0
           type: number
         unstructured:
-          description: natural language text description of the character
+          description: Natural language, plain text description of the character
+          example: 22 YO male Marine hit by an IED. Puncture wound on the left side
+            of the neck.
           type: string
         unstructured_postassess:
-          description: Natural language, plain text description of the character,
-            including injuries, demographics, and rapport
+          description: unstructured description updated after character assessment
+          example: 22 YO male Marine hit by an IED. Puncture wound on the left side
+            of the neck.  Burns cover about 30 of his body.
           type: string
         vitals:
           $ref: '#/components/schemas/Vitals'
@@ -240,17 +251,7 @@ components:
       - name
       - unstructured
       - demographics
-      - vitals
       type: object
-    CharacterImportanceEnum:
-      description: How important the character is to the mission
-      enum:
-      - none
-      - normal
-      - important
-      - priority
-      - vip
-      type: string
     CharacterRoleEnum:
       description: The primary role a character has in the mission, in terms of the
         skills they possess
@@ -286,14 +287,17 @@ components:
         or send a probe response
       properties:
         actions:
-          description: multiple action ID lists have "or" semantics; multiple action
-            IDs within a list have "and" semantics
+          description: True if the any of the specified lists of actions have been
+            taken; multiple action ID lists have "or" semantics; multiple action IDs
+            within a list have "and" semantics
           items:
             items:
               type: string
             type: array
           type: array
         character_vitals:
+          description: True if the specified list of vitals values have been met for
+            the specified character_id
           items:
             description: The minimum vitals of the specified character
             properties:
@@ -307,43 +311,52 @@ components:
         elapsed_time_gt:
           description: True if the scenario elapsed time (in seconds) is greater than
             the specified value
+          minimum: 5
           type: integer
         elapsed_time_lt:
           description: True if the scenario elapsed time (in seconds) is less than
             the specified value
+          minimum: 5
           type: integer
         probe_responses:
+          description: True if the specified list of probe responses (choice) have
+            been sent
+          example:
+          - adept-september-demo-probe-1-choice2
           items:
             type: string
           type: array
         probes:
+          description: True if the specified list of probe_ids have been answered
+          example:
+          - adept-september-demo-probe-1
           items:
             type: string
           type: array
         supplies:
-          description: a list of medical supplies available to the DM
+          description: True if there are at least the specified quantity of the specified
+            supply types remaining
+          example:
+          - quantity: 1
+            reusable: false
+            type: Tourniquet
           items:
             $ref: '#/components/schemas/Supplies'
           type: array
       type: object
-    CriticalLevelEnum:
-      enum:
-      - none
-      - normal
-      - important
-      - priority
-      - vip
-      type: string
     DecisionEnvironment:
-      description: Elements that impact decision-making
+      description: Environmental elements that impact decision-making
       properties:
         aid_delay:
           $ref: '#/components/schemas/AidDelay'
         air_quality:
-          description: Air Quality Index (AQI)
+          description: Air Quality Index (AQI); see [airnow.gov](https://www.airnow.gov/aqi/aqi-basics/)
+          maximum: 500
+          minimum: 0
           type: integer
         city_infrastructure:
-          description: TBD
+          description: Refers to building/city infrastructure that should be noted
+            and known (safe house, etc.)
           type: string
         injury_triggers:
           $ref: '#/components/schemas/InjuryTriggerEnum'
@@ -354,37 +367,42 @@ components:
         population_density:
           description: Population per square mile
           format: float
+          maximum: 50000.0
+          minimum: 0.0
           type: number
         sound_restriction:
           $ref: '#/components/schemas/SoundRestrictionEnum'
         unstructured:
           description: Natural language, plain text description of decision-impacting
             environmental factors
+          example: Injuries triggered by an IED detonation.  Helicopter Evac expected
+            in one hour for up to three casualties.
           type: string
       required:
       - unstructured
       type: object
     DemographicSexEnum:
-      description: the sex of the character, omit if unknown/indeterminate
+      description: the sex of the character
       enum:
       - M
       - F
-      example: F
+      - Unknown
       type: string
     Demographics:
       description: Basic properties about the character
       properties:
         age:
           description: the age of the character, omit if unknown
-          example: 32
           format: int16
+          maximum: 125
+          minimum: 0
           type: integer
         military_branch:
           $ref: '#/components/schemas/MilitaryBranchEnum'
         military_disposition:
           $ref: '#/components/schemas/MilitaryDispositionEnum'
         mission_importance:
-          $ref: '#/components/schemas/CharacterImportanceEnum'
+          $ref: '#/components/schemas/MissionImportanceEnum'
         race:
           description: Race or ethnicity
           type: string
@@ -397,11 +415,16 @@ components:
         sex:
           $ref: '#/components/schemas/DemographicSexEnum'
         skills:
+          description: A list of pairs of skill type and numeric skill level
+          example:
+          - level: 0.7
+            skill_type: Combat
+          - level: 0.3
+            skill_type: Medical
           items:
             $ref: '#/components/schemas/Skills'
           type: array
       required:
-      - age
       - sex
       - race
       type: object
@@ -415,10 +438,9 @@ components:
           $ref: '#/components/schemas/SimEnvironment'
       required:
       - sim_environment
-      - decision_environment
       type: object
     FaunaTypeEnum:
-      description: a natural language description of the local animals/insects
+      description: Descriptor of local animal/insect activity
       enum:
       - none
       - limited
@@ -427,7 +449,7 @@ components:
       - pervasive
       type: string
     FloraTypeEnum:
-      description: a natural language description of the local vegetation
+      description: Descriptor of local vegetation.
       enum:
       - none
       - limited
@@ -436,24 +458,25 @@ components:
       - extensive
       type: string
     Injury:
-      description: An injury on a character. The name field defines a controlled vocabulary.
+      description: An injury on a character.
       properties:
-        hidden:
-          description: Whether the injury is known prior to assessment
-          type: boolean
         location:
           $ref: '#/components/schemas/InjuryLocationEnum'
         name:
           $ref: '#/components/schemas/InjuryTypeEnum'
         severity:
-          description: the apparent severity of the injury from 0 (low) to 1.0 (high)
-          example: 0.8
+          description: A numerical indication of the severity of the injury from low
+            (0.0) to high (1.0)
           format: float
+          maximum: 1.0
+          minimum: 0.0
           type: number
+        status:
+          $ref: '#/components/schemas/InjuryStatusEnum'
       required:
       - location
       - name
-      - hidden
+      - status
       type: object
     InjuryLocationEnum:
       description: the injury location on the character's body
@@ -482,10 +505,19 @@ components:
       - right neck
       - internal
       - unspecified
-      example: right forearm
+      type: string
+    InjuryStatusEnum:
+      description: Whether the injury is known prior- and post-assessment, and whether
+        it's been treated
+      enum:
+      - hidden
+      - discoverable
+      - visible
+      - discovered
+      - treated
       type: string
     InjuryTriggerEnum:
-      description: What source(s) caused character injuries.
+      description: What source caused character injuries.
       enum:
       - explosion
       - firearm
@@ -502,9 +534,8 @@ components:
       - chemical
       type: string
     InjuryTypeEnum:
-      description: a brief label for the type of injury
+      description: A brief but descriptive label for the injury type
       enum:
-      - Forehead Scrape
       - Ear Bleed
       - Asthmatic
       - Laceration
@@ -514,8 +545,8 @@ components:
       - Amputation
       - Burn
       - Abrasion
+      - Broken Bone
       - Internal
-      example: Laceration
       type: string
     KDMA_Value:
       description: a KDMA and its value
@@ -529,8 +560,9 @@ components:
           type: string
         value:
           description: target alignment value
-          example: 0.8
           format: float
+          maximum: 1.0
+          minimum: 0.0
           type: number
       required:
       - kdma
@@ -546,14 +578,13 @@ components:
       - flashing
       type: string
     MentalStatusEnum:
-      description: description of the character's overall demeanor
+      description: Character mental status, which impacts interaction in the sim environment
       enum:
       - AGONY
       - CALM
       - CONFUSED
       - UPSET
       - UNRESPONSIVE
-      example: CALM
       type: string
     MilitaryBranchEnum:
       description: Branch of the US military.
@@ -691,14 +722,18 @@ components:
         communication_capability:
           $ref: '#/components/schemas/CommunicationCapabilityEnum'
         critical_ids:
-          additionalProperties:
-            $ref: '#/components/schemas/CriticalLevelEnum'
           description: A list of pairs of character ids with an indicator of how mission-critical
             the character is
-          example:
-          - 123: none
-          - 456: priority
-          type: object
+          items:
+            additionalProperties:
+              $ref: '#/components/schemas/MissionImportanceEnum'
+            description: A character id with an indicator of how mission-critical
+              that character is
+            example:
+            - Mike: none
+            - Intelligence Officer: priority
+            type: object
+          type: array
         medical_policies:
           description: Medical policies in effect in a mission, to inform decision-making
           type: string
@@ -719,6 +754,15 @@ components:
       - mission_type
       - unstructured
       type: object
+    MissionImportanceEnum:
+      description: How important the character is to the mission
+      enum:
+      - none
+      - normal
+      - important
+      - priority
+      - vip
+      type: string
     MissionTypeEnum:
       description: enumeration of possible mission types
       enum:
@@ -765,7 +809,8 @@ components:
       - noisy
       - extreme
       type: string
-    Probe:
+    ProbeResponses:
+      description: tag-specific probe responses (choices) for a tagged character
       properties:
         character_id:
           description: A valid character ID from the scene
@@ -794,10 +839,9 @@ components:
       - expectant
       type: object
     Scenario:
-      description: a tactical scenario
+      description: a triage scenario requiring decisions by a medic
       properties:
         id:
-          default: '1234'
           description: a globally unique id for the scenario
           type: string
         name:
@@ -816,12 +860,13 @@ components:
       - name
       - state
       - scenes
-      - scenes
       type: object
     Scene:
+      description: the specification for a scene in the scenario
       properties:
-        actions:
-          description: List of available actions
+        action_mapping:
+          description: List of actions with details of how those actions map to probe
+            responses
           items:
             $ref: '#/components/schemas/Action'
           type: array
@@ -830,7 +875,15 @@ components:
           type: boolean
         index:
           description: The order the scene appears in the scenario
+          minimum: 0
           type: integer
+        restricted_actions:
+          description: List of actions that will be excluded from get_available_actions
+          example:
+          - CHECK_ALL_VITALS
+          items:
+            type: string
+          type: array
         state:
           $ref: '#/components/schemas/State'
         tagging:
@@ -841,28 +894,29 @@ components:
           $ref: '#/components/schemas/Conditions'
       required:
       - index
-      - state
       - end_scenario_allowed
-      - actions
+      - action_mapping
       type: object
     SemanticTypeEnum:
-      description: Whether multiple transition conditions use and, or, or not semantics
+      description: Whether transition or probe response conditions use and, or, or
+        not semantics
       enum:
       - and
       - or
       - not
       type: string
     SimEnvironment:
-      description: Elements that impact simulation configuration
+      description: Environmental elements that impact simulation configuration
       properties:
         fauna:
           $ref: '#/components/schemas/FaunaTypeEnum'
         flora:
           $ref: '#/components/schemas/FloraTypeEnum'
         humidity:
-          description: percentage of relative humidity
-          example: 80
+          description: Numerical relative humidity, in percentage
           format: float
+          maximum: 100.0
+          minimum: 0.0
           type: number
         lighting:
           $ref: '#/components/schemas/LightingTypeEnum'
@@ -872,13 +926,18 @@ components:
           $ref: '#/components/schemas/PeakNoiseEnum'
         temperature:
           description: numerical temperature in degrees Fahrenheit
-          example: 82.5
           format: float
+          maximum: 150.0
+          minimum: -75.0
           type: number
         terrain:
           $ref: '#/components/schemas/TerrainTypeEnum'
         type:
           $ref: '#/components/schemas/SimEnvironmentTypeEnum'
+        unstructured:
+          description: Natural language, plain text description of the environment
+          example: It was a dark and stormy night.
+          type: string
         visibility:
           $ref: '#/components/schemas/VisibilityTypeEnum'
         weather:
@@ -904,10 +963,14 @@ components:
       - Command
       type: string
     Skills:
+      description: A skill possessed by a character at a certain level of proficiency
       properties:
         level:
-          description: the level of expertise the character has in their skill
+          description: the level of expertise (from 0-10) the character has in the
+            skill
           format: float
+          maximum: 10.0
+          minimum: 0.0
           type: number
         skill_type:
           $ref: '#/components/schemas/SkillTypeEnum'
@@ -926,10 +989,11 @@ components:
       type: string
     State:
       description: the current tactical & environmental state of the scenario and
-        of its characters.
+        of its characters
       properties:
         characters:
-          description: the list of characters in the scenario
+          description: A list of characters in the scene, including injured patients,
+            civilians, medics, etc.
           items:
             $ref: '#/components/schemas/Character'
           type: array
@@ -938,14 +1002,14 @@ components:
         mission:
           $ref: '#/components/schemas/Mission'
         supplies:
-          description: a list of medical supplies available to the DM
+          description: A list of supplies available to the medic
           items:
             $ref: '#/components/schemas/Supplies'
           type: array
         threat_state:
           $ref: '#/components/schemas/ThreatState'
         unstructured:
-          description: text description of current state
+          description: Natural language, plain text description of a scene's state
           type: string
       required:
       - unstructured
@@ -957,13 +1021,14 @@ components:
       description: a single type of medical supply available to the medic
       example:
         quantity: 4
+        reusable: false
         type: Tourniquet
       properties:
         quantity:
-          description: the number (count) of this item available to the medic at the
-            present time
-          example: 4
+          description: Number of items available in the medical bag
           format: int32
+          maximum: 999
+          minimum: 0
           type: integer
         reusable:
           description: Whether or not item is consumable/reusable
@@ -990,24 +1055,37 @@ components:
       - Pain Medications
       - Splint
       - Blood
-      example: Tourniquet
       type: string
     Tagging:
       description: Scene-level tagging configuration
       properties:
         enabled:
+          description: Whether tagging is enabled for the scene
           type: boolean
         probe_responses:
+          description: A list of probe responses to send TA1 for each character-tag
+            combination
+          example:
+          - character_id: Mike
+            delayed: s1-p3-choice2
+            expectant: s1-p3-choice4
+            immediate: s1-p3-choice3
+            minimal: s1-p3-choice1
+            probe_id: adept-september-demo-probe-3
           items:
-            $ref: '#/components/schemas/Probe'
+            $ref: '#/components/schemas/ProbeResponses'
           type: array
         reference:
+          description: Re-use the tagging configuration from the specified scene index
+          minimum: 0
           type: integer
         repeatable:
+          description: Whether probe responses should be sent each time a new tag
+            is applied
           type: boolean
       type: object
     TerrainTypeEnum:
-      description: a natural language description of the local terrain
+      description: Descriptor for the scenario terrain
       enum:
       - jungle
       - indoors
@@ -1025,13 +1103,16 @@ components:
       type: string
     Threat:
       additionalProperties:
-        type: string
-      description: 'list of pairs of type (enum like IED, Gunshots, fire, etc)
+        format: float
+        maximum: 1.0
+        minimum: 0.0
+        type: number
+      description: 'list of pairs of type (e.g., gunfire, severe weather, fire)
 
         and severity (float 0 (no threat) - 1 (max severity))'
       example:
         severity: 0.5
-        type: Gunfire
+        type: gunfire
       type: object
     ThreatState:
       description: Description of the current threat to the characters, including
@@ -1039,22 +1120,21 @@ components:
       example:
         threats:
         - severity: 0.5
-          type: Gunfire
-        - severity: 0.5
-          type: Gunfire
-        unstructured: No additional threats are detected
+          type: gunfire
+        unstructured: Gunfire can be heard in the surrounding area
       properties:
         threats:
-          description: An array of threats
+          description: A list of pairs of threat types with a numeric severity indicator
           items:
             $ref: '#/components/schemas/Threat'
           type: array
         unstructured:
-          description: text description of current threat state
+          description: Natural language, plain text description of environmental threats
           example: No additional threats are detected
           type: string
       required:
       - unstructured
+      - threats
       type: object
     VisibilityTypeEnum:
       description: Descriptor for operational visibility; affected by time of day,
@@ -1068,23 +1148,26 @@ components:
       - variable
       type: string
     Vitals:
-      description: vital levels for a character, omit properties if unknown
+      description: Vital levels and other indications of health
       properties:
         Spo2:
-          description: blood oxygen level
+          description: blood oxygen level (percentage)
           format: float
+          maximum: 100.0
+          minimum: 0.0
           type: number
         avpu:
           $ref: '#/components/schemas/AvpuLevelEnum'
         breathing:
           $ref: '#/components/schemas/BreathingLevelEnum'
         conscious:
-          description: whether or not the character is conscious
-          example: true
+          description: whether or not the character appears to be conscious
           type: boolean
         hrpmin:
           description: heart rate in beats per minute
           format: int16
+          maximum: 300
+          minimum: 0
           type: integer
         mental_status:
           $ref: '#/components/schemas/MentalStatusEnum'
@@ -1095,15 +1178,9 @@ components:
       - breathing
       - hrpmin
       - Spo2
-      - conscious
-      - avpu
-      - mental_status
-      - breathing
-      - hrpmin
-      - Spo2
       type: object
     WeatherTypeEnum:
-      description: a natural language description of local weather conditions
+      description: Descriptor of the scenario weather
       enum:
       - clear
       - wind
@@ -1122,7 +1199,7 @@ info:
 
     The API is based on the OpenAPI 3.0 specification.'
   title: ITM TA3 API
-  version: 0.2.2
+  version: 0.3.0
 openapi: 3.0.3
 paths:
   /ta2/getAlignmentTarget:
