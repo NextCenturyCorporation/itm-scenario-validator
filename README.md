@@ -40,7 +40,14 @@ To run the validator, execute the following command:
 ```
 python3 validator.py -f [path_to_file]
 ```
-Ensure that the path leads to a yaml file
+Ensure that the path leads to a yaml file.
+
+## API Changes
+- When the Swagger API changes, make sure you upload the newest version as `api.yaml` to the `api_files` directory.
+- Once the api file is up-to-date, run 
+```
+python3 validator.py -f [path_to_file] --update
+```
 
 ## Logging
 To change the log level, edit the value in the .env file.

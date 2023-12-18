@@ -1,5 +1,6 @@
 import argparse
 import yaml
+from api_files.generator import ApiGenerator
 from logger import LogLevel, Logger
 from decouple import config
 
@@ -346,8 +347,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator')
 
     parser.add_argument('-f', '--filepath', dest='path', type=str, help='The path to the yaml file.')
+    parser.add_argument('-u', '--update', dest='update', action='store_true', help='Switch to update the api files or not')
     args = parser.parse_args()
-
+    if args.update:
+        generator = ApiGenerator()
+        generator.generate_new_api()
+        generator.generate_state_change_api()
     file = args.path
     validator = YamlValidator(file)
     # validate the field names in the valid
