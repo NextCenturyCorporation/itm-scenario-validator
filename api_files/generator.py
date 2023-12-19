@@ -5,7 +5,7 @@ Also generates a state_changes.yaml which defines which properties
 are allowed in Scenes/State
 '''
 
-import yaml
+import yaml, copy
 from decouple import config
 from logger import Logger, LogLevel
 
@@ -44,13 +44,12 @@ class ApiGenerator:
         if (self.new_state_file):
             self.new_state_file.close()
     
-
-    def generate_new_api(self):
+    def update_general_api(self):
         '''
-        Takes the current api.yaml and updates the properties whose required attributes 
-        do not match between the validator and the api. Keeps the original api intact.
+        Updates properties in the api.yaml file that don't match with
+        what we expect during TA1's validation.
         '''
-        new_api = self.api_yaml
+        new_api = copy.deepcopy(self.api_yaml)
         # validator requires Scenario/Scenes
         required_scenario = new_api['components']['schemas']['Scenario']['required']
         required_scenario.append('scenes')
@@ -113,7 +112,15 @@ class ApiGenerator:
             del new_api['components']['schemas']['State']['properties']['elapsed_time']
         except: 
             self.logger.log(LogLevel.INFO, "No 'elapsed_time' property found in 'State'. Not removing anything")
+        return new_api
+    
 
+    def generate_new_api(self):
+        '''
+        Takes the current api.yaml and updates the properties whose required attributes 
+        do not match between the validator and the api. Keeps the original api intact.
+        '''
+        new_api = self.update_general_api()
         # put the updated data into the yaml file
         yaml.dump(new_api, self.new_api_file, allow_unicode=True)
 
@@ -123,11 +130,12 @@ class ApiGenerator:
         Takes the current api.yaml and pulls out only the state properties.
         Changes the requirements to match what is expected for state changes.
         '''
+        updated_api = self.update_general_api()
         new_api = {'components': {'schemas': {}}}
-        state_type = self.api_yaml['components']['schemas']['State']
+        state_type = updated_api['components']['schemas']['State']
         new_api['components']['schemas']['State'] = state_type
         # go through everything required in state and grab it to put in the new api
-        new_api['components']['schemas'].update(self.get_required_schemas(state_type, self.api_yaml))
+        new_api['components']['schemas'].update(self.get_required_schemas(state_type, updated_api))
 
         # update the api to not require everything
         # state should only require unstructured
