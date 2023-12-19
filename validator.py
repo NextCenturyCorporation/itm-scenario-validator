@@ -27,6 +27,7 @@ class YamlValidator:
     missing_keys = 0
     wrong_types = 0
     invalid_values = 0
+    out_of_range = 0
     invalid_keys = 0
     empty_levels = 0
 
@@ -308,7 +309,18 @@ class YamlValidator:
         elif not self.do_types_match(item, PRIMITIVE_TYPE_MAP[expected_type]):
             self.log_wrong_type(key, level, expected_type, type(item))
             is_valid = False
-
+        if is_valid:
+            # check for min/max only if type is valid
+            if 'minimum' in type_obj:
+                if item < type_obj['minimum']:
+                    is_valid = False
+                    self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' has a minimum of " + str(type_obj['minimum']) + " but is " + str(item) + ". (" + str(item) + " < " + str(type_obj['minimum']) + ")")
+                    self.out_of_range += 1
+            if 'maximum' in type_obj:
+                if item > type_obj['maximum']:
+                    is_valid = False
+                    self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' has a maximum of " + str(type_obj['maximum']) + " but is " + str(item) + ". (" + str(item) + " > " + str(type_obj['maximum']) + ")")
+                    self.out_of_range += 1
         return is_valid
 
 
@@ -364,8 +376,9 @@ if __name__ == '__main__':
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.wrong_types == 0 else "\033[91m") + "Incorrect Data Type: " + str(validator.wrong_types))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_keys == 0 else "\033[91m") + "Invalid Keys: " + str(validator.invalid_keys))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_values == 0 else "\033[91m") + "Invalid Values (mismatched enum): " + str(validator.invalid_values))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.out_of_range == 0 else "\033[91m") + "Invalid Values (out of range): " + str(validator.out_of_range))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.empty_levels == 0 else "\033[91m") + "Properties Missing Data (empty level): " + str(validator.empty_levels))
-    total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels
+    total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels + validator.out_of_range
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if total_errors == 0 else "\033[91m") + "Total Errors: " + str(total_errors))
     if field_names_valid:
         validator.logger.log(LogLevel.CRITICAL_INFO, "\033[92m" + file + " is valid!")
