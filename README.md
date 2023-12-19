@@ -53,7 +53,7 @@ python3 validator.py -f [path_to_file] --update
 To change the log level, edit the value in the .env file.
 
 ## Dependencies JSON
-The dependencies json lists specific rules for the validator to follow.
+The dependencies json lists specific rules for the validator to follow. When listing a field, use '.' between each level. For levels that contain arrays, ensure you put '[]' at the end of the level name. For example, `scenes[].index`, or `state.characters[].demographics.skills[].level`.
 
 | key | description | value |
 | -- | -- | -- |
