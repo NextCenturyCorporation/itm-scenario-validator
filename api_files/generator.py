@@ -70,6 +70,9 @@ class ApiGenerator:
         required_vitals.append('Spo2')
         new_api['components']['schemas']['Vitals']['required'] = required_vitals
 
+        # injury status enum should only include hidden, discoverable, or visible
+        new_api['components']['schemas']['InjuryStatusEnum']['enum'] = ['hidden', 'discoverable', 'visible']
+
         # validator does not allow justification in action
         try:
             if 'justification' in required_actions:

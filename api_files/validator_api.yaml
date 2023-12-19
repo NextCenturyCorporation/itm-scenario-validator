@@ -513,8 +513,6 @@ components:
       - hidden
       - discoverable
       - visible
-      - discovered
-      - treated
       type: string
     InjuryTriggerEnum:
       description: What source caused character injuries.
