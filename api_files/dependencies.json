@@ -1,0 +1,50 @@
+{
+    "simpleRequired": {
+        "scenes[].index": [
+            "scenes[].end_scenario_allowed",
+            "fieldb"
+        ],
+        "state.unstructured": [
+            "field2",
+            "field3"
+        ],
+        "state.characters[].demographics.skills[].level": [
+            "fieldx",
+            "fieldz"
+        ]
+    },
+    "conditionalRequired": {
+        "field1": [
+            {
+                "conditions": {
+                    "length": 2
+                },
+                "required": [
+                    "field2"
+                ]
+            }
+        ],
+        "fieldA": [
+            {
+                "conditions": {
+                    "value": "xyz"
+                },
+                "required": [
+                    "fieldB"
+                ]
+            }
+        ]
+    },
+    "conditionalIgnore": {
+        "field1": [
+            {
+                "conditions": {
+                    "value": "xyz"
+                },
+                "ignore": [
+                    "fieldB"
+                ]
+            }
+        ]
+    }
+}

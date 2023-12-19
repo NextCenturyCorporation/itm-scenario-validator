@@ -1,11 +1,11 @@
-import argparse
-import yaml
+import yaml, argparse, json, copy
 from api_files.generator import ApiGenerator
 from logger import LogLevel, Logger
 from decouple import config
 
 API_YAML = config('API_YAML')
 STATE_YAML = config('STATE_YAML')
+DEP_JSON = config('DEP_JSON')
 
 PRIMITIVE_TYPE_MAP = {
     'string': str,
@@ -20,10 +20,12 @@ class YamlValidator:
     logger = Logger("yamlValidator")
     file = None
     api_file = None
+    dep_file = None
     state_change_file = None
     loaded_yaml = None
     api_yaml = None
     state_changes_yaml = None
+    dep_json = None
     missing_keys = 0
     wrong_types = 0
     invalid_values = 0
@@ -49,6 +51,11 @@ class YamlValidator:
             self.loaded_yaml = yaml.load(self.file, Loader=yaml.CLoader)
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
+        try:
+            self.dep_file = open(DEP_JSON)
+            self.dep_json = json.load(self.dep_file)
+        except Exception as e:
+            self.logger.log(LogLevel.ERROR, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
     
 
     def __del__(self):
@@ -62,6 +69,8 @@ class YamlValidator:
             self.api_file.close()
         if (self.state_change_file):
             self.state_change_file.close()
+        if (self.dep_file):
+            self.dep_file.close()
 
 
     def validate_field_names(self):
@@ -161,6 +170,7 @@ class YamlValidator:
                     self.logger.log(LogLevel.DEBUG, "Optional key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
         return is_valid
 
+
     def validate_state_change(self, obj_to_validate):
         '''
         Under Scenes in the API, state should be defined slightly differently.
@@ -170,6 +180,7 @@ class YamlValidator:
         top_level = schema['State']['properties']
         required = schema['State']['required'] if 'required' in schema['State'] else []
         return self.validate_one_level('Scenes/State', obj_to_validate, top_level, required, self.state_changes_yaml)
+
 
     def validate_enum(self, type_obj, key, level, item):
         '''
@@ -343,6 +354,94 @@ class YamlValidator:
             self.logger.log(LogLevel.ERROR, "Could not open file " + filename + ". Please make sure the path is valid and the file exists.")
 
 
+    def validate_dependencies(self):
+        '''
+        Checks the yaml file against the dependency requirements to check for 
+        additional required/ignored fields and specific value requirements
+        '''
+        self.simple_requirements()
+
+    def simple_requirements(self):
+        '''
+        Checks the yaml file for simple required dependencies.
+        If field 1 is provided, then field2 is required
+        '''
+        for req in self.dep_json['simpleRequired']:
+            loc = req.split('.')
+            all_found = self.does_property_exist(loc, copy.deepcopy(self.loaded_yaml))
+            for x in all_found:
+                found = x.split('.')
+                if found[len(found)-1] != loc[len(loc)-1]:
+                    # possible that we thought we found a key but didn't. if so, skip
+                    continue 
+                else:
+                    # start searching for the key(s) that is/are required now that the first key has been found
+                    print('found ' + str(x) + ' looking for ' + str(self.dep_json['simpleRequired'][req]))
+                    for required in self.dep_json['simpleRequired'][req]:
+                        # go through the path to the location we found and the requirement
+                        # side-by-side as long as possible
+                        required = required.split('.')
+                        data = copy.deepcopy(self.loaded_yaml)
+                        for i in range(min(len(found), len(required))):
+                            if found[i].split('[')[0] == required[i].split('[')[0]:
+                                # they are the same!
+                                if '[]' in required[i]:
+                                    ind = int(found[i].split('[')[1].replace(']', ''))
+                                    data = data[required[i].split('[]')[0]][ind] 
+                            else:
+                                # difference found, break
+                                required = required[i:]
+                                break
+                        # look through data for required
+                        for k in required:
+                            if '[]' in k:
+                                self.logger.log(LogLevel.ERROR, "")
+                                return
+                            if k in data:
+                                data = data[k]
+                            else:
+                                self.logger.log(LogLevel.WARN, "Key '" + k + "' is required because '" + x + "' is present, but it is missing.")
+                                self.missing_keys += 1
+
+
+    def does_property_exist(self, first_key_list, data, loc=[]):
+        '''
+        Accepts a list of deepening keys to search through, where
+        the last key is the key to find if it exists in data.
+        Returns the paths of the found keys
+        '''
+        if len(loc) == 0:
+            loc = first_key_list
+        found_indices = []
+        skip = False
+        for i in range(len(first_key_list)):
+            k = first_key_list[i]
+            # check through each element of the array for keys
+            if '[]' in k:
+                simple_k = k.split('[]')[0]
+                if simple_k in data:
+                    data = data[simple_k]
+                    for j in range(len(data)):
+                        # add in indices where keys were found
+                        detailed_k = simple_k + '[' + str(j) + ']'
+                        found_indices += (self.does_property_exist(first_key_list[i+1:], data[j], '.'.join(loc).replace(k, detailed_k).split('.')))
+                else:
+                    # key is not here, don't keep searching
+                    skip = True
+                    break
+            else:
+                if k in data:
+                    data = data[k]
+                else:
+                    # key is not here, don't keep searching
+                    skip = True
+                    break
+        if not skip:
+            found_indices.append('.'.join(loc))
+        return found_indices
+
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator')
 
@@ -355,8 +454,10 @@ if __name__ == '__main__':
         generator.generate_state_change_api()
     file = args.path
     validator = YamlValidator(file)
-    # validate the field names in the valid
-    field_names_valid = validator.validate_field_names()
+    # validate the field names in the yaml
+    validator.validate_field_names()
+    # validate additional depdencies between fields
+    validator.validate_dependencies()
     # print the answer for validity
     print("")
 
@@ -367,7 +468,7 @@ if __name__ == '__main__':
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.empty_levels == 0 else "\033[91m") + "Properties Missing Data (empty level): " + str(validator.empty_levels))
     total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if total_errors == 0 else "\033[91m") + "Total Errors: " + str(total_errors))
-    if field_names_valid:
+    if total_errors == 0:
         validator.logger.log(LogLevel.CRITICAL_INFO, "\033[92m" + file + " is valid!")
     else:
         validator.logger.log(LogLevel.CRITICAL_INFO, "\033[91m" + file + " is not valid.")

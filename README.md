@@ -51,3 +51,13 @@ python3 validator.py -f [path_to_file] --update
 
 ## Logging
 To change the log level, edit the value in the .env file.
+
+## Dependencies JSON
+The dependencies json lists specific rules for the validator to follow.
+
+| key | description | value |
+| -- | -- | -- |
+| `simpleRequired` | "If [field1] is provided, then [field2] is required." | A dictionary where each key is [field1] and the value is a list of [field2] names |
+| `conditionalRequired` | "If [field1] is provided and [conditions] apply, then [field2] is required." | A dictionary where each key is [field1] and the value is a list of objects that define conditions and [field2] names|
+| `conditionalIgnore` | "If [field1] has a value of [value1], then [field2] is ignored (or shouldn't be provided)" | A dictionary where each key is [field1] and the value is a list of objects that define conditions and [field2] names. If [field2] is in the yaml to validate when the conditions are true, a warning will be given. |
+| `conditions` | An object containing specific conditions that must apply before the appropriate action is taken | An object containing keys such as `length` or `value`, where the value of that key is the length or value that must hold true for the key to be required |
