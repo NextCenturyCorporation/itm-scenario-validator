@@ -376,7 +376,6 @@ class YamlValidator:
                     continue 
                 else:
                     # start searching for the key(s) that is/are required now that the first key has been found
-                    print('found ' + str(x) + ' looking for ' + str(self.dep_json['simpleRequired'][req]))
                     for required in self.dep_json['simpleRequired'][req]:
                         # go through the path to the location we found and the requirement
                         # side-by-side as long as possible
