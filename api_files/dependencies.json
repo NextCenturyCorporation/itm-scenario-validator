@@ -51,5 +51,17 @@
                 ]
             }
         ]
+    },
+    "simpleAllowedValues": {
+        "state.characters[].vitals.conscious": {
+            "False": {
+                "state.characters[].vitals.avpu": [
+                    "UNRESPONSIVE"
+                ],
+                "state.characters[].vitals.mental_status": [
+                    "UNRESPONSIVE"
+                ]
+            }
+        }
     }
 }

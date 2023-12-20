@@ -362,6 +362,7 @@ class YamlValidator:
         self.simple_requirements()
         self.conditional_requirements()
         self.conditional_ignore()
+        self.simple_value_matching()
 
     def simple_requirements(self):
         '''
@@ -418,7 +419,7 @@ class YamlValidator:
             valid = True
             # check for specific value
             if value != '':
-                if data != value:
+                if str(data) != str(value):
                     valid = False 
             # check for array length
             if length > -1:
@@ -429,7 +430,7 @@ class YamlValidator:
         return found_indices
 
 
-    def search_for_key(self, should_find, found, expected_required, explanation):
+    def search_for_key(self, should_find, found, expected_required, explanation, expected_val=[]):
         '''
         Searches for a key that is either required or ignored based on the additional dependencies. 
         @param should_find is a boolean of if we need this key or don't need this key
@@ -438,6 +439,7 @@ class YamlValidator:
         @param expected_required is the list of locations where we expect to find 
         keys
         @param explanation is a string explanation of why the key is expected (or not), in case of an error
+        @param expected_val is a list of possible/allowed expected values for each key found, if applicable
         '''
         for required in expected_required:
             # go through the path to the location we found and the requirement
@@ -478,6 +480,10 @@ class YamlValidator:
             if not should_find and found_key:
                 self.logger.log(LogLevel.WARN, "Key '" + k + "' is not allowed because '" + '.'.join(found) + "' " + explanation + ".")
                 self.invalid_keys += 1
+            elif found_key and len(expected_val) > 0:
+                if data not in expected_val:
+                    self.logger.log(LogLevel.WARN, "Key '" + k + "' must have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is " + str(data))
+                    self.invalid_values += 1
                     
 
     def conditional_requirements(self):
@@ -522,6 +528,28 @@ class YamlValidator:
                     else:
                         # start searching for the key(s) that is/are required now that the first key has been found
                         self.search_for_key(False, found, entry['ignore'], "meets conditions " + str(entry['conditions']))
+
+
+    def simple_value_matching(self):
+        '''
+        Checks the yaml file for value-matching dependencies.
+        If field1 equals value1, then field2 must be one of [...values]
+        '''
+        for field in self.dep_json['simpleAllowedValues']:
+            loc = field.split('.')
+            # there may be more than one value for each key, look through each
+            for val in self.dep_json['simpleAllowedValues'][field]:
+                # find every place where the field matches the value
+                all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=val)
+                for x in all_found:
+                    found = x.split('.')
+                    if found[len(found)-1] != loc[len(loc)-1]:
+                        # possible that we thought we found a key but didn't. if so, skip
+                        continue 
+                    else:
+                        # start searching for the key(s) that need to match one of the provided values
+                        for key in self.dep_json['simpleAllowedValues'][field][val]:
+                            self.search_for_key(True, found, [key], "is '" + val + "'", self.dep_json['simpleAllowedValues'][field][val][key])
 
 
 if __name__ == '__main__':
