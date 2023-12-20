@@ -41,13 +41,13 @@
         ]
     },
     "conditionalIgnore": {
-        "field1": [
+        "scenes[].index": [
             {
                 "conditions": {
-                    "value": "xyz"
+                    "value": 0
                 },
                 "ignore": [
-                    "fieldB"
+                    "scenes[].state"
                 ]
             }
         ]
