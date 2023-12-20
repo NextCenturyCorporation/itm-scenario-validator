@@ -1,16 +1,11 @@
 {
     "simpleRequired": {
-        "scenes[].index": [
-            "scenes[].end_scenario_allowed",
-            "fieldb"
-        ],
         "state.unstructured": [
             "field2",
             "field3"
         ],
         "state.characters[].demographics.skills[].level": [
-            "fieldx",
-            "fieldz"
+            "fieldx"
         ]
     },
     "conditionalRequired": {
@@ -34,13 +29,13 @@
                 ]
             }
         ],
-        "fieldA": [
+        "state.characters[].injuries[].name": [
             {
                 "conditions": {
-                    "value": "xyz"
+                    "value": "Burn"
                 },
                 "required": [
-                    "fieldB"
+                    "state.characters[].injuries[].severity"
                 ]
             }
         ]

@@ -446,8 +446,12 @@ class YamlValidator:
                 if found[i].split('[')[0] == required[i].split('[')[0]:
                     # they are the same!
                     if '[]' in required[i]:
+                        # handle arrays
                         ind = int(found[i].split('[')[1].replace(']', ''))
                         data = data[required[i].split('[]')[0]][ind] 
+                    else:
+                        # handle non-arrays
+                        data = data[required[i]]
                 else:
                     # difference found, break
                     required = required[i:]
@@ -455,7 +459,7 @@ class YamlValidator:
             # look through data for required
             for k in required:
                 if '[]' in k:
-                    self.logger.log(LogLevel.ERROR, "")
+                    self.logger.log(LogLevel.ERROR, "No index provided for required key '" + k + "'. Cannot proceed.")
                     return
                 if k in data:
                     data = data[k]
