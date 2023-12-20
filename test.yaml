@@ -35,9 +35,9 @@ state:
       fauna: high # descriptor of local animal/insect activity; controlled vocab includes none, limited, normal, high, pervasive, etc.
     decision_environment:
       unstructured: >
-        Isolated jungle island
+        Isolated jungle island. EVAC is scheduled for 5 minutes.
       aid_delay:
-        delay: 0 # CASEVAC or MEDEVAC timer, in minutes
+        delay: 5 # CASEVAC or MEDEVAC timer, in minutes
         type: helicopter # controlled vocab includes AMEV, truck, helicopter, unknown, etc.
         max_transport: 1 # Maximum number of characters that can be transported
       movement_restriction: unrestricted # operational movement restrictions; controlled vocab includes unrestricted, minimal, moderate, severe, extreme
@@ -53,9 +53,9 @@ state:
   threat_state:
     unstructured: Hostile gunfire can be heard in the distance.  The area has a history of IED placement.
     threats:
-      - type: Gunfire # Controlled vocabulary of threat type could include "gunfire_threat", "gunfire_proximity", etc.
-        severity: 0.5 # Severity could be a controlled vocabulary, e.g.,
-      - type: ied
+      - threat_type: Gunfire # Controlled vocabulary of threat type could include "gunfire_threat", "gunfire_proximity", etc.
+        severity: 0.5 # Severity could be a controlled vocabulary, e.g., minor, severe, life-threatening, etc.
+      - threat_type: ied
         severity: 0.7
 
   supplies: # If reusable is True, then quantity should always be 0 or 1
@@ -317,12 +317,13 @@ scenes:
     tagging:
       reference: 0 # Re-use the tagging configuration from the specified scene index
     state: # can contain any state, including mission parameters, environment, characters, etc.
+      unstructured: 
       environment:
         decision_environment:
           unstructured: >
-            EVAC is 5 minutes out but can only take one patient.
+            EVAC has been delayed to 50 minutes out and can only take one patient.
           aid_delay:
-            delay: 5
+            delay: 50
             max_transport: 1
     restricted_actions: # These actions will not be returned in get_available_actions (not incl. TAG_CHARACTER and END_SCENARIO)
       - DIRECT_MOBILE_CHARACTERS
