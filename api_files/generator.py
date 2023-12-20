@@ -123,6 +123,7 @@ class ApiGenerator:
         new_api = self.update_general_api()
         # put the updated data into the yaml file
         yaml.dump(new_api, self.new_api_file, allow_unicode=True)
+        self.logger.log(LogLevel.INFO, "Updated validator yaml. Find it at " + NEW_API)
 
 
     def generate_state_change_api(self):
@@ -161,6 +162,9 @@ class ApiGenerator:
 
         # put the updated data into the yaml file
         yaml.dump(new_api, self.new_state_file, allow_unicode=True)
+        
+        self.logger.log(LogLevel.INFO, "Updated state change yaml. Find it at " + STATE_CHANGES)
+
 
 
     def get_required_schemas(self, schema, full_api):

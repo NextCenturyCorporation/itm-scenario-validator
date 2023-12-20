@@ -353,6 +353,8 @@ if __name__ == '__main__':
         generator = ApiGenerator()
         generator.generate_new_api()
         generator.generate_state_change_api()
+    if args.update and not args.path:
+        exit(0)
     file = args.path
     validator = YamlValidator(file)
     # validate the field names in the valid

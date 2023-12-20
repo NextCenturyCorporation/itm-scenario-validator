@@ -46,7 +46,7 @@ Ensure that the path leads to a yaml file.
 - When the Swagger API changes, make sure you upload the newest version as `api.yaml` to the `api_files` directory.
 - Once the api file is up-to-date, run 
 ```
-python3 validator.py -f [path_to_file] --update
+python3 validator.py --update
 ```
 
 ## Logging
