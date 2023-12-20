@@ -14,13 +14,23 @@
         ]
     },
     "conditionalRequired": {
-        "field1": [
+        "scenes[].action_mapping[].conditions": [
             {
                 "conditions": {
                     "length": 2
                 },
                 "required": [
-                    "field2"
+                    "scenes[].action_mapping[].condition_semantics"
+                ]
+            }
+        ],
+        "scenes[].transitions": [
+            {
+                "conditions": {
+                    "length": 2
+                },
+                "required": [
+                    "scenes[].transition_semantics"
                 ]
             }
         ],
