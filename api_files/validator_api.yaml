@@ -837,6 +837,17 @@ components:
       - immediate
       - expectant
       type: object
+    RestrictedActionsEnum:
+      description: An action type [recognized by the ADM Server](https://github.com/NextCenturyCorporation/itm-evaluation-client?tab=readme-ov-file#available-actions)
+      enum:
+      - APPLY_TREATMENT
+      - CHECK_ALL_VITALS
+      - CHECK_PULSE
+      - CHECK_RESPIRATION
+      - DIRECT_MOBILE_CHARACTERS
+      - MOVE_TO_EVAC
+      - SITREP
+      type: string
     Scenario:
       description: a triage scenario requiring decisions by a medic
       properties:
@@ -881,7 +892,7 @@ components:
           example:
           - CHECK_ALL_VITALS
           items:
-            $ref: '#/components/schemas/ActionTypeEnum'
+            $ref: '#/components/schemas/RestrictedActionsEnum'
           type: array
         state:
           $ref: '#/components/schemas/State'

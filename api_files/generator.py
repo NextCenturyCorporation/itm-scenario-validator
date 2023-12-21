@@ -72,6 +72,14 @@ class ApiGenerator:
         # injury status enum should only include hidden, discoverable, or visible
         new_api['components']['schemas']['InjuryStatusEnum']['enum'] = ['hidden', 'discoverable', 'visible']
 
+        # create a new enum for restricted_actions that doesn't include END_SCENARIO or TAG_CHARACTER
+        new_api['components']['schemas']['RestrictedActionsEnum'] = copy.deepcopy(new_api['components']['schemas']['ActionTypeEnum'])
+        new_api['components']['schemas']['RestrictedActionsEnum']['enum'].remove('END_SCENARIO')
+        new_api['components']['schemas']['RestrictedActionsEnum']['enum'].remove('TAG_CHARACTER')
+
+        # set restricted_actions to this enum
+        new_api['components']['schemas']['Scene']['properties']['restricted_actions']['items']['$ref'] = "#/components/schemas/RestrictedActionsEnum"
+
         # validator does not allow justification in action
         try:
             if 'justification' in required_actions:
