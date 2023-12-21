@@ -1,0 +1,1554 @@
+components:
+  responses:
+    server_error:
+      content:
+        text/plain:
+          schema:
+            type: string
+            x-content-type: text/plain
+      description: An exception occurred on the server; see returned error string.
+    state_returned:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/State'
+      description: Successful operation, scenario state returned
+  schemas:
+    Action:
+      description: Details for how a given action maps to a probe response
+      properties:
+        action_id:
+          description: A unique action ID within the scenario
+          example: action_01
+          type: string
+        action_type:
+          $ref: '#/components/schemas/ActionTypeEnum'
+        character_id:
+          description: The ID of the character being acted upon
+          type: string
+        choice:
+          description: A valid choice for the specified probe_id
+          type: string
+        condition_semantics:
+          $ref: '#/components/schemas/SemanticTypeEnum'
+        conditions:
+          $ref: '#/components/schemas/Conditions'
+        kdma_association:
+          additionalProperties:
+            format: float
+            maximum: 1.0
+            minimum: 0.0
+            type: number
+          description: KDMA associations for this choice, if provided by TA1
+          example:
+          - Mission: 0.8
+          type: object
+        parameters:
+          additionalProperties:
+            type: string
+          description: key-value pairs containing additional [action-specific parameters](https://github.com/NextCenturyCorporation/itm-evaluation-client?tab=readme-ov-file#available-actions)
+          example:
+          - treatment: Tourniquet
+          - location: right forearm
+          type: object
+        probe_id:
+          description: A valid probe_id from the appropriate TA1
+          type: string
+        repeatable:
+          default: false
+          description: Whether or not this action should remain after it's selected
+            by an ADM
+          type: boolean
+        unstructured:
+          description: Natural language, plain text description of the action
+          example: Check Mike's pulse.
+          type: string
+      required:
+      - action_id
+      - action_type
+      - unstructured
+      - probe_id
+      - choice
+      type: object
+    ActionTypeEnum:
+      description: An action type [recognized by the ADM Server](https://github.com/NextCenturyCorporation/itm-evaluation-client?tab=readme-ov-file#available-actions)
+      enum:
+      - APPLY_TREATMENT
+      - CHECK_ALL_VITALS
+      - CHECK_PULSE
+      - CHECK_RESPIRATION
+      - DIRECT_MOBILE_CHARACTERS
+      - END_SCENARIO
+      - MOVE_TO_EVAC
+      - SITREP
+      - TAG_CHARACTER
+      type: string
+    AidDelay:
+      description: Properties related to CASEVAC or MEDEVAC
+      properties:
+        delay:
+          description: CASEVAC or MEDEVAC timer, in minutes
+          format: float
+          minimum: 1.0
+          type: number
+        max_transport:
+          description: Maximum number of casualties that can be transported
+          minimum: 1
+          type: integer
+        type:
+          $ref: '#/components/schemas/AidTypeEnum'
+      required:
+      - delay
+      type: object
+    AidTypeEnum:
+      description: Means of evacuation
+      enum:
+      - AMEV
+      - truck
+      - helicopter
+      - unknown
+      type: string
+    AlignmentResults:
+      description: Computed KDMA profile and alignment score for a set of decisions.
+      properties:
+        alignment_source:
+          items:
+            $ref: '#/components/schemas/AlignmentSource'
+          title: Alignment Source
+          type: array
+        alignment_target_id:
+          description: ID of desired profile to align responses to.
+          title: Alignment Target Id
+          type: string
+        kdma_values:
+          description: Computed KDMA profile from results
+          items:
+            $ref: '#/components/schemas/KDMA_Value'
+          title: Kdma Values
+          type: array
+        score:
+          description: Measured alignment, 0 (completely unaligned) - 1 (completely
+            aligned).
+          maximum: 1
+          minimum: 0
+          title: Score
+          type: number
+      required:
+      - alignment_source
+      - alignment_target_id
+      - score
+      - kdma_values
+      title: AlignmentResults
+      type: object
+    AlignmentSource:
+      description: 'Describes which session/probe responses were used to
+
+        compute an alignment score, allowing for lots of flexibility.'
+      properties:
+        probes:
+          description: List of ID's of probes used to compute alignment.
+          items:
+            type: string
+          title: Probes
+          type: array
+        scenario_id:
+          description: Unique ID for user session.
+          title: Scenario Id
+          type: string
+      required:
+      - scenario_id
+      - probes
+      title: AlignmentSource
+      type: object
+    AlignmentTarget:
+      description: list of KDMAs to align to
+      example:
+        id: id
+        kdma_values:
+        - kdma: mission
+          value: 0.8
+        - kdma: fairness
+          value: 0.5
+      properties:
+        id:
+          description: globally unique alignment target id
+          type: string
+        kdma_values:
+          description: list of KDMAs to align to
+          items:
+            $ref: '#/components/schemas/KDMA_Value'
+          type: array
+      required:
+      - id
+      - kdma_values
+      type: object
+    AmbientNoiseEnum:
+      description: Descriptor for background noise level
+      enum:
+      - none
+      - quiet
+      - normal
+      - noisy
+      - extreme
+      type: string
+    AvpuLevelEnum:
+      description: Character level of response.  See [Levels of Response](https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response)
+        for details
+      enum:
+      - ALERT
+      - VOICE
+      - PAIN
+      - UNRESPONSIVE
+      type: string
+    BreathingLevelEnum:
+      description: Descriptive breathing level
+      enum:
+      - NORMAL
+      - FAST
+      - RESTRICTED
+      - NONE
+      type: string
+    Character:
+      description: a character in the scene, including injured patients, civilians,
+        medics, etc.
+      properties:
+        demographics:
+          $ref: '#/components/schemas/Demographics'
+        id:
+          description: A unique character ID throughout the scenario
+          example: Soldier_01
+          type: string
+        injuries:
+          description: A list of Injuries for the character
+          items:
+            $ref: '#/components/schemas/Injury'
+          type: array
+        name:
+          description: display name, as in a dashboard
+          example: Mike
+          type: string
+        rapport:
+          description: A measure of closeness or affinity towards the player/medic;
+            0 represents strong dislike, 10 represents very close relationships like
+            family
+          format: float
+          maximum: 10.0
+          minimum: 0.0
+          type: number
+        unstructured:
+          description: Natural language, plain text description of the character
+          example: 22 YO male Marine hit by an IED. Puncture wound on the left side
+            of the neck.
+          type: string
+        unstructured_postassess:
+          description: unstructured description updated after character assessment
+          example: 22 YO male Marine hit by an IED. Puncture wound on the left side
+            of the neck.  Burns cover about 30 of his body.
+          type: string
+        vitals:
+          $ref: '#/components/schemas/Vitals'
+      required:
+      - id
+      - name
+      - unstructured
+      - demographics
+      type: object
+    CharacterRoleEnum:
+      description: The primary role a character has in the mission, in terms of the
+        skills they possess
+      enum:
+      - Infantry
+      - SEAL
+      - Command
+      - Intelligence
+      - Medical
+      - Specialist
+      - Communications
+      type: string
+    CivilianPresenceEnum:
+      description: Indicator of how many civilians are present in the mission
+      enum:
+      - none
+      - limited
+      - some
+      - extensive
+      - crowd
+      type: string
+    CommunicationCapabilityEnum:
+      description: current operational communication capability and limitations
+      enum:
+      - all
+      - satellite
+      - radio
+      - voice
+      - visual
+      type: string
+    Conditions:
+      description: Conditions that specify whether to transition to the next scene
+        or send a probe response
+      properties:
+        actions:
+          description: True if the any of the specified lists of actions have been
+            taken; multiple action ID lists have "or" semantics; multiple action IDs
+            within a list have "and" semantics
+          items:
+            items:
+              type: string
+            type: array
+          type: array
+        character_vitals:
+          description: True if the specified list of vitals values have been met for
+            the specified character_id
+          items:
+            description: The minimum vitals of the specified character
+            properties:
+              character_id:
+                description: The ID of the character in question
+                type: string
+              vitals:
+                $ref: '#/components/schemas/Vitals'
+            type: object
+          type: array
+        elapsed_time_gt:
+          description: True if the scenario elapsed time (in seconds) is greater than
+            the specified value
+          minimum: 5
+          type: integer
+        elapsed_time_lt:
+          description: True if the scenario elapsed time (in seconds) is less than
+            the specified value
+          minimum: 5
+          type: integer
+        probe_responses:
+          description: True if the specified list of probe responses (choice) have
+            been sent
+          example:
+          - adept-september-demo-probe-1-choice2
+          items:
+            type: string
+          type: array
+        probes:
+          description: True if the specified list of probe_ids have been answered
+          example:
+          - adept-september-demo-probe-1
+          items:
+            type: string
+          type: array
+        supplies:
+          description: True if there are at least the specified quantity of the specified
+            supply types remaining
+          example:
+          - quantity: 1
+            reusable: false
+            type: Tourniquet
+          items:
+            $ref: '#/components/schemas/Supplies'
+          type: array
+      type: object
+    DecisionEnvironment:
+      description: Environmental elements that impact decision-making
+      properties:
+        aid_delay:
+          $ref: '#/components/schemas/AidDelay'
+        air_quality:
+          description: Air Quality Index (AQI); see [airnow.gov](https://www.airnow.gov/aqi/aqi-basics/)
+          maximum: 500
+          minimum: 0
+          type: integer
+        city_infrastructure:
+          description: Refers to building/city infrastructure that should be noted
+            and known (safe house, etc.)
+          type: string
+        injury_triggers:
+          $ref: '#/components/schemas/InjuryTriggerEnum'
+        movement_restriction:
+          $ref: '#/components/schemas/MovementRestrictionEnum'
+        oxygen_levels:
+          $ref: '#/components/schemas/OxygenLevelsEnum'
+        population_density:
+          description: Population per square mile
+          format: float
+          maximum: 50000.0
+          minimum: 0.0
+          type: number
+        sound_restriction:
+          $ref: '#/components/schemas/SoundRestrictionEnum'
+        unstructured:
+          description: Natural language, plain text description of decision-impacting
+            environmental factors
+          example: Injuries triggered by an IED detonation.  Helicopter Evac expected
+            in one hour for up to three casualties.
+          type: string
+      required:
+      - unstructured
+      type: object
+    DemographicSexEnum:
+      description: the sex of the character
+      enum:
+      - M
+      - F
+      - Unknown
+      type: string
+    Demographics:
+      description: Basic properties about the character
+      properties:
+        age:
+          description: the age of the character, omit if unknown
+          format: int16
+          maximum: 125
+          minimum: 0
+          type: integer
+        military_branch:
+          $ref: '#/components/schemas/MilitaryBranchEnum'
+        military_disposition:
+          $ref: '#/components/schemas/MilitaryDispositionEnum'
+        mission_importance:
+          $ref: '#/components/schemas/MissionImportanceEnum'
+        race:
+          description: Race or ethnicity
+          type: string
+        rank:
+          $ref: '#/components/schemas/MilitaryRankEnum'
+        rank_title:
+          $ref: '#/components/schemas/MilitaryRankTitleEnum'
+        role:
+          $ref: '#/components/schemas/CharacterRoleEnum'
+        sex:
+          $ref: '#/components/schemas/DemographicSexEnum'
+        skills:
+          description: A list of pairs of skill type and numeric skill level
+          example:
+          - level: 0.7
+            skill_type: Combat
+          - level: 0.3
+            skill_type: Medical
+          items:
+            $ref: '#/components/schemas/Skills'
+          type: array
+      required:
+      - sex
+      - race
+      type: object
+    Environment:
+      description: Environmental parameters that impact either decision-making, the
+        simulation environment, or both
+      properties:
+        decision_environment:
+          $ref: '#/components/schemas/DecisionEnvironment'
+        sim_environment:
+          $ref: '#/components/schemas/SimEnvironment'
+      required:
+      - sim_environment
+      type: object
+    FaunaTypeEnum:
+      description: Descriptor of local animal/insect activity
+      enum:
+      - none
+      - limited
+      - normal
+      - high
+      - pervasive
+      type: string
+    FloraTypeEnum:
+      description: Descriptor of local vegetation.
+      enum:
+      - none
+      - limited
+      - normal
+      - lush
+      - extensive
+      type: string
+    Injury:
+      description: An injury on a character.
+      properties:
+        location:
+          $ref: '#/components/schemas/InjuryLocationEnum'
+        name:
+          $ref: '#/components/schemas/InjuryTypeEnum'
+        severity:
+          description: A numerical indication of the severity of the injury from low
+            (0.0) to high (1.0)
+          format: float
+          maximum: 1.0
+          minimum: 0.0
+          type: number
+        status:
+          $ref: '#/components/schemas/InjuryStatusEnum'
+      required:
+      - location
+      - name
+      - status
+      type: object
+    InjuryLocationEnum:
+      description: the injury location on the character's body
+      enum:
+      - right forearm
+      - left forearm
+      - right calf
+      - left calf
+      - right thigh
+      - left thigh
+      - right stomach
+      - left stomach
+      - right bicep
+      - left bicep
+      - right shoulder
+      - left shoulder
+      - right side
+      - left side
+      - right chest
+      - left chest
+      - right wrist
+      - left wrist
+      - left face
+      - right face
+      - left neck
+      - right neck
+      - internal
+      - unspecified
+      type: string
+    InjuryStatusEnum:
+      description: Whether the injury is known prior- and post-assessment, and whether
+        it's been treated
+      enum:
+      - hidden
+      - discoverable
+      - visible
+      type: string
+    InjuryTriggerEnum:
+      description: What source caused character injuries.
+      enum:
+      - explosion
+      - firearm
+      - fall
+      - pathogen
+      - animal
+      - plant
+      - water
+      - collision
+      - equipment
+      - attack
+      - fire
+      - stress
+      - chemical
+      type: string
+    InjuryTypeEnum:
+      description: A brief but descriptive label for the injury type
+      enum:
+      - Ear Bleed
+      - Asthmatic
+      - Laceration
+      - Puncture
+      - Shrapnel
+      - Chest Collapse
+      - Amputation
+      - Burn
+      - Abrasion
+      - Broken Bone
+      - Internal
+      type: string
+    KDMA_Value:
+      description: a KDMA and its value
+      example:
+        kdma: mission
+        value: 0.8
+      properties:
+        kdma:
+          description: KDMA name
+          example: mission
+          type: string
+        value:
+          description: target alignment value
+          format: float
+          maximum: 1.0
+          minimum: 0.0
+          type: number
+      required:
+      - kdma
+      - value
+      type: object
+    LightingTypeEnum:
+      description: Descriptor of available natural or man-made lighting
+      enum:
+      - none
+      - limited
+      - normal
+      - bright
+      - flashing
+      type: string
+    MentalStatusEnum:
+      description: Character mental status, which impacts interaction in the sim environment
+      enum:
+      - AGONY
+      - CALM
+      - CONFUSED
+      - UPSET
+      - UNRESPONSIVE
+      type: string
+    MilitaryBranchEnum:
+      description: Branch of the US military.
+      enum:
+      - US Army
+      - US Navy
+      - US Air Force
+      - US Marine Corps
+      - US Space Force
+      - US Coast Guard
+      type: string
+    MilitaryDispositionEnum:
+      description: How the character is to be treated in a military context
+      enum:
+      - Allied US
+      - Allied
+      - Civilian
+      - Military Adversary
+      - Non-Military Adversary
+      type: string
+    MilitaryRankEnum:
+      description: the cross-branch military rank (paygrade)
+      enum:
+      - E-1
+      - E-2
+      - E-3
+      - E-4
+      - E-5
+      - E-6
+      - E-7
+      - E-8
+      - E-9
+      - E-9 (special)
+      - W-1
+      - W-2
+      - W-3
+      - W-4
+      - W-5
+      - O-1
+      - O-2
+      - O-3
+      - O-4
+      - O-5
+      - O-6
+      - O-7
+      - O-8
+      - O-9
+      - O-10
+      - Special
+      - Special (Navy)
+      - Special (Coast Guard)
+      type: string
+    MilitaryRankTitleEnum:
+      description: the branch-specific military rank
+      enum:
+      - Private (Recruit)
+      - Private
+      - Private First Class
+      - Specialist
+      - Corporal
+      - Sergeant
+      - Staff Sergeant
+      - Sergeant First Class
+      - Master Sergeant
+      - First Sergeant
+      - Sergeant Major
+      - Command Sergeant Major
+      - Sergeant Major of the Army
+      - Warrant Officer 1
+      - Chief Warrant Officer 2
+      - Chief Warrant Officer 3
+      - Chief Warrant Officer 4
+      - Chief Warrant Officer 5
+      - 2nd Lieutenant
+      - 1st Lieutenant
+      - Captain
+      - Major
+      - Lieutenant Colonel
+      - Colonel
+      - Brigadier General
+      - Major General
+      - Lieutenant General
+      - Army Chief of Staff (special)
+      - General
+      - Airman Basic
+      - Airman
+      - Airman First Class
+      - Senior Airman
+      - Technical Sergeant
+      - Senior Master Sergeant
+      - First Sergeant / Chief Master Sergeant
+      - Chief Master Sergeant of the Air Force
+      - Air Force Chief of Staff (special)
+      - Seaman Recruit
+      - Seaman Apprentice
+      - Seaman
+      - Petty Officer Third Class
+      - Petty Officer Second Class
+      - Petty Officer First Class
+      - Chief Petty Officer
+      - Senior Chief Petty Officer
+      - Master Chief Petty Officer
+      - Master Chief Petty Officer of the Navy
+      - Master Chief Petty Officer of the Coast Guard
+      - Chief Warrant Officer
+      - Ensign
+      - Lieutenant, Junior Grade
+      - Lieutenant Commander
+      - Commander
+      - Rear Admiral (Lower Half)
+      - Rear Admiral (Upper Half)
+      - Vice Admiral
+      - Chief of Naval Operations (special)
+      - Commandant of the Coast Guard (special)
+      - Admiral
+      - Lance Corporal
+      - Gunnery Sergeant
+      - Master Gunnery Sergeant
+      - Sergeant Major of the Marine Corps
+      - Warrant Officer
+      - Commandant of the Marine Corps
+      - Specialist 1
+      - Specialist 2
+      - Specialist 3
+      - Specialist 4
+      - Chief Master Sergeant
+      - Chief Master Sergeant of the Space Force
+      - Chief of Space Operations
+      type: string
+    Mission:
+      description: Mission parameters that impact decision-making
+      properties:
+        civilian_presence:
+          $ref: '#/components/schemas/CivilianPresenceEnum'
+        communication_capability:
+          $ref: '#/components/schemas/CommunicationCapabilityEnum'
+        critical_ids:
+          description: A list of pairs of character ids with an indicator of how mission-critical
+            the character is
+          items:
+            additionalProperties:
+              $ref: '#/components/schemas/MissionImportanceEnum'
+            description: A character id with an indicator of how mission-critical
+              that character is
+            example:
+            - Mike: none
+            - Intelligence Officer: priority
+            type: object
+          type: array
+        medical_policies:
+          description: Medical policies in effect in a mission, to inform decision-making
+          type: string
+        mission_type:
+          $ref: '#/components/schemas/MissionTypeEnum'
+        political_climate:
+          description: The political climate in a mission to inform decision-making
+          type: string
+        roe:
+          description: rules of engagement to inform decision-making, but not to restrict
+            decision space
+          type: string
+        unstructured:
+          description: natural language description of current mission
+          example: Place sensors in and around the jungle base
+          type: string
+      required:
+      - mission_type
+      - unstructured
+      type: object
+    MissionImportanceEnum:
+      description: How important the character is to the mission
+      enum:
+      - none
+      - normal
+      - important
+      - priority
+      - vip
+      type: string
+    MissionTypeEnum:
+      description: enumeration of possible mission types
+      enum:
+      - Listening/Observation
+      - Direct Action
+      - Hostage rescue
+      - Asset transport
+      - Sensor emplacement
+      - Intelligence gathering
+      - Civil affairs
+      - Training
+      - Sabotage
+      - Security patrol
+      - Fire support
+      - Nuclear deterrence
+      - Extraction
+      - Unknown
+      type: string
+    MovementRestrictionEnum:
+      description: Operational movement restrictions due to any factor including terrain,
+        weather, enemy activity, etc.
+      enum:
+      - unrestricted
+      - minimal
+      - moderate
+      - severe
+      - extreme
+      type: string
+    OxygenLevelsEnum:
+      description: Oxygen levels due to any factor that may impact decision-making
+      enum:
+      - normal
+      - limited
+      - scarce
+      - none
+      type: string
+    PeakNoiseEnum:
+      description: Descriptor for peak noise level due to gunfire, vehicles, helicopters,
+        etc.
+      enum:
+      - none
+      - quiet
+      - normal
+      - noisy
+      - extreme
+      type: string
+    ProbeResponses:
+      description: tag-specific probe responses (choices) for a tagged character
+      properties:
+        character_id:
+          description: A valid character ID from the scene
+          type: string
+        delayed:
+          description: The probe response to send for a DELAYED tag
+          type: string
+        expectant:
+          description: The probe response to send for a EXPECTANT tag
+          type: string
+        immediate:
+          description: The probe response to send for a IMMEDIATE tag
+          type: string
+        minimal:
+          description: The probe response to send for a MINIMAL tag
+          type: string
+        probe_id:
+          description: A valid probe_id from the appropriate TA1
+          type: string
+      required:
+      - character_id
+      - probe_id
+      - minimal
+      - delayed
+      - immediate
+      - expectant
+      type: object
+    RestrictedActionsEnum:
+      description: An action type [recognized by the ADM Server](https://github.com/NextCenturyCorporation/itm-evaluation-client?tab=readme-ov-file#available-actions)
+      enum:
+      - APPLY_TREATMENT
+      - CHECK_ALL_VITALS
+      - CHECK_PULSE
+      - CHECK_RESPIRATION
+      - DIRECT_MOBILE_CHARACTERS
+      - MOVE_TO_EVAC
+      - SITREP
+      type: string
+    Scenario:
+      description: a triage scenario requiring decisions by a medic
+      properties:
+        id:
+          description: a globally unique id for the scenario
+          type: string
+        name:
+          description: human-readable scenario name, not necessarily unique
+          example: IED Explosion
+          type: string
+        scenes:
+          description: A list of specification for all scenes in the scenario
+          items:
+            $ref: '#/components/schemas/Scene'
+          type: array
+        state:
+          $ref: '#/components/schemas/State'
+      required:
+      - id
+      - name
+      - state
+      - scenes
+      type: object
+    Scene:
+      description: the specification for a scene in the scenario
+      properties:
+        action_mapping:
+          description: List of actions with details of how those actions map to probe
+            responses
+          items:
+            $ref: '#/components/schemas/Action'
+          type: array
+        end_scenario_allowed:
+          description: Whether ADMs can end the scenario during this scene
+          type: boolean
+        index:
+          description: The order the scene appears in the scenario
+          minimum: 0
+          type: integer
+        restricted_actions:
+          description: List of actions that will be excluded from get_available_actions
+          example:
+          - CHECK_ALL_VITALS
+          items:
+            $ref: '#/components/schemas/RestrictedActionsEnum'
+          type: array
+        state:
+          $ref: '#/components/schemas/State'
+        tagging:
+          $ref: '#/components/schemas/Tagging'
+        transition_semantics:
+          $ref: '#/components/schemas/SemanticTypeEnum'
+        transitions:
+          $ref: '#/components/schemas/Conditions'
+      required:
+      - index
+      - end_scenario_allowed
+      - action_mapping
+      type: object
+    SemanticTypeEnum:
+      description: Whether transition or probe response conditions use and, or, or
+        not semantics
+      enum:
+      - and
+      - or
+      - not
+      type: string
+    SimEnvironment:
+      description: Environmental elements that impact simulation configuration
+      properties:
+        fauna:
+          $ref: '#/components/schemas/FaunaTypeEnum'
+        flora:
+          $ref: '#/components/schemas/FloraTypeEnum'
+        humidity:
+          description: Numerical relative humidity, in percentage
+          format: float
+          maximum: 100.0
+          minimum: 0.0
+          type: number
+        lighting:
+          $ref: '#/components/schemas/LightingTypeEnum'
+        noise_ambient:
+          $ref: '#/components/schemas/AmbientNoiseEnum'
+        noise_peak:
+          $ref: '#/components/schemas/PeakNoiseEnum'
+        temperature:
+          description: numerical temperature in degrees Fahrenheit
+          format: float
+          maximum: 150.0
+          minimum: -75.0
+          type: number
+        terrain:
+          $ref: '#/components/schemas/TerrainTypeEnum'
+        type:
+          $ref: '#/components/schemas/SimEnvironmentTypeEnum'
+        unstructured:
+          description: Natural language, plain text description of the environment
+          example: It was a dark and stormy night.
+          type: string
+        visibility:
+          $ref: '#/components/schemas/VisibilityTypeEnum'
+        weather:
+          $ref: '#/components/schemas/WeatherTypeEnum'
+      required:
+      - type
+      type: object
+    SimEnvironmentTypeEnum:
+      description: Basic setting for the entire scenario
+      enum:
+      - jungle
+      - submarine
+      - urban
+      - desert
+      type: string
+    SkillTypeEnum:
+      description: the type of skill the character has
+      enum:
+      - Medical
+      - Combat
+      - Specialist
+      - Communications
+      - Command
+      type: string
+    Skills:
+      description: A skill possessed by a character at a certain level of proficiency
+      properties:
+        level:
+          description: the level of expertise (from 0-10) the character has in the
+            skill
+          format: float
+          maximum: 10.0
+          minimum: 0.0
+          type: number
+        skill_type:
+          $ref: '#/components/schemas/SkillTypeEnum'
+      required:
+      - skill_type
+      - level
+      type: object
+    SoundRestrictionEnum:
+      description: Operational sound restrictions due to any factor
+      enum:
+      - unrestricted
+      - minimal
+      - moderate
+      - severe
+      - extreme
+      type: string
+    State:
+      description: the current tactical & environmental state of the scenario and
+        of its characters
+      properties:
+        characters:
+          description: A list of characters in the scene, including injured patients,
+            civilians, medics, etc.
+          items:
+            $ref: '#/components/schemas/Character'
+          type: array
+        environment:
+          $ref: '#/components/schemas/Environment'
+        mission:
+          $ref: '#/components/schemas/Mission'
+        supplies:
+          description: A list of supplies available to the medic
+          items:
+            $ref: '#/components/schemas/Supplies'
+          type: array
+        threat_state:
+          $ref: '#/components/schemas/ThreatState'
+        unstructured:
+          description: Natural language, plain text description of a scene's state
+          type: string
+      required:
+      - unstructured
+      - environment
+      - supplies
+      - characters
+      type: object
+    Supplies:
+      description: a single type of medical supply available to the medic
+      example:
+        quantity: 4
+        reusable: false
+        type: Tourniquet
+      properties:
+        quantity:
+          description: Number of items available in the medical bag
+          format: int32
+          maximum: 999
+          minimum: 0
+          type: integer
+        reusable:
+          description: Whether or not item is consumable/reusable
+          type: boolean
+        type:
+          $ref: '#/components/schemas/SupplyTypeEnum'
+      required:
+      - quantity
+      - type
+      - reusable
+      type: object
+    SupplyTypeEnum:
+      description: an enumeration of available supply types
+      enum:
+      - Tourniquet
+      - Pressure bandage
+      - Hemostatic gauze
+      - Decompression Needle
+      - Nasopharyngeal airway
+      - Pulse Oximeter
+      - Blanket
+      - Epi Pen
+      - Vented Chest Seal
+      - Pain Medications
+      - Splint
+      - Blood
+      type: string
+    Tagging:
+      description: Scene-level tagging configuration
+      properties:
+        enabled:
+          description: Whether tagging is enabled for the scene
+          type: boolean
+        probe_responses:
+          description: A list of probe responses to send TA1 for each character-tag
+            combination
+          example:
+          - character_id: Mike
+            delayed: s1-p3-choice2
+            expectant: s1-p3-choice4
+            immediate: s1-p3-choice3
+            minimal: s1-p3-choice1
+            probe_id: adept-september-demo-probe-3
+          items:
+            $ref: '#/components/schemas/ProbeResponses'
+          type: array
+        reference:
+          description: Re-use the tagging configuration from the specified scene index
+          minimum: 0
+          type: integer
+        repeatable:
+          description: Whether probe responses should be sent each time a new tag
+            is applied
+          type: boolean
+      type: object
+    TerrainTypeEnum:
+      description: Descriptor for the scenario terrain
+      enum:
+      - jungle
+      - indoors
+      - urban
+      - dunes
+      - forest
+      - beach
+      - mountain
+      - plains
+      - hills
+      - swamp
+      - flat
+      - rough
+      - extreme
+      type: string
+    Threat:
+      description: threats in the environment that could affect decision-making
+      properties:
+        severity:
+          description: how severe/imminent the threat is, from 0 (no threat) to 1
+            (max severity)
+          format: float
+          maximum: 1.0
+          minimum: 0.0
+          type: number
+        threat_type:
+          description: the type or nature of the threat, may become a controlled vocabulary
+          example: gunfire
+          type: string
+      required:
+      - threat_type
+      - severity
+      type: object
+    ThreatState:
+      description: Description of the current threat to the characters, including
+        the medic
+      example:
+        threats:
+        - severity: 0.5
+          type: gunfire
+        unstructured: Gunfire can be heard in the surrounding area
+      properties:
+        threats:
+          description: A list of pairs of threat types with a numeric severity indicator
+          items:
+            $ref: '#/components/schemas/Threat'
+          type: array
+        unstructured:
+          description: Natural language, plain text description of environmental threats
+          example: No additional threats are detected
+          type: string
+      required:
+      - unstructured
+      - threats
+      type: object
+    VisibilityTypeEnum:
+      description: Descriptor for operational visibility; affected by time of day,
+        lighting, weather, terrain, etc.
+      enum:
+      - none
+      - low
+      - normal
+      - good
+      - excellent
+      - variable
+      type: string
+    Vitals:
+      description: Vital levels and other indications of health
+      properties:
+        Spo2:
+          description: blood oxygen level (percentage)
+          format: float
+          maximum: 100.0
+          minimum: 0.0
+          type: number
+        avpu:
+          $ref: '#/components/schemas/AvpuLevelEnum'
+        breathing:
+          $ref: '#/components/schemas/BreathingLevelEnum'
+        conscious:
+          description: whether or not the character appears to be conscious
+          type: boolean
+        hrpmin:
+          description: heart rate in beats per minute
+          format: int16
+          maximum: 300
+          minimum: 0
+          type: integer
+        mental_status:
+          $ref: '#/components/schemas/MentalStatusEnum'
+      required:
+      - conscious
+      - avpu
+      - mental_status
+      - breathing
+      - hrpmin
+      - Spo2
+      type: object
+    WeatherTypeEnum:
+      description: Descriptor of the scenario weather
+      enum:
+      - clear
+      - wind
+      - clouds
+      - rain
+      - fog
+      - thunderstorm
+      - hail
+      - sleet
+      - snow
+      type: string
+info:
+  description: 'This is the specification of the TA3 API for In The Moment (ITM).  Currently,
+    the Evaluation API for TA2 supports functionality for the September milestone.
+
+
+    The API is based on the OpenAPI 3.0 specification.'
+  title: ITM TA3 API
+  version: 0.3.0
+openapi: 3.0.3
+paths:
+  /ta2/getAlignmentTarget:
+    get:
+      description: Retrieve alignment target for the scenario with the specified id
+      operationId: get_alignment_target
+      parameters:
+      - description: a unique session_id, as returned by /ta2/startSession
+        explode: true
+        in: query
+        name: session_id
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: The ID of the scenario for which to retrieve alignment target
+        explode: true
+        in: query
+        name: scenario_id
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlignmentTarget'
+          description: Successful operation, alignment target returned
+        '400':
+          description: Scenario Complete or Invalid Session ID
+        '404':
+          description: Scenario ID not found
+        '500':
+          content:
+            text/plain:
+              schema:
+                type: string
+                x-content-type: text/plain
+          description: An exception occurred on the server; see returned error string.
+      summary: Retrieve alignment target for the scenario
+      tags:
+      - itm-ta2-eval
+      x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
+  /ta2/getSessionAlignment:
+    get:
+      description: Retrieve the current session alignment for the session with the
+        specified id
+      operationId: get_session_alignment
+      parameters:
+      - description: a unique session_id, as returned by /ta2/startSession
+        explode: true
+        in: query
+        name: session_id
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: alignment target id
+        explode: true
+        in: query
+        name: target_id
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlignmentResults'
+          description: Successful Response
+        '400':
+          description: Session ID not found
+        '403':
+          description: Session alignment can only be requested during a training session
+        '500':
+          content:
+            text/plain:
+              schema:
+                type: string
+                x-content-type: text/plain
+          description: An exception occurred on the server; see returned error string.
+      summary: Retrieve session alignment from TA1
+      tags:
+      - itm-ta2-eval
+      x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
+  /ta2/scenario:
+    get:
+      description: Get the next scenario in a session with the specified ADM name,
+        returning a Scenario object and unique id
+      operationId: start_scenario
+      parameters:
+      - description: a unique session_id, as returned by /ta2/startSession
+        explode: true
+        in: query
+        name: session_id
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: a scenario id to start, used internally by TA3
+        explode: true
+        in: query
+        name: scenario_id
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+          description: Successful operation; scenario data returned, or session_complete
+            is True
+        '400':
+          description: Invalid Session ID or there is already an active scenario
+        '403':
+          description: Specifying a scenario ID is unauthorized
+        '404':
+          description: Scenario ID not found
+        '500':
+          content:
+            text/plain:
+              schema:
+                type: string
+                x-content-type: text/plain
+          description: An exception occurred on the server; see returned error string.
+      summary: Get the next scenario
+      tags:
+      - itm-ta2-eval
+      x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
+  /ta2/startSession:
+    get:
+      description: Get unique session id for grouping answers from a collection of
+        scenarios together
+      operationId: start_session
+      parameters:
+      - description: A self-assigned ADM name.  Can add authentication later.
+        explode: true
+        in: query
+        name: adm_name
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: the type of session to start (`eval` or a TA1 name)
+        explode: true
+        in: query
+        name: session_type
+        required: true
+        schema:
+          example: eval
+          type: string
+        style: form
+      - description: whether or not this is a training session with TA2
+        explode: true
+        in: query
+        name: kdma_training
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      - description: the maximum number of scenarios requested, not supported in `eval`
+          sessions
+        explode: true
+        in: query
+        name: max_scenarios
+        required: false
+        schema:
+          format: int16
+          type: integer
+        style: form
+      responses:
+        '200':
+          content:
+            text/plain:
+              schema:
+                description: a new session Id to use in subsequent calls
+                type: string
+                x-content-type: text/plain
+          description: Successful operation
+        '400':
+          description: Invalid session type or max_scenarios
+        '500':
+          content:
+            text/plain:
+              schema:
+                type: string
+                x-content-type: text/plain
+          description: An exception occurred on the server; see returned error string.
+        '503':
+          description: The server is not ready to start a session
+      summary: Start a new session
+      tags:
+      - itm-ta2-eval
+      x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
+  /ta2/takeAction:
+    post:
+      description: Take the specified Action within a scenario
+      operationId: take_action
+      parameters:
+      - description: a unique session_id, as returned by /ta2/startSession
+        explode: true
+        in: query
+        name: session_id
+        required: true
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Action'
+        description: Encapsulation of an action taken by a DM in the context of the
+          scenario
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/State'
+          description: Successful operation, scenario state returned
+        '400':
+          description: Invalid action or Session ID
+        '500':
+          content:
+            text/plain:
+              schema:
+                type: string
+                x-content-type: text/plain
+          description: An exception occurred on the server; see returned error string.
+      summary: Take an action within a scenario
+      tags:
+      - itm-ta2-eval
+      x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
+  /ta2/{scenario_id}/getAvailableActions:
+    get:
+      description: Retrieve a list of currently available actions in the scenario
+        with the specified id
+      operationId: get_available_actions
+      parameters:
+      - description: a unique session_id, as returned by /ta2/startSession
+        explode: true
+        in: query
+        name: session_id
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: The ID of the scenario for which to retrieve available actions
+        explode: false
+        in: path
+        name: scenario_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Action'
+                type: array
+                x-content-type: application/json
+          description: Successful operation; array of possible Actions returned
+        '400':
+          description: Scenario Complete or Invalid Session ID
+        '404':
+          description: Scenario ID not found
+        '500':
+          content:
+            text/plain:
+              schema:
+                type: string
+                x-content-type: text/plain
+          description: An exception occurred on the server; see returned error string.
+      summary: Get a list of currently available ADM actions
+      tags:
+      - itm-ta2-eval
+      x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
+  /ta2/{scenario_id}/getState:
+    get:
+      description: Retrieve state of the scenario with the specified id
+      operationId: get_scenario_state
+      parameters:
+      - description: a unique session_id, as returned by /ta2/startSession
+        explode: true
+        in: query
+        name: session_id
+        required: true
+        schema:
+          type: string
+        style: form
+      - description: the ID of the scenario for which to retrieve status
+        explode: false
+        in: path
+        name: scenario_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/State'
+          description: Successful operation, scenario state returned
+        '400':
+          description: Invalid Session ID
+        '404':
+          description: Scenario ID not found
+        '500':
+          content:
+            text/plain:
+              schema:
+                type: string
+                x-content-type: text/plain
+          description: An exception occurred on the server; see returned error string.
+      summary: Retrieve scenario state
+      tags:
+      - itm-ta2-eval
+      x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
+servers:
+- url: /
+tags:
+- description: Endpoints for TA2 Evaluation
+  name: itm-ta2-eval

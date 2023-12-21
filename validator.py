@@ -1,9 +1,11 @@
 import argparse
 import yaml
+from api_files.generator import ApiGenerator
 from logger import LogLevel, Logger
 from decouple import config
 
 API_YAML = config('API_YAML')
+STATE_YAML = config('STATE_YAML')
 
 PRIMITIVE_TYPE_MAP = {
     'string': str,
@@ -12,13 +14,16 @@ PRIMITIVE_TYPE_MAP = {
     'int': int,
     'integer': int
 }
+# state in scene should follow state_changes.yaml
 
 class YamlValidator:
     logger = Logger("yamlValidator")
     file = None
     api_file = None
+    state_change_file = None
     loaded_yaml = None
     api_yaml = None
+    state_changes_yaml = None
     missing_keys = 0
     wrong_types = 0
     invalid_values = 0
@@ -36,6 +41,11 @@ class YamlValidator:
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         try:
+            self.state_change_file = open(STATE_YAML)
+            self.state_changes_yaml = yaml.load(self.state_change_file, Loader=yaml.CLoader)
+        except Exception as e:
+            self.logger.log(LogLevel.ERROR, "Error while loading in state api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
+        try:
             self.loaded_yaml = yaml.load(self.file, Loader=yaml.CLoader)
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
@@ -50,6 +60,8 @@ class YamlValidator:
             self.file.close()
         if (self.api_file):
             self.api_file.close()
+        if (self.state_change_file):
+            self.state_change_file.close()
 
 
     def validate_field_names(self):
@@ -60,10 +72,10 @@ class YamlValidator:
         schema = self.api_yaml['components']['schemas']
         top_level = schema['Scenario']['properties']
         required = schema['Scenario']['required'] if 'required' in schema['Scenario'] else []
-        return self.validate_one_level('top', self.loaded_yaml, top_level, required)
+        return self.validate_one_level('top', self.loaded_yaml, top_level, required, self.api_yaml)
 
 
-    def validate_one_level(self, level_name, to_validate, type_obj, required):
+    def validate_one_level(self, level_name, to_validate, type_obj, required, api_yaml):
         '''
         Takes in an object to validate (to_validate) and the yaml schema describing the 
         expected types (type_obj)
@@ -99,14 +111,14 @@ class YamlValidator:
                     # check for objects (key:value pairs)
                     elif key_type == 'object':
                         if 'additionalProperties' in type_obj[key]:
-                            if not self.validate_additional_properties(type_obj[key], to_validate[key], key, level_name):
+                            if not self.validate_additional_properties(type_obj[key], to_validate[key], key, level_name, api_yaml):
                                 is_valid = False
                         else:
                             self.logger.log(LogLevel.ERROR, "API error: Missing additionalProperties on '" + key + "' object at the '" + level_name + "' level. Please contact TA3 for assistance.")
                             return False
                         
                     elif key_type == 'array':
-                        if not self.validate_array(to_validate[key], key, level_name, key_type, type_obj):
+                        if not self.validate_array(to_validate[key], key, level_name, key_type, type_obj, api_yaml):
                             is_valid = False
                     else:
                         self.logger.log(LogLevel.ERROR, "API error: Unhandled validation for type '" +  key_type + "' at the " + level_name + "' level. Please contact TA3 for assistance.")
@@ -116,19 +128,24 @@ class YamlValidator:
                 elif '$ref' in this_key_data:
                     # get the ref type and check that location (skip starting hashtag)
                     location = type_obj[key]['$ref'].split('/')[1:]
-                    ref_loc = self.api_yaml
-                    # access the currect location to get the type map
-                    for x in location:
-                        ref_loc = ref_loc[x]
-                    if 'enum' in ref_loc:
-                        if not self.validate_enum(ref_loc, key, level_name, to_validate[key]):
-                            is_valid = False
-                    elif isinstance(to_validate[key], dict):
-                        if not self.validate_object(to_validate[key], ref_loc, key, level_name, type_obj[key]['$ref']):
+                    if level_name == 'scenes' and location[len(location)-1] == 'State':
+                        # state at the scenes level should follow state_changes.yaml
+                        if not self.validate_state_change(to_validate[key]):
                             is_valid = False
                     else:
-                        self.log_wrong_type(key, level_name, location[len(location)-1], type(to_validate[key]))
-                        is_valid = False 
+                        ref_loc = api_yaml
+                        # access the currect location to get the type map
+                        for x in location:
+                            ref_loc = ref_loc[x]
+                        if 'enum' in ref_loc:
+                            if not self.validate_enum(ref_loc, key, level_name, to_validate[key]):
+                                is_valid = False
+                        elif isinstance(to_validate[key], dict):
+                            if not self.validate_object(to_validate[key], ref_loc, key, level_name, type_obj[key]['$ref'], api_yaml):
+                                is_valid = False
+                        else:
+                            self.log_wrong_type(key, level_name, location[len(location)-1], type(to_validate[key]))
+                            is_valid = False 
                 else:
                     self.logger.log(LogLevel.ERROR, "API Error: Key '" + key + "' at level '" + level_name + "' has no defined type or reference. Please contact TA3 for assistance.")
                     return False
@@ -144,8 +161,22 @@ class YamlValidator:
                     self.logger.log(LogLevel.DEBUG, "Optional key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
         return is_valid
 
+    def validate_state_change(self, obj_to_validate):
+        '''
+        Under Scenes in the API, state should be defined slightly differently.
+        Use state_changes.yaml and perform as before.
+        '''
+        schema = self.state_changes_yaml['components']['schemas']
+        top_level = schema['State']['properties']
+        required = schema['State']['required'] if 'required' in schema['State'] else []
+        return self.validate_one_level('Scenes/State', obj_to_validate, top_level, required, self.state_changes_yaml)
 
     def validate_enum(self, type_obj, key, level, item):
+        '''
+        Accepts as parameters the object that describes expected types, 
+        the key of the object, the level we're looking at, and the value 
+        to check        
+        '''
         is_valid = True
         # we are expecting a string here (will this ever be an int/float?)
         if isinstance(item, str):
@@ -160,7 +191,7 @@ class YamlValidator:
         return is_valid
 
 
-    def validate_object(self, item, location, key, level, ref_name):
+    def validate_object(self, item, location, key, level, ref_name, api_yaml):
         '''
         Checks if an item matches the reference location. The reference location
         may reference a full object, small object, or enum. Checks all 3 possibilities.
@@ -168,11 +199,11 @@ class YamlValidator:
         is_valid = True
         # check large object
         if 'properties' in location:
-            if not self.validate_one_level(key, item, location['properties'], location['required'] if 'required' in location else []):
+            if not self.validate_one_level(key, item, location['properties'], location['required'] if 'required' in location else [], api_yaml):
                 is_valid = False
         # check small object
         elif 'additionalProperties' in location:
-            if not self.validate_additional_properties(location, item, key, level):
+            if not self.validate_additional_properties(location, item, key, level, api_yaml):
                 is_valid = False
         # check enum
         elif 'enum' in location:
@@ -183,7 +214,7 @@ class YamlValidator:
         return is_valid
     
 
-    def validate_additional_properties(self, type_obj, item, key, level):
+    def validate_additional_properties(self, type_obj, item, key, level, api_yaml):
         '''
         Accepts an object that describes the type we're looking for and an item to validate
         '''
@@ -209,18 +240,18 @@ class YamlValidator:
                     is_valid = False 
         elif '$ref' in type_obj['additionalProperties']:
             location = type_obj['additionalProperties']['$ref'].split('/')[1:]
-            ref_loc = self.api_yaml
+            ref_loc = api_yaml
             for x in location:
                 ref_loc = ref_loc[x]
             if isinstance(item, list):
                 for pair_set in item:
                     for k in pair_set:
-                        if not self.validate_object(pair_set[k], ref_loc, key, level, type_obj['additionalProperties']['$ref']):
+                        if not self.validate_object(pair_set[k], ref_loc, key, level, type_obj['additionalProperties']['$ref'], api_yaml):
                             is_valid = False
             else:
                 if isinstance(item, dict):
                     for k in item:
-                        if not self.validate_object(item[k], ref_loc, key, level, type_obj['additionalProperties']['$ref']):
+                        if not self.validate_object(item[k], ref_loc, key, level, type_obj['additionalProperties']['$ref'], api_yaml):
                             is_valid = False
                 else:
                     self.log_wrong_type(key, level, 'object', type(item))
@@ -231,7 +262,7 @@ class YamlValidator:
         return is_valid
 
 
-    def validate_array(self, item, key, level, key_type, typed_keys):
+    def validate_array(self, item, key, level, key_type, typed_keys, api_yaml):
         '''
         Looks at an array and ensures that each item in the array matches expectations
         '''
@@ -245,11 +276,11 @@ class YamlValidator:
             # check complex object types 
             if '$ref' in item_type:
                 location = item_type['$ref'].split('/')[1:]
-                ref_loc = self.api_yaml
+                ref_loc = api_yaml
                 for x in location:
                     ref_loc = ref_loc[x]
                 for i in item:
-                    if not self.validate_object(i, ref_loc, key, level, typed_keys[key]['items']['$ref']):
+                    if not self.validate_object(i, ref_loc, key, level, typed_keys[key]['items']['$ref'], api_yaml):
                         is_valid = False
             # check basic types
             elif 'type' in item_type:
@@ -313,11 +344,17 @@ class YamlValidator:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='ITM - YAML Validator')
+    parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
 
-    parser.add_argument('-f', '--filepath', dest='path', type=str, help='The path to the yaml file.')
+    parser.add_argument('-f', '--filepath', dest='path', type=str, help='The path to the yaml file. Required if -u is not specified.')
+    parser.add_argument('-u', '--update', dest='update', action='store_true', help='Switch to update the api files or not. Required if -f is not specified.')
     args = parser.parse_args()
-
+    if args.update:
+        generator = ApiGenerator()
+        generator.generate_new_api()
+        generator.generate_state_change_api()
+    if args.update and not args.path:
+        exit(0)
     file = args.path
     validator = YamlValidator(file)
     # validate the field names in the valid
