@@ -1,50 +1,67 @@
 {
     "simpleRequired": {
-        "scenes[].index": [
-            "scenes[].end_scenario_allowed",
-            "fieldb"
-        ],
         "state.unstructured": [
             "field2",
             "field3"
         ],
         "state.characters[].demographics.skills[].level": [
-            "fieldx",
-            "fieldz"
+            "fieldx"
         ]
     },
     "conditionalRequired": {
-        "field1": [
+        "scenes[].action_mapping[].conditions": [
             {
                 "conditions": {
                     "length": 2
                 },
                 "required": [
-                    "field2"
+                    "scenes[].action_mapping[].condition_semantics"
                 ]
             }
         ],
-        "fieldA": [
+        "scenes[].transitions": [
             {
                 "conditions": {
-                    "value": "xyz"
+                    "length": 2
                 },
                 "required": [
-                    "fieldB"
+                    "scenes[].transition_semantics"
+                ]
+            }
+        ],
+        "state.characters[].injuries[].name": [
+            {
+                "conditions": {
+                    "value": "Burn"
+                },
+                "required": [
+                    "state.characters[].injuries[].severity"
                 ]
             }
         ]
     },
     "conditionalIgnore": {
-        "field1": [
+        "scenes[].index": [
             {
                 "conditions": {
-                    "value": "xyz"
+                    "value": 0
                 },
                 "ignore": [
-                    "fieldB"
+                    "scenes[].state"
                 ]
             }
         ]
+    },
+    "simpleAllowedValues": {
+        "state.characters[].vitals.conscious": {
+            "False": {
+                "state.characters[].vitals.avpu": [
+                    "UNRESPONSIVE"
+                ],
+                "state.characters[].vitals.mental_status": [
+                    "UNRESPONSIVE"
+                ]
+            }
+        }
     }
 }

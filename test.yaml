@@ -247,6 +247,7 @@ scenes:
         conditions:
           # Action conditions are configured just like scene transitions below.  If the condition is met, the probe response is sent.
           elapsed_time_gt: 30
+          elapsed_time_lt: 50
       - action_id: action2
         action_type: CHECK_ALL_VITALS
         unstructured: Check Mike's vital signs
@@ -287,7 +288,7 @@ scenes:
         character_id: Civilian_01
         # Here, the probe response is sent as long as a tourniquet was applied to the specified character_id
         # Note that if a different probe response is needed for different locations, then they must be configured as separate mappings
-        parameters: { "treatment": "Tourniquet"}
+        parameters: { "treatment": "Tourniquet" }
         probe_id: adept-september-demo-probe-1
         choice: s1-p1-choice2
         kdma_association:
