@@ -41,15 +41,27 @@
         ]
     },
     "conditionalIgnore": {
-        "field1": [
+        "scenes[].index": [
             {
                 "conditions": {
-                    "value": "xyz"
+                    "value": 0
                 },
                 "ignore": [
-                    "fieldB"
+                    "scenes[].state"
                 ]
             }
         ]
+    },
+    "simpleAllowedValues": {
+        "state.characters[].vitals.conscious": {
+            "False": {
+                "state.characters[].vitals.avpu": [
+                    "UNRESPONSIVE"
+                ],
+                "state.characters[].vitals.mental_status": [
+                    "UNRESPONSIVE"
+                ]
+            }
+        }
     }
 }
