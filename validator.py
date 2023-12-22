@@ -525,15 +525,17 @@ class YamlValidator:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='ITM - YAML Validator')
+    parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
 
-    parser.add_argument('-f', '--filepath', dest='path', type=str, help='The path to the yaml file.')
-    parser.add_argument('-u', '--update', dest='update', action='store_true', help='Switch to update the api files or not')
+    parser.add_argument('-f', '--filepath', dest='path', type=str, help='The path to the yaml file. Required if -u is not specified.')
+    parser.add_argument('-u', '--update', dest='update', action='store_true', help='Switch to update the api files or not. Required if -f is not specified.')
     args = parser.parse_args()
     if args.update:
         generator = ApiGenerator()
         generator.generate_new_api()
         generator.generate_state_change_api()
+    if args.update and not args.path:
+        exit(0)
     file = args.path
     validator = YamlValidator(file)
     # validate the field names in the yaml

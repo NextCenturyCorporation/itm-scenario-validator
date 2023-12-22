@@ -728,17 +728,22 @@ components:
       - extreme
       type: string
     Threat:
-      additionalProperties:
-        format: float
-        maximum: 1.0
-        minimum: 0.0
-        type: number
-      description: 'list of pairs of type (e.g., gunfire, severe weather, fire)
-
-        and severity (float 0 (no threat) - 1 (max severity))'
-      example:
-        severity: 0.5
-        type: gunfire
+      description: threats in the environment that could affect decision-making
+      properties:
+        severity:
+          description: how severe/imminent the threat is, from 0 (no threat) to 1
+            (max severity)
+          format: float
+          maximum: 1.0
+          minimum: 0.0
+          type: number
+        threat_type:
+          description: the type or nature of the threat, may become a controlled vocabulary
+          example: gunfire
+          type: string
+      required:
+      - threat_type
+      - severity
       type: object
     ThreatState:
       description: Description of the current threat to the characters, including
