@@ -55,6 +55,7 @@ components:
           description: A valid probe_id from the appropriate TA1
           type: string
         repeatable:
+          default: false
           description: Whether or not this action should remain after it's selected
             by an ADM
           type: boolean
@@ -836,6 +837,17 @@ components:
       - immediate
       - expectant
       type: object
+    RestrictedActionsEnum:
+      description: An action type [recognized by the ADM Server](https://github.com/NextCenturyCorporation/itm-evaluation-client?tab=readme-ov-file#available-actions)
+      enum:
+      - APPLY_TREATMENT
+      - CHECK_ALL_VITALS
+      - CHECK_PULSE
+      - CHECK_RESPIRATION
+      - DIRECT_MOBILE_CHARACTERS
+      - MOVE_TO_EVAC
+      - SITREP
+      type: string
     Scenario:
       description: a triage scenario requiring decisions by a medic
       properties:
@@ -880,7 +892,7 @@ components:
           example:
           - CHECK_ALL_VITALS
           items:
-            type: string
+            $ref: '#/components/schemas/RestrictedActionsEnum'
           type: array
         state:
           $ref: '#/components/schemas/State'
@@ -1100,17 +1112,22 @@ components:
       - extreme
       type: string
     Threat:
-      additionalProperties:
-        format: float
-        maximum: 1.0
-        minimum: 0.0
-        type: number
-      description: 'list of pairs of type (e.g., gunfire, severe weather, fire)
-
-        and severity (float 0 (no threat) - 1 (max severity))'
-      example:
-        severity: 0.5
-        type: gunfire
+      description: threats in the environment that could affect decision-making
+      properties:
+        severity:
+          description: how severe/imminent the threat is, from 0 (no threat) to 1
+            (max severity)
+          format: float
+          maximum: 1.0
+          minimum: 0.0
+          type: number
+        threat_type:
+          description: the type or nature of the threat, may become a controlled vocabulary
+          example: gunfire
+          type: string
+      required:
+      - threat_type
+      - severity
       type: object
     ThreatState:
       description: Description of the current threat to the characters, including
