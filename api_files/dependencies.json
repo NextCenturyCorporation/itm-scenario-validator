@@ -1,11 +1,8 @@
 {
     "simpleRequired": {
-        "state.unstructured": [
-            "field2",
-            "field3"
-        ],
-        "state.characters[].demographics.skills[].level": [
-            "fieldx"
+        "state.characters[].demographics.military_branch": [
+            "state.characters[].demographics.rank",
+            "state.characters[].demographics.rank_title"
         ]
     },
     "conditionalRequired": {
