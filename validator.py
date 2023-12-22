@@ -551,7 +551,6 @@ class YamlValidator:
                         for key in self.dep_json['simpleAllowedValues'][field][val]:
                             self.search_for_key(True, found, [key], "is '" + val + "'", self.dep_json['simpleAllowedValues'][field][val][key])
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
 
