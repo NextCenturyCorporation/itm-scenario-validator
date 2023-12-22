@@ -665,18 +665,22 @@ components:
           - type: gunfire
             severity: 0.5
     Threat:
+      required:
+        - threat_type
+        - severity
       type: object
-      additionalProperties:
-        type: number
-        format: float
-        minimum: 0.0
-        maximum: 1.0
-      description: |-
-        list of pairs of type (e.g., gunfire, severe weather, fire)
-        and severity (float 0 (no threat) - 1 (max severity))
-      example:
-        type: gunfire
-        severity: 0.5
+      description: threats in the environment that could affect decision-making
+      properties:
+        threat_type:
+          type: string
+          description: the type or nature of the threat, may become a controlled vocabulary
+          example: gunfire
+        severity:
+          type: number
+          format: float
+          description: how severe/imminent the threat is, from 0 (no threat) to 1 (max severity)
+          minimum: 0.0
+          maximum: 1.0
     Supplies:
       required:
         - quantity
@@ -873,7 +877,7 @@ components:
           description: List of actions that will be excluded from get_available_actions
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/ActionTypeEnum"
           example:
             - CHECK_ALL_VITALS
         transition_semantics:
@@ -900,6 +904,7 @@ components:
           example: "Check Mike's pulse."
         repeatable:
           type: boolean
+          default: false
           description: Whether or not this action should remain after it's selected by an ADM
         character_id:
           type: string
