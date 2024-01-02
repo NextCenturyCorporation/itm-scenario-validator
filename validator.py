@@ -363,6 +363,7 @@ class YamlValidator:
         self.conditional_requirements()
         self.conditional_ignore()
         self.simple_value_matching()
+        self.deep_links()
 
     def simple_requirements(self):
         '''
@@ -446,6 +447,7 @@ class YamlValidator:
             # side-by-side as long as possible
             required = required.split('.')
             data = copy.deepcopy(self.loaded_yaml)
+            earlyExit = False
             for i in range(min(len(found), len(required))):
                 if found[i].split('[')[0] == required[i].split('[')[0]:
                     # they are the same!
@@ -459,7 +461,10 @@ class YamlValidator:
                 else:
                     # difference found, break
                     required = required[i:]
+                    earlyExit = True
                     break
+            if not earlyExit:
+                required = required[i+1:]
             # look through data for required
             found_key = True
             for k in required:
@@ -477,7 +482,7 @@ class YamlValidator:
                         # otherwise, we did not want to find the key, so we're good here
                         found_key = False
                         break
-            if not should_find and found_key:
+            if should_find is not None and not should_find and found_key:
                 self.logger.log(LogLevel.WARN, "Key '" + k + "' is not allowed because '" + '.'.join(found) + "' " + explanation + ".")
                 self.invalid_keys += 1
             elif found_key and len(expected_val) > 0:
@@ -550,6 +555,54 @@ class YamlValidator:
                         # start searching for the key(s) that need to match one of the provided values
                         for key in self.dep_json['simpleAllowedValues'][field][val]:
                             self.search_for_key(True, found, [key], "is '" + val + "'", self.dep_json['simpleAllowedValues'][field][val][key])
+
+
+    def deep_links(self):
+        '''
+        Checks the yaml file for "if field1 is value1 and field2 is value2,
+        then field3 must be one of [values]"
+        '''
+        for parent_key in self.dep_json['deepLinks']:
+            # get all possible parents for the keys
+            possible_parents = self.property_meets_conditions(parent_key.split('.'), copy.deepcopy(self.loaded_yaml))
+            for p in possible_parents:
+                if '[]' in p:
+                    # no index given for an array, skip this key
+                    continue
+                # look for matching keys using possibleParents
+                for req_set in self.dep_json['deepLinks'][parent_key]:
+                    conditions = True
+                    # check if the conditions are true
+                    explanation = ""
+                    for c in req_set['condition']:
+                        conditions = conditions and self.does_key_have_value(p.split('.')+c.split('.'), req_set['condition'][c], copy.deepcopy(self.loaded_yaml))
+                        explanation += "key " + c + " with value " + str(req_set['condition'][c]) + '; '
+                    if conditions:
+                        # if the conditions match at this parent level, check if the required keys also match
+                        for x in req_set['requirement']:                            
+                            self.search_for_key(None, p.split('.'), [parent_key+'.'+x], 'has ' + explanation, expected_val=req_set['requirement'][x])
+            
+
+    def does_key_have_value(self, key, value, yaml):
+        '''
+        Looks through the yaml file to see if a key at a specific location has the given value
+        '''
+        data = yaml
+        for k in key:
+            if '[' in k:
+                loc = k.split('[')[0]
+                ind = int(k.split('[')[1].split(']')[0])
+                if loc in data:
+                    data = data[loc]
+                    if len(data) > ind:
+                        data = data[ind]
+            elif k in data:
+                data = data[k]
+            else:
+                # key not found
+                return False
+        # if we made it to here, we found the key - check the value!
+        return data == value
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
