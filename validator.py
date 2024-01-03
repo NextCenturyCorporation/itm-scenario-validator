@@ -499,7 +499,7 @@ class YamlValidator:
                 self.invalid_keys += 1
             elif found_key and len(expected_val) > 0:
                 if data not in expected_val:
-                    self.logger.log(LogLevel.WARN, "Key '" + k + "' must have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is " + str(data))
+                    self.logger.log(LogLevel.WARN, "Key '" + k + "' must have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is '" + str(data) + "'")
                     self.invalid_values += 1
                     
 
