@@ -576,7 +576,10 @@ class YamlValidator:
                     explanation = "key-value pairs "
                     for c in req_set['condition']:
                         singleCondition = False
-                        for v in req_set['condition'][c]:
+                        values = req_set['condition'][c]
+                        if not isinstance(values, list):
+                            values = [values]
+                        for v in values:
                             singleCondition = singleCondition or self.does_key_have_value(p.split('.')+c.split('.'), v, copy.deepcopy(self.loaded_yaml))
                             if singleCondition:
                                 explanation += "('" + c + "': '" + str(v) + "'); "
