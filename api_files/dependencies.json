@@ -1,0 +1,64 @@
+{
+    "simpleRequired": {
+        "state.characters[].demographics.military_branch": [
+            "state.characters[].demographics.rank",
+            "state.characters[].demographics.rank_title"
+        ]
+    },
+    "conditionalRequired": {
+        "scenes[].action_mapping[].conditions": [
+            {
+                "conditions": {
+                    "length": 2
+                },
+                "required": [
+                    "scenes[].action_mapping[].condition_semantics"
+                ]
+            }
+        ],
+        "scenes[].transitions": [
+            {
+                "conditions": {
+                    "length": 2
+                },
+                "required": [
+                    "scenes[].transition_semantics"
+                ]
+            }
+        ],
+        "state.characters[].injuries[].name": [
+            {
+                "conditions": {
+                    "value": "Burn"
+                },
+                "required": [
+                    "state.characters[].injuries[].severity"
+                ]
+            }
+        ]
+    },
+    "conditionalIgnore": {
+        "scenes[].index": [
+            {
+                "conditions": {
+                    "value": 0
+                },
+                "ignore": [
+                    "scenes[].state"
+                ]
+            }
+        ]
+    },
+    "simpleAllowedValues": {
+        "state.characters[].vitals.conscious": {
+            "False": {
+                "state.characters[].vitals.avpu": [
+                    "UNRESPONSIVE"
+                ],
+                "state.characters[].vitals.mental_status": [
+                    "UNRESPONSIVE"
+                ]
+            }
+        }
+    }
+}

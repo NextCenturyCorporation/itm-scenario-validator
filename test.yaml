@@ -287,7 +287,7 @@ scenes:
         character_id: Civilian_01
         # Here, the probe response is sent as long as a tourniquet was applied to the specified character_id
         # Note that if a different probe response is needed for different locations, then they must be configured as separate mappings
-        parameters: { "treatment": "Tourniquet"}
+        parameters: { "treatment": "Tourniquet" }
         probe_id: adept-september-demo-probe-1
         choice: s1-p1-choice2
         kdma_association:
@@ -317,7 +317,7 @@ scenes:
     tagging:
       reference: 0 # Re-use the tagging configuration from the specified scene index
     state: # can contain any state, including mission parameters, environment, characters, etc.
-      unstructured: 
+      unstructured:
       environment:
         decision_environment:
           unstructured: >

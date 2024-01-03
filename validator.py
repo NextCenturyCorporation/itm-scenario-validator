@@ -1,11 +1,11 @@
-import argparse
-import yaml
+import yaml, argparse, json, copy
 from api_files.generator import ApiGenerator
 from logger import LogLevel, Logger
 from decouple import config
 
 API_YAML = config('API_YAML')
 STATE_YAML = config('STATE_YAML')
+DEP_JSON = config('DEP_JSON')
 
 PRIMITIVE_TYPE_MAP = {
     'string': str,
@@ -20,10 +20,12 @@ class YamlValidator:
     logger = Logger("yamlValidator")
     file = None
     api_file = None
+    dep_file = None
     state_change_file = None
     loaded_yaml = None
     api_yaml = None
     state_changes_yaml = None
+    dep_json = None
     missing_keys = 0
     wrong_types = 0
     invalid_values = 0
@@ -50,6 +52,11 @@ class YamlValidator:
             self.loaded_yaml = yaml.load(self.file, Loader=yaml.CLoader)
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
+        try:
+            self.dep_file = open(DEP_JSON)
+            self.dep_json = json.load(self.dep_file)
+        except Exception as e:
+            self.logger.log(LogLevel.ERROR, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
     
 
     def __del__(self):
@@ -63,6 +70,8 @@ class YamlValidator:
             self.api_file.close()
         if (self.state_change_file):
             self.state_change_file.close()
+        if (self.dep_file):
+            self.dep_file.close()
 
 
     def validate_field_names(self):
@@ -162,6 +171,7 @@ class YamlValidator:
                     self.logger.log(LogLevel.DEBUG, "Optional key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
         return is_valid
 
+
     def validate_state_change(self, obj_to_validate):
         '''
         Under Scenes in the API, state should be defined slightly differently.
@@ -171,6 +181,7 @@ class YamlValidator:
         top_level = schema['State']['properties']
         required = schema['State']['required'] if 'required' in schema['State'] else []
         return self.validate_one_level('Scenes/State', obj_to_validate, top_level, required, self.state_changes_yaml)
+
 
     def validate_enum(self, type_obj, key, level, item):
         '''
@@ -355,6 +366,203 @@ class YamlValidator:
             self.logger.log(LogLevel.ERROR, "Could not open file " + filename + ". Please make sure the path is valid and the file exists.")
 
 
+    def validate_dependencies(self):
+        '''
+        Checks the yaml file against the dependency requirements to check for 
+        additional required/ignored fields and specific value requirements
+        '''
+        self.simple_requirements()
+        self.conditional_requirements()
+        self.conditional_ignore()
+        self.simple_value_matching()
+
+    def simple_requirements(self):
+        '''
+        Checks the yaml file for simple required dependencies.
+        If field 1 is provided, then field2 is required
+        '''
+        for req in self.dep_json['simpleRequired']:
+            loc = req.split('.')
+            all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml))
+            for x in all_found:
+                found = x.split('.')
+                if found[len(found)-1] != loc[len(loc)-1]:
+                    # possible that we thought we found a key but didn't. if so, skip
+                    continue 
+                else:
+                    # start searching for the key(s) that is/are required now that the first key has been found
+                    self.search_for_key(True, found, self.dep_json['simpleRequired'][req], "has been provided")
+
+
+    def property_meets_conditions(self, first_key_list, data, value='', length=-1, loc=[]):
+        '''
+        Accepts a list of deepening keys to search through, where
+        the last key is the key to find if it exists in data.
+        Then checks if certain conditions are met.
+        Returns the paths of the found keys that meet conditions.
+        '''
+        if len(loc) == 0:
+            loc = first_key_list
+        found_indices = []
+        skip = False
+        for i in range(len(first_key_list)):
+            k = first_key_list[i]
+            # check through each element of the array for keys
+            if '[]' in k:
+                simple_k = k.split('[]')[0]
+                if simple_k in data:
+                    data = data[simple_k]
+                    for j in range(len(data)):
+                        # add in indices where keys were found
+                        detailed_k = simple_k + '[' + str(j) + ']'
+                        found_indices += (self.property_meets_conditions(first_key_list[i+1:], data[j], value=value, length=length, loc='.'.join(loc).replace(k, detailed_k).split('.')))
+                else:
+                    # key is not here, don't keep searching
+                    skip = True
+                    break
+            else:
+                if k in data:
+                    data = data[k]
+                else:
+                    # key is not here, don't keep searching
+                    skip = True
+                    break
+        if not skip:
+            valid = True
+            # check for specific value
+            if value != '':
+                if str(data) != str(value):
+                    valid = False 
+            # check for array length
+            if length > -1:
+                if len(data) < length:
+                    valid = False
+            if valid:
+                found_indices.append('.'.join(loc))
+        return found_indices
+
+
+    def search_for_key(self, should_find, found, expected_required, explanation, expected_val=[]):
+        '''
+        Searches for a key that is either required or ignored based on the additional dependencies. 
+        @param should_find is a boolean of if we need this key or don't need this key
+        @param found is the list of locations where the original key was found that
+        forced this key to be required or not. 
+        @param expected_required is the list of locations where we expect to find 
+        keys
+        @param explanation is a string explanation of why the key is expected (or not), in case of an error
+        @param expected_val is a list of possible/allowed expected values for each key found, if applicable
+        '''
+        for required in expected_required:
+            # go through the path to the location we found and the requirement
+            # side-by-side as long as possible
+            required = required.split('.')
+            data = copy.deepcopy(self.loaded_yaml)
+            for i in range(min(len(found), len(required))):
+                if found[i].split('[')[0] == required[i].split('[')[0]:
+                    # they are the same!
+                    if '[]' in required[i]:
+                        # handle arrays
+                        ind = int(found[i].split('[')[1].replace(']', ''))
+                        data = data[required[i].split('[]')[0]][ind] 
+                    else:
+                        # handle non-arrays
+                        data = data[required[i]]
+                else:
+                    # difference found, break
+                    required = required[i:]
+                    break
+            # look through data for required
+            found_key = True
+            for k in required:
+                if '[]' in k:
+                    self.logger.log(LogLevel.ERROR, "No index provided for required key '" + k + "'. Cannot proceed.")
+                    return
+                if k in data:
+                    data = data[k]
+                else:
+                    if should_find:
+                        # we expected to find this key, error
+                        self.logger.log(LogLevel.WARN, "Key '" + k + "' is required because '" + '.'.join(found) + "' " + explanation + ", but it is missing.")
+                        self.missing_keys += 1
+                    else:
+                        # otherwise, we did not want to find the key, so we're good here
+                        found_key = False
+                        break
+            if not should_find and found_key:
+                self.logger.log(LogLevel.WARN, "Key '" + k + "' is not allowed because '" + '.'.join(found) + "' " + explanation + ".")
+                self.invalid_keys += 1
+            elif found_key and len(expected_val) > 0:
+                if data not in expected_val:
+                    self.logger.log(LogLevel.WARN, "Key '" + k + "' must have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is " + str(data))
+                    self.invalid_values += 1
+                    
+
+    def conditional_requirements(self):
+        '''
+        Checks the yaml file for simple required dependencies.
+        If field 1 is provided and meets a set of conditions, then field 2 is required
+        '''
+        for req in self.dep_json['conditionalRequired']:
+            loc = req.split('.')
+            # there may be more than one if-else for each key, look through each
+            for entry in self.dep_json['conditionalRequired'][req]:
+                value = entry['conditions']['value'] if 'value' in entry['conditions'] else ''
+                length = entry['conditions']['length'] if 'length' in entry['conditions'] else -1
+                all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, length=length)
+                for x in all_found:
+                    found = x.split('.')
+                    if found[len(found)-1] != loc[len(loc)-1]:
+                        # possible that we thought we found a key but didn't. if so, skip
+                        continue 
+                    else:
+                        # start searching for the key(s) that is/are required now that the first key has been found
+                        self.search_for_key(True, found, entry['required'], "meets conditions " + str(entry['conditions']))
+
+
+    def conditional_ignore(self):
+        '''
+        Checks the yaml file for simple required dependencies.
+        If field 1 is provided and meets a set of conditions, then field 2 should not be provided
+        '''
+        for req in self.dep_json['conditionalIgnore']:
+            loc = req.split('.')
+            # there may be more than one if-else for each key, look through each
+            for entry in self.dep_json['conditionalIgnore'][req]:
+                value = entry['conditions']['value'] if 'value' in entry['conditions'] else ''
+                length = entry['conditions']['length'] if 'length' in entry['conditions'] else -1
+                all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, length=length)
+                for x in all_found:
+                    found = x.split('.')
+                    if found[len(found)-1] != loc[len(loc)-1]:
+                        # possible that we thought we found a key but didn't. if so, skip
+                        continue 
+                    else:
+                        # start searching for the key(s) that is/are required now that the first key has been found
+                        self.search_for_key(False, found, entry['ignore'], "meets conditions " + str(entry['conditions']))
+
+
+    def simple_value_matching(self):
+        '''
+        Checks the yaml file for value-matching dependencies.
+        If field1 equals value1, then field2 must be one of [...values]
+        '''
+        for field in self.dep_json['simpleAllowedValues']:
+            loc = field.split('.')
+            # there may be more than one value for each key, look through each
+            for val in self.dep_json['simpleAllowedValues'][field]:
+                # find every place where the field matches the value
+                all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=val)
+                for x in all_found:
+                    found = x.split('.')
+                    if found[len(found)-1] != loc[len(loc)-1]:
+                        # possible that we thought we found a key but didn't. if so, skip
+                        continue 
+                    else:
+                        # start searching for the key(s) that need to match one of the provided values
+                        for key in self.dep_json['simpleAllowedValues'][field][val]:
+                            self.search_for_key(True, found, [key], "is '" + val + "'", self.dep_json['simpleAllowedValues'][field][val][key])
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
 
@@ -369,8 +577,10 @@ if __name__ == '__main__':
         exit(0)
     file = args.path
     validator = YamlValidator(file)
-    # validate the field names in the valid
-    field_names_valid = validator.validate_field_names()
+    # validate the field names in the yaml
+    validator.validate_field_names()
+    # validate additional depdencies between fields
+    validator.validate_dependencies()
     # print the answer for validity
     print("")
 
@@ -382,7 +592,7 @@ if __name__ == '__main__':
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.empty_levels == 0 else "\033[91m") + "Properties Missing Data (empty level): " + str(validator.empty_levels))
     total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels + validator.out_of_range
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if total_errors == 0 else "\033[91m") + "Total Errors: " + str(total_errors))
-    if field_names_valid:
+    if total_errors == 0:
         validator.logger.log(LogLevel.CRITICAL_INFO, "\033[92m" + file + " is valid!")
     else:
         validator.logger.log(LogLevel.CRITICAL_INFO, "\033[91m" + file + " is not valid.")
