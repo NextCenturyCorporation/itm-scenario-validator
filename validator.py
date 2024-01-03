@@ -378,6 +378,7 @@ class YamlValidator:
         self.deep_links()
         self.scenes_with_transitions()
         self.validate_action_params()
+        self.validate_mission_importance()
 
 
     def simple_requirements(self):
@@ -677,6 +678,34 @@ class YamlValidator:
                     j += 1
             i += 1
 
+
+    def validate_mission_importance(self):
+        '''
+        Verifies that all characters with their mission importance appear
+        in the critical_ids list.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)['state']
+        characters = data['characters']
+        pairs = {}
+        # gather all id/mission-importance pairs
+        for c in characters:
+            if 'mission_importance' in c['demographics']:
+                cid = c['id']
+                importance = c['demographics']['mission_importance']
+                pairs[cid] = importance 
+        # verify that all pairs appear in critical_ids
+        critical = data['mission']['critical_ids']
+        obj_pairs = []
+        for c in pairs:
+            if {c:pairs[c]} not in critical:
+                self.logger.log(LogLevel.WARN, "Value of 'state.mission.critical_ids' is missing pair ('" + c + "', '" + str(pairs[c]) + "')")
+                self.missing_keys += 1
+            obj_pairs.append({c:pairs[c]})
+        # go backwards - make sure all pairs in critical_ids can be found in character data
+        for c in critical:
+            if c not in obj_pairs:
+                self.logger.log(LogLevel.WARN, "Value of 'state.mission.critical_ids' has pair '" + str(c) + "', but no character could be found matching that information")
+                self.missing_keys += 1
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
