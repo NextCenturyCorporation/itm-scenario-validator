@@ -378,6 +378,9 @@ class YamlValidator:
         self.deep_links()
         self.value_follows_list()
         self.require_unstructured()
+        self.scenes_with_transitions()
+        self.validate_action_params()
+        self.validate_mission_importance()
 
 
     def simple_requirements(self):
@@ -688,6 +691,83 @@ class YamlValidator:
             if k == 'unstructured':
                 found = True
         return found
+
+
+    def scenes_with_transitions(self):
+        '''
+        Looks through the yaml file to make sure that every scene from 0 to n-1 has 
+        a transitions field
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        for i in range(0, len(scenes)-1):
+            if 'transitions' not in scenes[i]:
+                self.logger.log(LogLevel.WARN, "Key 'transitions'  must be provided within each entry in 'scenes' but is missing at scenes[" + str(i) + "]")
+                self.missing_keys += 1
+
+
+    def validate_action_params(self):
+        '''
+        Ensure that action parameters have valid values
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        api = copy.deepcopy(self.api_yaml)
+        allowed_supplies = api['components']['schemas']['SupplyTypeEnum']['enum']
+        allowed_locations = api['components']['schemas']['InjuryLocationEnum']['enum']
+        allowed_categories = api['components']['schemas']['CharacterTagEnum']['enum']
+
+        scenes = data['scenes']
+        i = 0
+        for scene in scenes:
+            if 'action_mapping' in scene:
+                map = scene['action_mapping']
+                j = 0
+                for action in map:
+                    if 'parameters' in action:
+                        params = action['parameters']
+                        if 'treatment' in params:
+                            if params['treatment'] not in allowed_supplies:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.treatment' must be one of the following values: " + str(allowed_supplies) + " but is '" + params['treatment'] + "' instead.")
+                                self.invalid_values += 1                        
+                        if 'location' in params:
+                            if params['location'] not in allowed_locations:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.location' must be one of the following values: " + str(allowed_locations) + " but is '" + params['location'] + "' instead.")
+                                self.invalid_values += 1 
+                        if 'category' in params:
+                            if params['category'] not in allowed_categories:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.category' must be one of the following values: " + str(allowed_categories) + " but is '" + params['category'] + "' instead.")
+                                self.invalid_values += 1 
+                    j += 1
+            i += 1
+
+
+    def validate_mission_importance(self):
+        '''
+        Verifies that all characters with their mission importance appear
+        in the critical_ids list.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)['state']
+        characters = data['characters']
+        pairs = {}
+        # gather all id/mission-importance pairs
+        for c in characters:
+            if 'mission_importance' in c['demographics']:
+                cid = c['id']
+                importance = c['demographics']['mission_importance']
+                pairs[cid] = importance 
+        # verify that all pairs appear in critical_ids
+        critical = data['mission']['critical_ids']
+        obj_pairs = []
+        for c in pairs:
+            if {c:pairs[c]} not in critical:
+                self.logger.log(LogLevel.WARN, "Value of 'state.mission.critical_ids' is missing pair ('" + c + "', '" + str(pairs[c]) + "')")
+                self.missing_keys += 1
+            obj_pairs.append({c:pairs[c]})
+        # go backwards - make sure all pairs in critical_ids can be found in character data
+        for c in critical:
+            if c not in obj_pairs:
+                self.logger.log(LogLevel.WARN, "Value of 'state.mission.critical_ids' has pair '" + str(c) + "', but no character could be found matching that information")
+                self.missing_keys += 1
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')

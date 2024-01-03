@@ -1396,6 +1396,15 @@ components:
         - Medical
         - Specialist
         - Communications
+    CharacterTagEnum:
+      type: string
+      description: "the tag assigned to a character"
+      example: DELAYED
+      enum:
+        - MINIMAL
+        - DELAYED
+        - IMMEDIATE
+        - EXPECTANT
     MissionImportanceEnum:
       type: string
       description: How important the character is to the mission
