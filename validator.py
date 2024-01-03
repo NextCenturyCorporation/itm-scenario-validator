@@ -377,6 +377,8 @@ class YamlValidator:
         self.simple_value_matching()
         self.deep_links()
         self.value_follows_list()
+        self.require_unstructured()
+
 
     def simple_requirements(self):
         '''
@@ -658,6 +660,34 @@ class YamlValidator:
                 if v not in allowed_values:
                     self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is " + str(v))
                     self.invalid_values += 1
+    def require_unstructured(self):
+        '''
+        Within every scenes[].state, at least one unstructured field must be provided.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        i = 0
+        for scene in data['scenes']:
+            if 'state' in scene:
+                state = scene['state']
+                # look for an unstructured field
+                found = self.find_unstructured(state)
+                if not found:
+                    # unstructured not found - error
+                    self.logger.log(LogLevel.WARN, "At least one 'unstructured' key must be provided within each scenes[].state but is missing at scene[" + str(i) + "]")
+                    self.missing_keys += 1
+            i += 1
+
+    def find_unstructured(self, obj):
+        '''
+        Looks through obj for an unstructured field
+        '''
+        found = False
+        for k in obj:
+            if isinstance(obj[k], dict):
+                found = found or self.find_unstructured(obj[k])
+            if k == 'unstructured':
+                found = True
+        return found
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
