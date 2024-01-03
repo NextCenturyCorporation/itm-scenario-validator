@@ -573,10 +573,12 @@ class YamlValidator:
                 for req_set in self.dep_json['deepLinks'][parent_key]:
                     conditions = True
                     # check if the conditions are true
-                    explanation = ""
+                    explanation = "key-value pairs "
                     for c in req_set['condition']:
                         conditions = conditions and self.does_key_have_value(p.split('.')+c.split('.'), req_set['condition'][c], copy.deepcopy(self.loaded_yaml))
-                        explanation += "key " + c + " with value " + str(req_set['condition'][c]) + '; '
+                        explanation += "('" + c + "': '" + str(req_set['condition'][c]) + "'); "
+                    # remove extra semicolon
+                    explanation = explanation[:-2]
                     if conditions:
                         # if the conditions match at this parent level, check if the required keys also match
                         for x in req_set['requirement']:                            
