@@ -376,6 +376,8 @@ class YamlValidator:
         self.conditional_ignore()
         self.simple_value_matching()
         self.deep_links()
+        self.scenes_with_transitions()
+
 
     def simple_requirements(self):
         '''
@@ -625,6 +627,21 @@ class YamlValidator:
                 return False
         # if we made it to here, we found the key - check the value!
         return data == value
+
+
+    def scenes_with_transitions(self):
+        '''
+        Looks through the yaml file to make sure that every scene from 0 to n-1 has 
+        a transitions field
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        for i in range(0, len(scenes)-1):
+            if 'transitions' not in scenes[i]:
+                self.logger.log(LogLevel.WARN, "Key 'transitions'  must be provided within each entry in 'scenes' but is missing at scenes[" + str(i) + "]")
+                self.missing_keys += 1
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
