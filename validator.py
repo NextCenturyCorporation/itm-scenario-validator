@@ -560,8 +560,8 @@ class YamlValidator:
 
     def deep_links(self):
         '''
-        Checks the yaml file for "if field1 is value1 and field2 is value2,
-        then field3 must be one of [values]"
+        Checks the yaml file for "if field1 is one of [a, b,...] and field2 is one of [c, d,...],
+        then field3 must be one of [e, f,...]"
         '''
         for parent_key in self.dep_json['deepLinks']:
             # get all possible parents for the keys
@@ -574,10 +574,20 @@ class YamlValidator:
                 for req_set in self.dep_json['deepLinks'][parent_key]:
                     conditions = True
                     # check if the conditions are true
-                    explanation = ""
+                    explanation = "key-value pairs "
                     for c in req_set['condition']:
-                        conditions = conditions and self.does_key_have_value(p.split('.')+c.split('.'), req_set['condition'][c], copy.deepcopy(self.loaded_yaml))
-                        explanation += "key " + c + " with value " + str(req_set['condition'][c]) + '; '
+                        singleCondition = False
+                        values = req_set['condition'][c]
+                        if not isinstance(values, list):
+                            values = [values]
+                        for v in values:
+                            singleCondition = singleCondition or self.does_key_have_value(p.split('.')+c.split('.'), v, copy.deepcopy(self.loaded_yaml))
+                            if singleCondition:
+                                explanation += "('" + c + "': '" + str(v) + "'); "
+                                break
+                        conditions = conditions and singleCondition
+                    # remove extra semicolon
+                    explanation = explanation[:-2]
                     if conditions:
                         # if the conditions match at this parent level, check if the required keys also match
                         for x in req_set['requirement']:                            
