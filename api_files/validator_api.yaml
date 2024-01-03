@@ -265,6 +265,15 @@ components:
       - Specialist
       - Communications
       type: string
+    CharacterTagEnum:
+      description: the tag assigned to a character
+      enum:
+      - MINIMAL
+      - DELAYED
+      - IMMEDIATE
+      - EXPECTANT
+      example: DELAYED
+      type: string
     CivilianPresenceEnum:
       description: Indicator of how many civilians are present in the mission
       enum:

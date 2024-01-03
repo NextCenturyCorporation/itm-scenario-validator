@@ -377,6 +377,7 @@ class YamlValidator:
         self.simple_value_matching()
         self.deep_links()
         self.scenes_with_transitions()
+        self.validate_action_params()
 
 
     def simple_requirements(self):
@@ -641,6 +642,40 @@ class YamlValidator:
                 self.logger.log(LogLevel.WARN, "Key 'transitions'  must be provided within each entry in 'scenes' but is missing at scenes[" + str(i) + "]")
                 self.missing_keys += 1
 
+
+    def validate_action_params(self):
+        '''
+        Ensure that action parameters have valid values
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        api = copy.deepcopy(self.api_yaml)
+        allowed_supplies = api['components']['schemas']['SupplyTypeEnum']['enum']
+        allowed_locations = api['components']['schemas']['InjuryLocationEnum']['enum']
+        allowed_categories = api['components']['schemas']['CharacterTagEnum']['enum']
+
+        scenes = data['scenes']
+        i = 0
+        for scene in scenes:
+            if 'action_mapping' in scene:
+                map = scene['action_mapping']
+                j = 0
+                for action in map:
+                    if 'parameters' in action:
+                        params = action['parameters']
+                        if 'treatment' in params:
+                            if params['treatment'] not in allowed_supplies:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.treatment' must be one of the following values: " + str(allowed_supplies) + " but is '" + params['treatment'] + "' instead.")
+                                self.invalid_values += 1                        
+                        if 'location' in params:
+                            if params['location'] not in allowed_locations:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.location' must be one of the following values: " + str(allowed_locations) + " but is '" + params['location'] + "' instead.")
+                                self.invalid_values += 1 
+                        if 'category' in params:
+                            if params['category'] not in allowed_categories:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.category' must be one of the following values: " + str(allowed_categories) + " but is '" + params['category'] + "' instead.")
+                                self.invalid_values += 1 
+                    j += 1
+            i += 1
 
 
 if __name__ == '__main__':
