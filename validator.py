@@ -559,8 +559,8 @@ class YamlValidator:
 
     def deep_links(self):
         '''
-        Checks the yaml file for "if field1 is value1 and field2 is value2,
-        then field3 must be one of [values]"
+        Checks the yaml file for "if field1 is one of [a, b,...] and field2 is one of [c, d,...],
+        then field3 must be one of [e, f,...]"
         '''
         for parent_key in self.dep_json['deepLinks']:
             # get all possible parents for the keys
@@ -575,8 +575,13 @@ class YamlValidator:
                     # check if the conditions are true
                     explanation = "key-value pairs "
                     for c in req_set['condition']:
-                        conditions = conditions and self.does_key_have_value(p.split('.')+c.split('.'), req_set['condition'][c], copy.deepcopy(self.loaded_yaml))
-                        explanation += "('" + c + "': '" + str(req_set['condition'][c]) + "'); "
+                        singleCondition = False
+                        for v in req_set['condition'][c]:
+                            singleCondition = singleCondition or self.does_key_have_value(p.split('.')+c.split('.'), v, copy.deepcopy(self.loaded_yaml))
+                            if singleCondition:
+                                explanation += "('" + c + "': '" + str(v) + "'); "
+                                break
+                        conditions = conditions and singleCondition
                     # remove extra semicolon
                     explanation = explanation[:-2]
                     if conditions:
