@@ -60,5 +60,24 @@
                 ]
             }
         }
+    },
+    "deepLinks": {
+        "state.characters[].demographics": [
+            {
+                "condition": {
+                    "rank": [
+                        "O-3"
+                    ],
+                    "military_branch": [
+                        "US Navy"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Lieutenant"
+                    ]
+                }
+            }
+        ]
     }
 }
