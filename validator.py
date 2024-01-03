@@ -7,6 +7,18 @@ API_YAML = config('API_YAML')
 STATE_YAML = config('STATE_YAML')
 DEP_JSON = config('DEP_JSON')
 
+# special loader with duplicate key checking (https://gist.github.com/pypt/94d747fe5180851196eb)
+class UniqueKeyLoader(yaml.SafeLoader):
+    def construct_mapping(self, node, deep=False):
+        mapping = []
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if key in mapping:
+                raise ValueError(f"Duplicate key {key!r} found in YAML.")
+            mapping.append(key)
+        return super().construct_mapping(node, deep)
+
+
 PRIMITIVE_TYPE_MAP = {
     'string': str,
     'boolean': bool,
@@ -19,6 +31,7 @@ PRIMITIVE_TYPE_MAP = {
 class YamlValidator:
     logger = Logger("yamlValidator")
     file = None
+    dup_check_file = None
     api_file = None
     dep_file = None
     state_change_file = None
@@ -50,6 +63,11 @@ class YamlValidator:
             self.logger.log(LogLevel.ERROR, "Error while loading in state api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         try:
             self.loaded_yaml = yaml.load(self.file, Loader=yaml.CLoader)
+            try:
+                dup_check_file = open(filename, 'r')
+                yaml.load(dup_check_file, Loader=UniqueKeyLoader)
+            except Exception as e:
+                self.logger.log(LogLevel.ERROR, "Error while loading in yaml file -- " + str(e))
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
         try:
@@ -57,7 +75,6 @@ class YamlValidator:
             self.dep_json = json.load(self.dep_file)
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
-    
 
     def __del__(self):
         '''
@@ -72,6 +89,8 @@ class YamlValidator:
             self.state_change_file.close()
         if (self.dep_file):
             self.dep_file.close()
+        if (self.dup_check_file):
+            self.dup_check_file.close()
 
 
     def validate_field_names(self):
