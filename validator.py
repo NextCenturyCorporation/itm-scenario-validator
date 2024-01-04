@@ -656,7 +656,7 @@ class YamlValidator:
             for loc in locations:
                 v = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
                 if v not in allowed_values:
-                    self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is " + str(v))
+                    self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
                     self.invalid_values += 1
 
 if __name__ == '__main__':
