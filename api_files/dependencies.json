@@ -80,7 +80,7 @@
             }
         ]
     },
-    "fromList": {
+    "valueMatch": {
         "scenes[].action_mapping[].character_id": "state.characters[].id",
         "scenes[].tagging.probe_responses[].character_id": "state.characters[].id",
         "scenes[].transitions.character_vitals[].character_id": "state.characters[].id",
