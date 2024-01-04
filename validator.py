@@ -754,7 +754,7 @@ class YamlValidator:
         scenes = data['scenes']
         for i in range(0, len(scenes)-1):
             if 'transitions' not in scenes[i]:
-                self.logger.log(LogLevel.WARN, "Key 'transitions'  must be provided within each entry in 'scenes' but is missing at scenes[" + str(i) + "]")
+                self.logger.log(LogLevel.WARN, "Key 'transitions'  must be provided within all but the last entry in 'scenes' but is missing at scenes[" + str(i) + "]")
                 self.missing_keys += 1
 
 
@@ -803,23 +803,31 @@ class YamlValidator:
         pairs = {}
         # gather all id/mission-importance pairs
         for c in characters:
+            cid = c['id']
             if 'mission_importance' in c['demographics']:
-                cid = c['id']
                 importance = c['demographics']['mission_importance']
                 pairs[cid] = importance 
-        # verify that all pairs appear in critical_ids
-        critical = data['mission']['critical_ids']
-        obj_pairs = []
-        for c in pairs:
-            if {c:pairs[c]} not in critical:
-                self.logger.log(LogLevel.WARN, "Value of 'state.mission.critical_ids' is missing pair ('" + c + "', '" + str(pairs[c]) + "')")
-                self.missing_keys += 1
-            obj_pairs.append({c:pairs[c]})
-        # go backwards - make sure all pairs in critical_ids can be found in character data
-        for c in critical:
-            if c not in obj_pairs:
-                self.logger.log(LogLevel.WARN, "Value of 'state.mission.critical_ids' has pair '" + str(c) + "', but no character could be found matching that information")
-                self.missing_keys += 1
+            else:
+                pairs[cid] = 'normal'
+        # verify that all pairs appear in character_importance
+        critical_dict = {}
+        if 'mission' in data and 'character_importance' in data['mission']:
+            critical = data['mission']['character_importance']
+            for c in critical:
+                critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
+            for k in critical_dict:
+                if k in pairs:
+                    if pairs[k] != critical_dict[k]:
+                        self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
+                        self.invalid_values += 1     
+                else:
+                    self.logger.log(LogLevel.WARN, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
+                    self.invalid_keys += 1             
+            for k in pairs:
+                if k not in critical_dict and pairs[k] != 'normal':
+                    self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
+                    self.missing_keys += 1         
+
 
 
 if __name__ == '__main__':
