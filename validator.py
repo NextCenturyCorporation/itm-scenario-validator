@@ -400,7 +400,8 @@ class YamlValidator:
         self.scenes_with_transitions()
         self.validate_action_params()
         self.validate_mission_importance()
-
+        self.require_unstructured()
+        self.deep_links()
 
     def simple_requirements(self):
         '''
@@ -593,6 +594,38 @@ class YamlValidator:
                         for key in self.dep_json['simpleAllowedValues'][field][val]:
                             self.search_for_key(True, found, [key], "is '" + val + "'", self.dep_json['simpleAllowedValues'][field][val][key])
 
+
+
+    def require_unstructured(self):
+        '''
+        Within every scenes[].state, at least one unstructured field must be provided.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        i = 0
+        for scene in data['scenes']:
+            if 'state' in scene:
+                state = scene['state']
+                # look for an unstructured field
+                found = self.find_unstructured(state)
+                if not found:
+                    # unstructured not found - error
+                    self.logger.log(LogLevel.WARN, "At least one 'unstructured' key must be provided within each scenes[].state but is missing at scene[" + str(i) + "]")
+                    self.missing_keys += 1
+            i += 1
+
+    def find_unstructured(self, obj):
+        '''
+        Looks through obj for an unstructured field
+        '''
+        found = False
+        if obj is None:
+            return found
+        for k in obj:
+            if isinstance(obj[k], dict):
+                found = found or self.find_unstructured(obj[k])
+            if k == 'unstructured':
+                found = True
+        return found
 
     def deep_links(self):
         '''
@@ -787,6 +820,7 @@ class YamlValidator:
             if c not in obj_pairs:
                 self.logger.log(LogLevel.WARN, "Value of 'state.mission.critical_ids' has pair '" + str(c) + "', but no character could be found matching that information")
                 self.missing_keys += 1
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
