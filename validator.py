@@ -664,9 +664,9 @@ class YamlValidator:
         '''
         Checks the yaml file for "field1 value must match one of the values from field2"
         '''
-        for key in self.dep_json['fromList']:
+        for key in self.dep_json['valueMatch']:
             # start by compiling a list of all allowed values by using the value of the k-v pair
-            allowed_loc = self.dep_json['fromList'][key].split('.')
+            allowed_loc = self.dep_json['valueMatch'][key].split('.')
             locations = self.property_meets_conditions(allowed_loc, copy.deepcopy(self.loaded_yaml))
             # gather allowed values
             allowed_values = []
@@ -680,7 +680,7 @@ class YamlValidator:
             for loc in locations:
                 v = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
                 if v not in allowed_values:
-                    self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is " + str(v))
+                    self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
                     self.invalid_values += 1
     def require_unstructured(self):
         '''
