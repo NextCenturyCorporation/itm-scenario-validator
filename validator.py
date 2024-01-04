@@ -401,7 +401,6 @@ class YamlValidator:
         self.validate_action_params()
         self.validate_mission_importance()
         self.require_unstructured()
-        self.deep_links()
 
     def simple_requirements(self):
         '''
@@ -659,7 +658,7 @@ class YamlValidator:
                     explanation = explanation[:-2]
                     if conditions:
                         # if the conditions match at this parent level, check if the required keys also match
-                        for x in req_set['requirement']:                            
+                        for x in req_set['requirement']:  
                             self.search_for_key(None, p.split('.'), [parent_key+'.'+x], 'has ' + explanation, expected_val=req_set['requirement'][x])
             
 
