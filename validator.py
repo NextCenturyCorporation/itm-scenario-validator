@@ -588,6 +588,8 @@ class YamlValidator:
         Looks through obj for an unstructured field
         '''
         found = False
+        if obj is None:
+            return found
         for k in obj:
             if isinstance(obj[k], dict):
                 found = found or self.find_unstructured(obj[k])
