@@ -366,7 +366,8 @@ components:
           example: IED Explosion
         session_complete:
           type: boolean
-          description: "set to true if the session is complete; that is, there are\
+          description:
+            "set to true if the session is complete; that is, there are\
             \ no more scenarios"
         state:
           $ref: "#/components/schemas/State"
@@ -487,7 +488,8 @@ components:
           example: 5.2
         scenario_complete:
           type: boolean
-          description: set to true if the scenario is complete; subsequent calls involving
+          description:
+            set to true if the scenario is complete; subsequent calls involving
             that scenario will return an error code
         mission:
           $ref: "#/components/schemas/Mission"
@@ -746,7 +748,8 @@ components:
           $ref: "#/components/schemas/Vitals"
         visited:
           type: boolean
-          description: whether or not this character has been visited by the ADM in the current
+          description:
+            whether or not this character has been visited by the ADM in the current
             scenario
           default: false
     Demographics:
@@ -1328,6 +1331,7 @@ components:
         - Chief Warrant Officer 5
         - 2nd Lieutenant
         - 1st Lieutenant
+        - Lieutenant
         - Captain
         - Major
         - Lieutenant Colonel
