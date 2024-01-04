@@ -42,9 +42,7 @@
                     "value": "APPLY_TREATMENT"
                 },
                 "required": [
-                    "scenes[].action_mapping[].character_id",
-                    "scenes[].action_mapping[].parameters.treatment",
-                    "scenes[].action_mapping[].parameters.location"
+                    "scenes[].action_mapping[].character_id"
                 ]
             },
             {
