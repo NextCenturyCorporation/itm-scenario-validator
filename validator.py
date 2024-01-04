@@ -400,7 +400,6 @@ class YamlValidator:
         self.scenes_with_transitions()
         self.validate_action_params()
         self.validate_mission_importance()
-        self.require_unstructured()
 
     def simple_requirements(self):
         '''
