@@ -685,6 +685,7 @@ class YamlValidator:
         in the critical_ids list.
         '''
         data = copy.deepcopy(self.loaded_yaml)['state']
+        allowed_importance = copy.deepcopy(self.api_yaml)['components']['schemas']['MissionImportanceEnum']['enum']
         characters = data['characters']
         pairs = {}
         # gather all id/mission-importance pairs
@@ -699,20 +700,24 @@ class YamlValidator:
         critical_dict = {}
         if 'mission' in data and 'character_importance' in data['mission']:
             critical = data['mission']['character_importance']
-            for c in critical:
-                critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
-            for k in critical_dict:
-                if k in pairs:
-                    if pairs[k] != critical_dict[k]:
-                        self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
-                        self.invalid_values += 1     
-                else:
-                    self.logger.log(LogLevel.WARN, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
-                    self.invalid_keys += 1             
-            for k in pairs:
-                if k not in critical_dict and pairs[k] != 'normal':
-                    self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
-                    self.missing_keys += 1         
+            if critical is not None:
+                for c in critical:
+                    critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
+                for k in critical_dict:
+                    if k in pairs:
+                        if pairs[k] != critical_dict[k]:
+                            self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
+                            self.invalid_values += 1     
+                    else:
+                        self.logger.log(LogLevel.WARN, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
+                        self.invalid_keys += 1     
+                    if critical_dict[k] not in allowed_importance:
+                        self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' must be one of " + str(allowed_importance) + "', but instead it is '" + critical_dict[k] + "'")
+                        self.invalid_values += 1              
+        for k in pairs:
+            if k not in critical_dict and pairs[k] != 'normal':
+                self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
+                self.missing_keys += 1         
 
 
 if __name__ == '__main__':
