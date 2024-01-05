@@ -590,7 +590,7 @@ class YamlValidator:
                     else:
                         # start searching for the key(s) that need to match one of the provided values
                         for key in self.dep_json['simpleAllowedValues'][field][val]:
-                            self.search_for_key(True, found, [key], "is '" + val + "'", self.dep_json['simpleAllowedValues'][field][val][key])
+                            self.search_for_key(None, found, [key], "is '" + val + "'", self.dep_json['simpleAllowedValues'][field][val][key])
 
 
 

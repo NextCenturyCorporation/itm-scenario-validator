@@ -110,6 +110,148 @@
                     "UNRESPONSIVE"
                 ]
             }
+        },
+        "state.characters[].injuries[].name": {
+            "Ear Bleed": {
+                "state.characters[].injuries[].location": [
+                    "left face",
+                    "right face"
+                ]
+            },
+            "Asthmatic": {
+                "state.characters[].injuries[].location": [
+                    "unspecified",
+                    "internal"
+                ]
+            },
+            "Laceration": {
+                "state.characters[].injuries[].location": [
+                    "left forearm",
+                    "right forearm",
+                    "left stomach",
+                    "right stomach",
+                    "left thigh",
+                    "right thigh",
+                    "left calf",
+                    "right calf",
+                    "left wrist",
+                    "right wrist"
+                ]
+            },
+            "Puncture": {
+                "state.characters[].injuries[].location": [
+                    "left neck",
+                    "right neck",
+                    "left bicep",
+                    "right bicep",
+                    "left shoulder",
+                    "right shoulder",
+                    "left stomach",
+                    "right stomach",
+                    "left side",
+                    "right side",
+                    "left thigh",
+                    "right thigh"
+                ]
+            },
+            "Shrapnel": {
+                "state.characters[].injuries[].location": [
+                    "left face",
+                    "right face",
+                    "left calf",
+                    "right calf"
+                ]
+            },
+            "Chest Collapse": {
+                "state.characters[].injuries[].location": [
+                    "left chest",
+                    "right chest"
+                ]
+            },
+            "Amputation": {
+                "state.characters[].injuries[].location": [
+                    "left wrist",
+                    "right wrist",
+                    "left calf",
+                    "right calf"
+                ]
+            },
+            "Burn": {
+                "state.characters[].injuries[].location": [
+                    "right forearm",
+                    "left forearm",
+                    "right calf",
+                    "left calf",
+                    "right thigh",
+                    "left thigh",
+                    "right stomach",
+                    "left stomach",
+                    "right bicep",
+                    "left bicep",
+                    "right shoulder",
+                    "left shoulder",
+                    "right side",
+                    "left side",
+                    "right chest",
+                    "left chest",
+                    "right wrist",
+                    "left wrist",
+                    "left face",
+                    "right face",
+                    "left neck",
+                    "right neck",
+                    "unspecified"
+                ]
+            },
+            "Abrasion": {
+                "state.characters[].injuries[].location": [
+                    "right forearm",
+                    "left forearm",
+                    "right calf",
+                    "left calf",
+                    "right thigh",
+                    "left thigh",
+                    "right stomach",
+                    "left stomach",
+                    "right bicep",
+                    "left bicep",
+                    "right shoulder",
+                    "left shoulder",
+                    "right side",
+                    "left side",
+                    "right chest",
+                    "left chest",
+                    "right wrist",
+                    "left wrist",
+                    "left face",
+                    "right face",
+                    "left neck",
+                    "right neck",
+                    "unspecified"
+                ]
+            },
+            "Broken Bone": {
+                "state.characters[].injuries[].location": [
+                    "right forearm",
+                    "left forearm",
+                    "right thigh",
+                    "left thigh",
+                    "right shoulder",
+                    "left shoulder",
+                    "right side",
+                    "left side",
+                    "right wrist",
+                    "left wrist",
+                    "left neck",
+                    "right neck",
+                    "unspecified"
+                ]
+            },
+            "Internal": {
+                "state.characters[].injuries[].location": [
+                    "internal"
+                ]
+            }
         }
     },
     "deepLinks": {
