@@ -675,6 +675,11 @@ class YamlValidator:
                             if params['category'] not in allowed_categories:
                                 self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.category' must be one of the following values: " + str(allowed_categories) + " but is '" + params['category'] + "' instead.")
                                 self.invalid_values += 1 
+                        # validate params only includes expected values
+                        for key in params:
+                            if key not in ['treatment', 'location', 'category']:
+                                self.logger.log(LogLevel.WARN, "'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(['treatment', 'location', 'category']) + " but has key '" + key + "'.")
+                                self.invalid_keys += 1 
                     j += 1
             i += 1
 
