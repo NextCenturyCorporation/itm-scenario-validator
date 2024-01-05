@@ -32,6 +32,7 @@ class YamlValidator:
     out_of_range = 0
     invalid_keys = 0
     empty_levels = 0
+    unstructured_missing = 0
 
     def __init__(self, filename):
         '''
@@ -376,6 +377,8 @@ class YamlValidator:
         self.conditional_ignore()
         self.simple_value_matching()
         self.deep_links()
+        self.validate_unstructured()
+
 
     def simple_requirements(self):
         '''
@@ -626,6 +629,104 @@ class YamlValidator:
         # if we made it to here, we found the key - check the value!
         return data == value
 
+
+    def validate_unstructured(self):
+        '''
+        Searches through the entire yaml file to ensure that
+        all structured text appears in the unstructured text
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        
+        # do not validate unstructured within state
+        
+        # validate unstructured text within mission
+        mission_unstructured = data['state']['mission']['unstructured']
+        mission_structured = data['state']['mission']
+        for key in mission_structured:
+            if key != 'unstructured':
+                val = mission_structured[key]
+                if isinstance(val, str) or isinstance(val, int) or isinstance(val, float):
+                    if self.format_string_for_search(val) not in mission_unstructured.lower():
+                        self.logger.log(LogLevel.WARN, "The value of '" + key + "' in state.mission is '" + str(val) + "'. This value must appear in state.mission's unstructured text, but does not.")
+                        self.unstructured_missing += 1
+                if isinstance(val, list):
+                    # critical ids is a list
+                    for x in val:
+                        if isinstance(x, dict):
+                            # critical ids is a list of objects
+                            for k in x:
+                                # check values of character importance
+                                if self.format_string_for_search(x[k]) not in mission_unstructured.lower():
+                                    self.logger.log(LogLevel.WARN, "The value of '" + k + "' in state.environment.decision_environment." + key + " is '" + str(x[k]) + "'. This value must appear in state.mission's unstructured text, but does not.")
+                                    self.unstructured_missing += 1
+                                # check character names
+                                if self.format_string_for_search(k) not in mission_unstructured.lower():
+                                    self.logger.log(LogLevel.WARN, "The value of 'critical_ids' in state.mission includes key '" + str(k) + "'. This value must appear in state.mission's unstructured text, but does not.")
+                                    self.unstructured_missing += 1                                  
+        
+        # do not validate unstructured within sim environment
+        
+        # decision_env needs to be validated with words and numbers, not keys
+        decision_env_unstructured = data['state']['environment']['decision_environment']['unstructured']
+        decision_env_structured = data['state']['environment']['decision_environment']
+        for key in decision_env_structured:
+            if key != 'unstructured':
+                val = decision_env_structured[key]
+                if isinstance(val, str) or isinstance(val, int) or isinstance(val, float):
+                    if self.format_string_for_search(val) not in decision_env_unstructured.lower():
+                        self.logger.log(LogLevel.WARN, "The value of '" + key + "' in state.environment.decision_environment is '" + str(val) + "'. This value must appear in state.environment.decision_environment's unstructured text, but does not.")
+                        self.unstructured_missing += 1
+                elif isinstance(val, dict):
+                    # aid delay is a dictionary
+                    for k in val:
+                        if self.format_string_for_search(val[k]) not in decision_env_unstructured.lower():
+                            self.logger.log(LogLevel.WARN, "The value of '" + k + "' in state.environment.decision_environment." + key + " is '" + str(val[k]) + "'. This value must appear in state.environment.decision_environment's unstructured text, but does not.")
+                            self.unstructured_missing += 1
+        
+        # threat state needs threat type and severity validated
+        threat_unstructured = data['state']['threat_state']['unstructured']
+        threat_structured = data['state']['threat_state']['threats']
+        for threat_set in threat_structured:
+            for key in threat_set:
+                if self.format_string_for_search(threat_set[key]) not in threat_unstructured.lower():
+                    self.logger.log(LogLevel.WARN, "The value of '" + key + "' in state.threat_state.threats is '" + str(val) + "'. This value must appear in state.threat_state's unstructured text, but does not.")
+                    self.unstructured_missing += 1
+        
+        # do not validate unstructured within supplies
+        
+        # characters need name/rapport/demographics and injury if visible at start
+        character_data = data['state']['characters']
+        for character in character_data:
+            character_unstructured = character['unstructured']
+            if self.format_string_for_search(character['name']) not in character_unstructured.lower():
+                    self.logger.log(LogLevel.WARN, "The value of 'name' in state.characters for character with id '" + character['id'] + "' is '" + str(character['name']) + "'. This value must appear in state.character's unstructured text for id '" + character['id'] + "', but does not.")
+                    self.unstructured_missing += 1
+            if self.format_string_for_search(character['rapport']) not in character_unstructured.lower():
+                self.logger.log(LogLevel.WARN, "The value of 'rapport' in state.characters for character with id '" + character['id'] + "' is '" + str(character['rapport']) + "'. This value must appear in state.character's unstructured text for id '" + character['id'] + "', but does not.")
+                self.unstructured_missing += 1
+            if self.format_string_for_search(character['demographics']['age']) not in character_unstructured.lower():
+                self.logger.log(LogLevel.WARN, "The value of 'age' in state.characters for character with id '" + character['id'] + "' is '" + str(character['demographics']['age']) + "'. This value must appear in state.character's unstructured text for id '" + character['id'] + "', but does not.")
+                self.unstructured_missing += 1
+            if self.format_string_for_search(character['demographics']['race']) not in character_unstructured.lower():
+                self.logger.log(LogLevel.WARN, "The value of 'race' in state.characters for character with id '" + character['id'] + "' is '" + str(character['demographics']['race']) + "'. This value must appear in state.character's unstructured text for id '" + character['id'] + "', but does not.")
+                self.unstructured_missing += 1
+            if self.format_string_for_search(character['demographics']['military_disposition']) not in character_unstructured.lower():
+                self.logger.log(LogLevel.WARN, "The value of 'military_disposition' in state.characters for character with id '" + character['id'] + "' is '" + str(character['demographics']['military_disposition']) + "'. This value must appear in state.character's unstructured text for id '" + character['id'] + "', but does not.")
+                self.unstructured_missing += 1
+            if self.format_string_for_search(character['demographics']['mission_importance']) not in character_unstructured.lower():
+                self.logger.log(LogLevel.WARN, "The value of 'mission_importance' in state.characters for character with id '" + character['id'] + "' is '" + str(character['demographics']['mission_importance']) + "'. This value must appear in state.character's unstructured text for id '" + character['id'] + "', but does not.")
+                self.unstructured_missing += 1
+            sex = 'male' if character['demographics']['sex'] == 'M' else 'female'
+            if self.format_string_for_search(sex) not in character_unstructured.lower():
+                self.logger.log(LogLevel.WARN, "The value of 'sex' in state.characters for character with id '" + character['id'] + "' is '" + str(sex) + "'. This value must appear in state.character's unstructured text for id '" + character['id'] + "', but does not.")
+                self.unstructured_missing += 1 
+
+    def format_string_for_search(self, string):
+        '''
+        Formats a string for searching within unstructured text
+        '''
+        return ' ' + str(string).lower() + ' '
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
 
@@ -653,7 +754,8 @@ if __name__ == '__main__':
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_values == 0 else "\033[91m") + "Invalid Values (mismatched enum): " + str(validator.invalid_values))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.out_of_range == 0 else "\033[91m") + "Invalid Values (out of range): " + str(validator.out_of_range))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.empty_levels == 0 else "\033[91m") + "Properties Missing Data (empty level): " + str(validator.empty_levels))
-    total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels + validator.out_of_range
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.unstructured_missing == 0 else "\033[91m") + "Values Missing From Unstructured Data: " + str(validator.unstructured_missing))
+    total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels + validator.out_of_range + validator.unstructured_missing
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if total_errors == 0 else "\033[91m") + "Total Errors: " + str(total_errors))
     if total_errors == 0:
         validator.logger.log(LogLevel.CRITICAL_INFO, "\033[92m" + file + " is valid!")
