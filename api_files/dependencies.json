@@ -93,13 +93,13 @@
             }
         ]
     },
-    "conditionalIgnore": {
+    "conditionalForbid": {
         "scenes[].index": [
             {
                 "conditions": {
                     "value": 0
                 },
-                "ignore": [
+                "forbid": [
                     "scenes[].state"
                 ]
             }
@@ -109,7 +109,7 @@
                 "conditions": {
                     "value": "Allied"
                 },
-                "ignore": [
+                "forbid": [
                     "state.characters[].demographics.military_branch"
                 ]
             },
@@ -117,7 +117,7 @@
                 "conditions": {
                     "value": "Civilian"
                 },
-                "ignore": [
+                "forbid": [
                     "state.characters[].demographics.military_branch"
                 ]
             },
@@ -125,7 +125,7 @@
                 "conditions": {
                     "value": "Military Adversary"
                 },
-                "ignore": [
+                "forbid": [
                     "state.characters[].demographics.military_branch"
                 ]
             },
@@ -133,7 +133,7 @@
                 "conditions": {
                     "value": "Non-Military Adversary"
                 },
-                "ignore": [
+                "forbid": [
                     "state.characters[].demographics.military_branch"
                 ]
             }
@@ -143,7 +143,7 @@
                 "conditions": {
                     "exists": false
                 },
-                "ignore": [
+                "forbid": [
                     "state.characters[].demographics.rank",
                     "state.characters[].demographics.rank_title"
                 ]

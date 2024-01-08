@@ -392,7 +392,7 @@ class YamlValidator:
         '''
         self.simple_requirements()
         self.conditional_requirements()
-        self.conditional_ignore()
+        self.conditional_forbid()
         self.simple_value_matching()
         self.deep_links()
         self.value_follows_list()
@@ -554,15 +554,15 @@ class YamlValidator:
                         self.search_for_key(True, found, entry['required'], "meets conditions " + str(entry['conditions']))
 
 
-    def conditional_ignore(self):
+    def conditional_forbid(self):
         '''
         Checks the yaml file for simple required dependencies.
         If field 1 is provided and meets a set of conditions, then field 2 should not be provided
         '''
-        for req in self.dep_json['conditionalIgnore']:
+        for req in self.dep_json['conditionalForbid']:
             loc = req.split('.')
             # there may be more than one if-else for each key, look through each
-            for entry in self.dep_json['conditionalIgnore'][req]:
+            for entry in self.dep_json['conditionalForbid'][req]:
                 value = entry['conditions']['value'] if 'value' in entry['conditions'] else ''
                 length = entry['conditions']['length'] if 'length' in entry['conditions'] else -1
                 exists = bool(entry['conditions']['exists']) if 'exists' in entry['conditions'] else True
@@ -574,7 +574,7 @@ class YamlValidator:
                         continue 
                     else:
                         # start searching for the key(s) that is/are required now that the first key has been found
-                        self.search_for_key(False, found, entry['ignore'], "meets conditions " + str(entry['conditions']))
+                        self.search_for_key(False, found, entry['forbid'], "meets conditions " + str(entry['conditions']))
 
 
     def simple_value_matching(self):
