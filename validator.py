@@ -394,12 +394,14 @@ class YamlValidator:
         self.conditional_requirements()
         self.conditional_forbid()
         self.simple_value_matching()
+        self.require_unstructured()
         self.deep_links()
         self.value_follows_list()
         self.require_unstructured()
         self.scenes_with_transitions()
         self.validate_action_params()
         self.validate_mission_importance()
+        self.value_follows_list()
 
     def simple_requirements(self):
         '''
@@ -632,6 +634,38 @@ class YamlValidator:
         return found
 
 
+
+    def require_unstructured(self):
+        '''
+        Within every scenes[].state, at least one unstructured field must be provided.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        i = 0
+        for scene in data['scenes']:
+            if 'state' in scene:
+                state = scene['state']
+                # look for an unstructured field
+                found = self.find_unstructured(state)
+                if not found:
+                    # unstructured not found - error
+                    self.logger.log(LogLevel.WARN, "At least one 'unstructured' key must be provided within each scenes[].state but is missing at scene[" + str(i) + "]")
+                    self.missing_keys += 1
+            i += 1
+
+    def find_unstructured(self, obj):
+        '''
+        Looks through obj for an unstructured field
+        '''
+        found = False
+        if obj is None:
+            return found
+        for k in obj:
+            if isinstance(obj[k], dict):
+                found = found or self.find_unstructured(obj[k])
+            if k == 'unstructured':
+                found = True
+        return found
+
     def deep_links(self):
         '''
         Checks the yaml file for "if field1 is one of [a, b,...] and field2 is one of [c, d,...],
@@ -723,7 +757,7 @@ class YamlValidator:
                     self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
                     self.invalid_values += 1
 
-
+                    
     def require_unstructured(self):
         '''
         Within every scenes[].state, at least one unstructured field must be provided.
@@ -753,6 +787,7 @@ class YamlValidator:
             if k == 'unstructured':
                 found = True
         return found
+
 
 
     def scenes_with_transitions(self):
@@ -809,6 +844,7 @@ class YamlValidator:
         in the critical_ids list.
         '''
         data = copy.deepcopy(self.loaded_yaml)['state']
+        allowed_importance = copy.deepcopy(self.api_yaml)['components']['schemas']['MissionImportanceEnum']['enum']
         characters = data['characters']
         pairs = {}
         # gather all id/mission-importance pairs
@@ -823,20 +859,24 @@ class YamlValidator:
         critical_dict = {}
         if 'mission' in data and 'character_importance' in data['mission']:
             critical = data['mission']['character_importance']
-            for c in critical:
-                critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
-            for k in critical_dict:
-                if k in pairs:
-                    if pairs[k] != critical_dict[k]:
-                        self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
-                        self.invalid_values += 1     
-                else:
-                    self.logger.log(LogLevel.WARN, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
-                    self.invalid_keys += 1             
-            for k in pairs:
-                if k not in critical_dict and pairs[k] != 'normal':
-                    self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
-                    self.missing_keys += 1         
+            if critical is not None:
+                for c in critical:
+                    critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
+                for k in critical_dict:
+                    if k in pairs:
+                        if pairs[k] != critical_dict[k]:
+                            self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
+                            self.invalid_values += 1     
+                    else:
+                        self.logger.log(LogLevel.WARN, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
+                        self.invalid_keys += 1     
+                    if critical_dict[k] not in allowed_importance:
+                        self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' must be one of " + str(allowed_importance) + "', but instead it is '" + critical_dict[k] + "'")
+                        self.invalid_values += 1              
+        for k in pairs:
+            if k not in critical_dict and pairs[k] != 'normal':
+                self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
+                self.missing_keys += 1         
 
 
 
