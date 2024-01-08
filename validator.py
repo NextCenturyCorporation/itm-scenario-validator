@@ -376,6 +376,7 @@ class YamlValidator:
         self.conditional_ignore()
         self.simple_value_matching()
         self.deep_links()
+        self.value_follows_list()
 
     def simple_requirements(self):
         '''
@@ -609,6 +610,16 @@ class YamlValidator:
         '''
         Looks through the yaml file to see if a key at a specific location has the given value
         '''
+        val = self.get_value_at_key(key, yaml)
+        if val is not None:
+            # if we made it to here, we found the key - check the value!
+            return val == value
+        return False
+
+    def get_value_at_key(self, key, yaml):
+        '''
+        Given a key, returns the value matching
+        '''
         data = yaml
         for k in key:
             if '[' in k:
@@ -622,9 +633,31 @@ class YamlValidator:
                 data = data[k]
             else:
                 # key not found
-                return False
-        # if we made it to here, we found the key - check the value!
-        return data == value
+                return None
+        return data
+
+    def value_follows_list(self):
+        '''
+        Checks the yaml file for "field1 value must match one of the values from field2"
+        '''
+        for key in self.dep_json['valueMatch']:
+            # start by compiling a list of all allowed values by using the value of the k-v pair
+            allowed_loc = self.dep_json['valueMatch'][key].split('.')
+            locations = self.property_meets_conditions(allowed_loc, copy.deepcopy(self.loaded_yaml))
+            # gather allowed values
+            allowed_values = []
+            for l in locations:
+                loc = l.split('.')
+                val = self.get_value_at_key(loc, copy.deepcopy(self.loaded_yaml))
+                if val is not None:
+                    allowed_values.append(val)
+            # check if the location matches one of the allowed values
+            locations = self.property_meets_conditions(key.split('.'), copy.deepcopy(self.loaded_yaml))
+            for loc in locations:
+                v = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
+                if v not in allowed_values:
+                    self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
+                    self.invalid_values += 1
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
@@ -650,7 +683,7 @@ if __name__ == '__main__':
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.missing_keys == 0 else "\033[91m") + "Missing Required Keys: " + str(validator.missing_keys))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.wrong_types == 0 else "\033[91m") + "Incorrect Data Type: " + str(validator.wrong_types))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_keys == 0 else "\033[91m") + "Invalid Keys: " + str(validator.invalid_keys))
-    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_values == 0 else "\033[91m") + "Invalid Values (mismatched enum): " + str(validator.invalid_values))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_values == 0 else "\033[91m") + "Invalid Values (mismatched enum or dependency): " + str(validator.invalid_values))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.out_of_range == 0 else "\033[91m") + "Invalid Values (out of range): " + str(validator.out_of_range))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.empty_levels == 0 else "\033[91m") + "Properties Missing Data (empty level): " + str(validator.empty_levels))
     total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels + validator.out_of_range
