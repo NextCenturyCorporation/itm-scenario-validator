@@ -419,7 +419,7 @@ class YamlValidator:
                     self.search_for_key(True, found, self.dep_json['simpleRequired'][req], "has been provided")
 
 
-    def property_meets_conditions(self, first_key_list, data, value='', length=-1, loc=[]):
+    def property_meets_conditions(self, first_key_list, data, value='', length=-1, exists=True, loc=[]):
         '''
         Accepts a list of deepening keys to search through, where
         the last key is the key to find if it exists in data.
@@ -440,7 +440,7 @@ class YamlValidator:
                     for j in range(len(data)):
                         # add in indices where keys were found
                         detailed_k = simple_k + '[' + str(j) + ']'
-                        found_indices += (self.property_meets_conditions(first_key_list[i+1:], data[j], value=value, length=length, loc='.'.join(loc).replace(k, detailed_k).split('.')))
+                        found_indices += (self.property_meets_conditions(first_key_list[i+1:], data[j], value=value, length=length, exists=exists, loc='.'.join(loc).replace(k, detailed_k).split('.')))
                 else:
                     # key is not here, don't keep searching
                     skip = True
@@ -452,7 +452,7 @@ class YamlValidator:
                     # key is not here, don't keep searching
                     skip = True
                     break
-        if not skip:
+        if not skip and exists:
             valid = True
             # check for specific value
             if value != '':
@@ -464,6 +464,11 @@ class YamlValidator:
                     valid = False
             if valid:
                 found_indices.append('.'.join(loc))
+        elif skip and not exists:
+            # key did not exist and we didn't want it to
+            loc = '.'.join(loc)
+            if '[]'  not in loc:
+                found_indices.append(loc)
         return found_indices
 
 
@@ -560,7 +565,8 @@ class YamlValidator:
             for entry in self.dep_json['conditionalIgnore'][req]:
                 value = entry['conditions']['value'] if 'value' in entry['conditions'] else ''
                 length = entry['conditions']['length'] if 'length' in entry['conditions'] else -1
-                all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, length=length)
+                exists = bool(entry['conditions']['exists']) if 'exists' in entry['conditions'] else True
+                all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, length=length, exists=exists)
                 for x in all_found:
                     found = x.split('.')
                     if found[len(found)-1] != loc[len(loc)-1]:
@@ -593,7 +599,6 @@ class YamlValidator:
                             self.search_for_key(None, found, [key], "is '" + val + "'", self.dep_json['simpleAllowedValues'][field][val][key])
 
 
-
     def require_unstructured(self):
         '''
         Within every scenes[].state, at least one unstructured field must be provided.
@@ -611,6 +616,7 @@ class YamlValidator:
                     self.missing_keys += 1
             i += 1
 
+
     def find_unstructured(self, obj):
         '''
         Looks through obj for an unstructured field
@@ -624,6 +630,7 @@ class YamlValidator:
             if k == 'unstructured':
                 found = True
         return found
+
 
     def deep_links(self):
         '''
@@ -671,6 +678,7 @@ class YamlValidator:
             return val == value
         return False
 
+
     def get_value_at_key(self, key, yaml):
         '''
         Given a key, returns the value matching
@@ -690,6 +698,7 @@ class YamlValidator:
                 # key not found
                 return None
         return data
+
 
     def value_follows_list(self):
         '''
@@ -713,6 +722,8 @@ class YamlValidator:
                 if v not in allowed_values:
                     self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
                     self.invalid_values += 1
+
+
     def require_unstructured(self):
         '''
         Within every scenes[].state, at least one unstructured field must be provided.
@@ -729,6 +740,7 @@ class YamlValidator:
                     self.logger.log(LogLevel.WARN, "At least one 'unstructured' key must be provided within each scenes[].state but is missing at scene[" + str(i) + "]")
                     self.missing_keys += 1
             i += 1
+
 
     def find_unstructured(self, obj):
         '''

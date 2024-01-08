@@ -1,10 +1,5 @@
 {
-    "simpleRequired": {
-        "state.characters[].demographics.military_branch": [
-            "state.characters[].demographics.rank",
-            "state.characters[].demographics.rank_title"
-        ]
-    },
+    "simpleRequired": {},
     "conditionalRequired": {
         "scenes[].action_mapping[].conditions": [
             {
@@ -13,6 +8,16 @@
                 },
                 "required": [
                     "scenes[].action_mapping[].condition_semantics"
+                ]
+            }
+        ],
+        "state.characters[].demographics.military_disposition": [
+            {
+                "conditions": {
+                    "value": "Allied US"
+                },
+                "required": [
+                    "state.characters[].demographics.military_branch"
                 ]
             }
         ],
@@ -96,6 +101,17 @@
                 },
                 "ignore": [
                     "scenes[].state"
+                ]
+            }
+        ],
+        "state.characters[].demographics.military_branch": [
+            {
+                "conditions": {
+                    "exists": false
+                },
+                "ignore": [
+                    "state.characters[].demographics.rank",
+                    "state.characters[].demographics.rank_title"
                 ]
             }
         ]
@@ -250,6 +266,335 @@
             "Internal": {
                 "state.characters[].injuries[].location": [
                     "internal"
+                ]
+            }
+        },
+        "state.characters[].demographics.military_branch": {
+            "US Army": {
+                "state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "E-9 (special)",
+                    "W-1",
+                    "W-2",
+                    "W-3",
+                    "W-4",
+                    "W-5",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "state.characters[].demographics.rank_title": [
+                    "Private (Recruit)",
+                    "Private",
+                    "Private First Class",
+                    "Specialist",
+                    "Corporal",
+                    "Sergeant",
+                    "Staff Sergeant",
+                    "Sergeant First Class",
+                    "Master Sergeant",
+                    "First Sergeant",
+                    "Sergeant Major",
+                    "Command Sergeant Major",
+                    "Sergeant Major of the Army",
+                    "Warrant Officer 1",
+                    "Chief Warrant Officer 2",
+                    "Chief Warrant Officer 3",
+                    "Chief Warrant Officer 4",
+                    "Chief Warrant Officer 5",
+                    "2nd Lieutenant",
+                    "1st Lieutenant",
+                    "Captain",
+                    "Major",
+                    "Lieutenant Colonel",
+                    "Colonel",
+                    "Brigadier General",
+                    "Major General",
+                    "Lieutenant General",
+                    "Army Chief of Staff (special)",
+                    "General"
+                ]
+            },
+            "US Air Force": {
+                "state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "Special",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "state.characters[].demographics.rank_title": [
+                    "Airman Basic",
+                    "Airman",
+                    "Airman First Class",
+                    "Senior Airman",
+                    "Staff Sergeant",
+                    "Technical Sergeant",
+                    "Master Sergeant",
+                    "Senior Master Sergeant",
+                    "First Sergeant / Chief Master Sergeant",
+                    "Chief Master Sergeant of the Air Force",
+                    "2nd Lieutenant",
+                    "1st Lieutenant",
+                    "Captain",
+                    "Major",
+                    "Lieutenant Colonel",
+                    "Colonel",
+                    "Brigadier General",
+                    "Major General",
+                    "Lieutenant General",
+                    "Air Force Chief of Staff (special)",
+                    "General"
+                ]
+            },
+            "US Navy": {
+                "state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "Special (Navy)",
+                    "W-1",
+                    "W-2",
+                    "W-3",
+                    "W-4",
+                    "W-5",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "state.characters[].demographics.rank_title": [
+                    "Seaman Recruit",
+                    "Seaman Apprentice",
+                    "Seaman",
+                    "Petty Officer Third Class",
+                    "Petty Officer Second Class",
+                    "Petty Officer First Class",
+                    "Chief Petty Officer",
+                    "Senior Chief Petty Officer",
+                    "Master Chief Petty Officer",
+                    "Master Chief Petty Officer of the Navy",
+                    "Warrant Officer 1",
+                    "Chief Warrant Officer 2",
+                    "Chief Warrant Officer 3",
+                    "Chief Warrant Officer 4",
+                    "Chief Warrant Officer",
+                    "Ensign",
+                    "Lieutenant, Junior Grade",
+                    "Lieutenant",
+                    "Lieutenant Commander",
+                    "Commander",
+                    "Captain",
+                    "Rear Admiral (Lower Half)",
+                    "Rear Admiral (Upper Half)",
+                    "Vice Admiral",
+                    "Chief of Naval Operations (special)",
+                    "Admiral"
+                ]
+            },
+            "US Coast Guard": {
+                "state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "Special (Coast Guard)",
+                    "W-1",
+                    "W-2",
+                    "W-3",
+                    "W-4",
+                    "W-5",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "state.characters[].demographics.rank_title": [
+                    "Seaman Recruit",
+                    "Seaman Apprentice",
+                    "Seaman",
+                    "Petty Officer Third Class",
+                    "Petty Officer Second Class",
+                    "Petty Officer First Class",
+                    "Chief Petty Officer",
+                    "Senior Chief Petty Officer",
+                    "Master Chief Petty Officer",
+                    "Master Chief Petty Officer of the Coast Guard",
+                    "Warrant Officer 1",
+                    "Chief Warrant Officer 2",
+                    "Chief Warrant Officer 3",
+                    "Chief Warrant Officer 4",
+                    "Chief Warrant Officer",
+                    "Ensign",
+                    "Lieutenant, Junior Grade",
+                    "Lieutenant",
+                    "Lieutenant Commander",
+                    "Commander",
+                    "Captain",
+                    "Rear Admiral (Lower Half)",
+                    "Rear Admiral (Upper Half)",
+                    "Vice Admiral",
+                    "Commandant of the Coast Guard (special)",
+                    "Admiral"
+                ]
+            },
+            "US Marine Corps": {
+                "state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "Special",
+                    "W-1",
+                    "W-2",
+                    "W-3",
+                    "W-4",
+                    "W-5",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "state.characters[].demographics.rank_title": [
+                    "Private",
+                    "Private First Class",
+                    "Lance Corporal",
+                    "Corporal",
+                    "Sergeant",
+                    "Staff Sergeant",
+                    "Gunnery Sergeant",
+                    "Master Sergeant",
+                    "First Sergeant",
+                    "Master Gunnery Sergeant",
+                    "Sergeant Major",
+                    "Sergeant Major of the Marine Corps",
+                    "Warrant Officer",
+                    "Chief Warrant Officer 2",
+                    "Chief Warrant Officer 3",
+                    "Chief Warrant Officer 4",
+                    "Chief Warrant Officer 5",
+                    "2nd Lieutenant",
+                    "1st Lieutenant",
+                    "Captain",
+                    "Major",
+                    "Lieutenant Colonel",
+                    "Colonel",
+                    "Brigadier General",
+                    "Major General",
+                    "Lieutenant General",
+                    "Commandant of the Marine Corps",
+                    "General"
+                ]
+            },
+            "US Space Force": {
+                "state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "Special",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "state.characters[].demographics.rank_title": [
+                    "Specialist 1",
+                    "Specialist 2",
+                    "Specialist 3",
+                    "Specialist 4",
+                    "Staff Sergeant",
+                    "Technical Sergeant",
+                    "Master Sergeant",
+                    "Senior Master Sergeant",
+                    "Chief Master Sergeant",
+                    "Chief Master Sergeant of the Space Force",
+                    "2nd Lieutenant",
+                    "1st Lieutenant",
+                    "Captain",
+                    "Major",
+                    "Lieutenant Colonel",
+                    "Colonel",
+                    "Brigadier General",
+                    "Major General",
+                    "Lieutenant General",
+                    "Chief of Space Operations",
+                    "General"
                 ]
             }
         }
