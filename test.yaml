@@ -149,7 +149,7 @@ state:
         sex: M
         race: Asian
         military_disposition: Civilian
-        mission_importance: none # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with mission.critical_ids
+        mission_importance: none # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with mission.character_importance
       vitals:
         conscious: true
         avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
@@ -179,7 +179,7 @@ state:
           - skill_type: Communications
             level: 3
         role: Command # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
-        mission_importance: important # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with mission.critical_ids
+        mission_importance: important # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with mission.character_importance
       vitals:
         conscious: true
         avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
