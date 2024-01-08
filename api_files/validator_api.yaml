@@ -265,6 +265,15 @@ components:
       - Specialist
       - Communications
       type: string
+    CharacterTagEnum:
+      description: the tag assigned to a character
+      enum:
+      - MINIMAL
+      - DELAYED
+      - IMMEDIATE
+      - EXPECTANT
+      example: DELAYED
+      type: string
     CivilianPresenceEnum:
       description: Indicator of how many civilians are present in the mission
       enum:
@@ -717,11 +726,7 @@ components:
     Mission:
       description: Mission parameters that impact decision-making
       properties:
-        civilian_presence:
-          $ref: '#/components/schemas/CivilianPresenceEnum'
-        communication_capability:
-          $ref: '#/components/schemas/CommunicationCapabilityEnum'
-        critical_ids:
+        character_importance:
           description: A list of pairs of character ids with an indicator of how mission-critical
             the character is
           items:
@@ -734,6 +739,10 @@ components:
             - Intelligence Officer: priority
             type: object
           type: array
+        civilian_presence:
+          $ref: '#/components/schemas/CivilianPresenceEnum'
+        communication_capability:
+          $ref: '#/components/schemas/CommunicationCapabilityEnum'
         medical_policies:
           description: Medical policies in effect in a mission, to inform decision-making
           type: string
@@ -755,6 +764,7 @@ components:
       - unstructured
       type: object
     MissionImportanceEnum:
+      default: normal
       description: How important the character is to the mission
       enum:
       - none

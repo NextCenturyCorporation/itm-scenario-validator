@@ -377,7 +377,11 @@ class YamlValidator:
         self.simple_value_matching()
         self.require_unstructured()
         self.deep_links()
+        self.scenes_with_transitions()
+        self.validate_action_params()
+        self.validate_mission_importance()
         self.value_follows_list()
+
 
     def simple_requirements(self):
         '''
@@ -691,6 +695,96 @@ class YamlValidator:
                 if v not in allowed_values:
                     self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
                     self.invalid_values += 1
+
+
+    def scenes_with_transitions(self):
+        '''
+        Looks through the yaml file to make sure that every scene from 0 to n-1 has 
+        a transitions field
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        for i in range(0, len(scenes)-1):
+            if 'transitions' not in scenes[i]:
+                self.logger.log(LogLevel.WARN, "Key 'transitions'  must be provided within all but the last entry in 'scenes' but is missing at scenes[" + str(i) + "]")
+                self.missing_keys += 1
+
+
+    def validate_action_params(self):
+        '''
+        Ensure that action parameters have valid values
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        api = copy.deepcopy(self.api_yaml)
+        allowed_supplies = api['components']['schemas']['SupplyTypeEnum']['enum']
+        allowed_locations = api['components']['schemas']['InjuryLocationEnum']['enum']
+        allowed_categories = api['components']['schemas']['CharacterTagEnum']['enum']
+
+        scenes = data['scenes']
+        i = 0
+        for scene in scenes:
+            if 'action_mapping' in scene:
+                map = scene['action_mapping']
+                j = 0
+                for action in map:
+                    if 'parameters' in action:
+                        params = action['parameters']
+                        if 'treatment' in params:
+                            if params['treatment'] not in allowed_supplies:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.treatment' must be one of the following values: " + str(allowed_supplies) + " but is '" + params['treatment'] + "' instead.")
+                                self.invalid_values += 1                        
+                        if 'location' in params:
+                            if params['location'] not in allowed_locations:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.location' must be one of the following values: " + str(allowed_locations) + " but is '" + params['location'] + "' instead.")
+                                self.invalid_values += 1 
+                        if 'category' in params:
+                            if params['category'] not in allowed_categories:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.category' must be one of the following values: " + str(allowed_categories) + " but is '" + params['category'] + "' instead.")
+                                self.invalid_values += 1 
+                    j += 1
+            i += 1
+
+
+    def validate_mission_importance(self):
+        '''
+        Verifies that all characters with their mission importance appear
+        in the critical_ids list.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)['state']
+        allowed_importance = copy.deepcopy(self.api_yaml)['components']['schemas']['MissionImportanceEnum']['enum']
+        characters = data['characters']
+        pairs = {}
+        # gather all id/mission-importance pairs
+        for c in characters:
+            cid = c['id']
+            if 'mission_importance' in c['demographics']:
+                importance = c['demographics']['mission_importance']
+                pairs[cid] = importance 
+            else:
+                pairs[cid] = 'normal'
+        # verify that all pairs appear in character_importance
+        critical_dict = {}
+        if 'mission' in data and 'character_importance' in data['mission']:
+            critical = data['mission']['character_importance']
+            if critical is not None:
+                for c in critical:
+                    critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
+                for k in critical_dict:
+                    if k in pairs:
+                        if pairs[k] != critical_dict[k]:
+                            self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
+                            self.invalid_values += 1     
+                    else:
+                        self.logger.log(LogLevel.WARN, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
+                        self.invalid_keys += 1     
+                    if critical_dict[k] not in allowed_importance:
+                        self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' must be one of " + str(allowed_importance) + "', but instead it is '" + critical_dict[k] + "'")
+                        self.invalid_values += 1              
+        for k in pairs:
+            if k not in critical_dict and pairs[k] != 'normal':
+                self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
+                self.missing_keys += 1         
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
