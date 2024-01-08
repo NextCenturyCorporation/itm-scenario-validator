@@ -316,7 +316,6 @@ scenes:
     tagging:
       reference: 0 # Re-use the tagging configuration from the specified scene index
     state: # can contain any state, including mission parameters, environment, characters, etc.
-      unstructured:
       environment:
         decision_environment:
           unstructured: >

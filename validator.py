@@ -375,10 +375,12 @@ class YamlValidator:
         self.conditional_requirements()
         self.conditional_ignore()
         self.simple_value_matching()
+        self.require_unstructured()
         self.deep_links()
         self.scenes_with_transitions()
         self.validate_action_params()
         self.validate_mission_importance()
+        self.value_follows_list()
 
 
     def simple_requirements(self):
@@ -573,6 +575,38 @@ class YamlValidator:
                             self.search_for_key(True, found, [key], "is '" + val + "'", self.dep_json['simpleAllowedValues'][field][val][key])
 
 
+
+    def require_unstructured(self):
+        '''
+        Within every scenes[].state, at least one unstructured field must be provided.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        i = 0
+        for scene in data['scenes']:
+            if 'state' in scene:
+                state = scene['state']
+                # look for an unstructured field
+                found = self.find_unstructured(state)
+                if not found:
+                    # unstructured not found - error
+                    self.logger.log(LogLevel.WARN, "At least one 'unstructured' key must be provided within each scenes[].state but is missing at scene[" + str(i) + "]")
+                    self.missing_keys += 1
+            i += 1
+
+    def find_unstructured(self, obj):
+        '''
+        Looks through obj for an unstructured field
+        '''
+        found = False
+        if obj is None:
+            return found
+        for k in obj:
+            if isinstance(obj[k], dict):
+                found = found or self.find_unstructured(obj[k])
+            if k == 'unstructured':
+                found = True
+        return found
+
     def deep_links(self):
         '''
         Checks the yaml file for "if field1 is one of [a, b,...] and field2 is one of [c, d,...],
@@ -613,6 +647,16 @@ class YamlValidator:
         '''
         Looks through the yaml file to see if a key at a specific location has the given value
         '''
+        val = self.get_value_at_key(key, yaml)
+        if val is not None:
+            # if we made it to here, we found the key - check the value!
+            return val == value
+        return False
+
+    def get_value_at_key(self, key, yaml):
+        '''
+        Given a key, returns the value matching
+        '''
         data = yaml
         for k in key:
             if '[' in k:
@@ -626,9 +670,31 @@ class YamlValidator:
                 data = data[k]
             else:
                 # key not found
-                return False
-        # if we made it to here, we found the key - check the value!
-        return data == value
+                return None
+        return data
+
+    def value_follows_list(self):
+        '''
+        Checks the yaml file for "field1 value must match one of the values from field2"
+        '''
+        for key in self.dep_json['valueMatch']:
+            # start by compiling a list of all allowed values by using the value of the k-v pair
+            allowed_loc = self.dep_json['valueMatch'][key].split('.')
+            locations = self.property_meets_conditions(allowed_loc, copy.deepcopy(self.loaded_yaml))
+            # gather allowed values
+            allowed_values = []
+            for l in locations:
+                loc = l.split('.')
+                val = self.get_value_at_key(loc, copy.deepcopy(self.loaded_yaml))
+                if val is not None:
+                    allowed_values.append(val)
+            # check if the location matches one of the allowed values
+            locations = self.property_meets_conditions(key.split('.'), copy.deepcopy(self.loaded_yaml))
+            for loc in locations:
+                v = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
+                if v not in allowed_values:
+                    self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
+                    self.invalid_values += 1
 
 
     def scenes_with_transitions(self):
@@ -744,7 +810,7 @@ if __name__ == '__main__':
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.missing_keys == 0 else "\033[91m") + "Missing Required Keys: " + str(validator.missing_keys))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.wrong_types == 0 else "\033[91m") + "Incorrect Data Type: " + str(validator.wrong_types))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_keys == 0 else "\033[91m") + "Invalid Keys: " + str(validator.invalid_keys))
-    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_values == 0 else "\033[91m") + "Invalid Values (mismatched enum): " + str(validator.invalid_values))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_values == 0 else "\033[91m") + "Invalid Values (mismatched enum or dependency): " + str(validator.invalid_values))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.out_of_range == 0 else "\033[91m") + "Invalid Values (out of range): " + str(validator.out_of_range))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.empty_levels == 0 else "\033[91m") + "Properties Missing Data (empty level): " + str(validator.empty_levels))
     total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels + validator.out_of_range

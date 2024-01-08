@@ -670,8 +670,7 @@ components:
         unstructured:
           description: Natural language, plain text description of a scene's state
           type: string
-      required:
-      - unstructured
+      required: []
       type: object
     Supplies:
       description: a single type of medical supply available to the medic

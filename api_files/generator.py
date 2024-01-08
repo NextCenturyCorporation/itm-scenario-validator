@@ -147,8 +147,8 @@ class ApiGenerator:
         new_api['components']['schemas'].update(self.get_required_schemas(state_type, updated_api))
 
         # update the api to not require everything
-        # state should only require unstructured
-        new_api['components']['schemas']['State']['required'] = ['unstructured']
+        # state should not require anything; at least one unstructured will be required manually
+        new_api['components']['schemas']['State']['required'] = []
 
         # mission only needs to require unstructured
         new_api['components']['schemas']['Mission']['required'] = ['unstructured']
