@@ -758,38 +758,6 @@ class YamlValidator:
                     self.invalid_values += 1
 
                     
-    def require_unstructured(self):
-        '''
-        Within every scenes[].state, at least one unstructured field must be provided.
-        '''
-        data = copy.deepcopy(self.loaded_yaml)
-        i = 0
-        for scene in data['scenes']:
-            if 'state' in scene:
-                state = scene['state']
-                # look for an unstructured field
-                found = self.find_unstructured(state)
-                if not found:
-                    # unstructured not found - error
-                    self.logger.log(LogLevel.WARN, "At least one 'unstructured' key must be provided within each scenes[].state but is missing at scene[" + str(i) + "]")
-                    self.missing_keys += 1
-            i += 1
-
-
-    def find_unstructured(self, obj):
-        '''
-        Looks through obj for an unstructured field
-        '''
-        found = False
-        for k in obj:
-            if isinstance(obj[k], dict):
-                found = found or self.find_unstructured(obj[k])
-            if k == 'unstructured':
-                found = True
-        return found
-
-
-
     def scenes_with_transitions(self):
         '''
         Looks through the yaml file to make sure that every scene from 0 to n-1 has 
