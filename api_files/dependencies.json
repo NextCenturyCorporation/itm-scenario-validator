@@ -104,6 +104,40 @@
                 ]
             }
         ],
+        "state.characters[].demographics.military_disposition": [
+            {
+                "conditions": {
+                    "value": "Allied"
+                },
+                "ignore": [
+                    "state.characters[].demographics.military_branch"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "Civilian"
+                },
+                "ignore": [
+                    "state.characters[].demographics.military_branch"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "Military Adversary"
+                },
+                "ignore": [
+                    "state.characters[].demographics.military_branch"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "Non-Military Adversary"
+                },
+                "ignore": [
+                    "state.characters[].demographics.military_branch"
+                ]
+            }
+        ],
         "state.characters[].demographics.military_branch": [
             {
                 "conditions": {
