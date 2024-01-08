@@ -35,6 +35,57 @@
                     "state.characters[].injuries[].severity"
                 ]
             }
+        ],
+        "scenes[].action_mapping[].action_type": [
+            {
+                "conditions": {
+                    "value": "APPLY_TREATMENT"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "CHECK_ALL_VITALS"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "CHECK_PULSE"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "CHECK_RESPIRATION"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "MOVE_TO_EVAC"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "TAG_CHARACTER"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id",
+                    "scenes[].action_mapping[].parameters.category"
+                ]
+            }
         ]
     },
     "conditionalIgnore": {
@@ -79,5 +130,12 @@
                 }
             }
         ]
+    },
+    "valueMatch": {
+        "scenes[].action_mapping[].character_id": "state.characters[].id",
+        "scenes[].tagging.probe_responses[].character_id": "state.characters[].id",
+        "scenes[].transitions.character_vitals[].character_id": "state.characters[].id",
+        "scenes[].action_mapping[].conditions.character_vitals[].character_id": "state.characters[].id",
+        "scenes[].tagging.reference": "scenes[].index"
     }
 }

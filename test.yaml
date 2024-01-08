@@ -11,8 +11,9 @@ state:
   mission:
     unstructured: Unknown # mission is not required, but if it is provided, unstructured is required
     mission_type: Security patrol # from controlled vocabulary; it's not clear how mission_type in itself impacts decision-making
-    critical_ids: # A list of pairs of character ids with an indicator of how mission-critical the character is
+    character_importance: # A list of pairs of character ids with an indicator of how mission-critical the character is
       - Captain_01: important # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with demographics.mission_importance
+      - Civilian_01: none
     civilian_presence: limited # controlled vocab includes none, limited, some, extensive, crowd
     communication_capability: radio # current communication capability, controlled vocab includes all, satellite, radio, voice, visual, etc. (need SME input)
     roe: TBD # controlled vocab TBD.  Will have to be discussed/defined individually
@@ -92,7 +93,6 @@ state:
           - skill_type: Communications
             level: 2
         role: Infantry # The primary role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
-        mission_importance: normal # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with mission.critical_ids
       vitals:
         conscious: true
         avpu: UNRESPONSIVE # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
@@ -126,7 +126,6 @@ state:
           - skill_type: Combat # controlled vocab including Medical, Combat, Specialist, Communications, Command
             level: 3 # A skill level from 0 to 10
         role: Infantry # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
-        mission_importance: normal # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with mission.critical_ids
       vitals:
         conscious: true
         avpu: ALERT # level of response; controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
@@ -317,7 +316,6 @@ scenes:
     tagging:
       reference: 0 # Re-use the tagging configuration from the specified scene index
     state: # can contain any state, including mission parameters, environment, characters, etc.
-      unstructured:
       environment:
         decision_environment:
           unstructured: >

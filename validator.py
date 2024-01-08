@@ -376,8 +376,13 @@ class YamlValidator:
         self.conditional_requirements()
         self.conditional_ignore()
         self.simple_value_matching()
+        self.require_unstructured()
         self.deep_links()
         self.validate_unstructured()
+        self.scenes_with_transitions()
+        self.validate_action_params()
+        self.validate_mission_importance()
+        self.value_follows_list()
 
 
     def simple_requirements(self):
@@ -572,6 +577,38 @@ class YamlValidator:
                             self.search_for_key(True, found, [key], "is '" + val + "'", self.dep_json['simpleAllowedValues'][field][val][key])
 
 
+
+    def require_unstructured(self):
+        '''
+        Within every scenes[].state, at least one unstructured field must be provided.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        i = 0
+        for scene in data['scenes']:
+            if 'state' in scene:
+                state = scene['state']
+                # look for an unstructured field
+                found = self.find_unstructured(state)
+                if not found:
+                    # unstructured not found - error
+                    self.logger.log(LogLevel.WARN, "At least one 'unstructured' key must be provided within each scenes[].state but is missing at scene[" + str(i) + "]")
+                    self.missing_keys += 1
+            i += 1
+
+    def find_unstructured(self, obj):
+        '''
+        Looks through obj for an unstructured field
+        '''
+        found = False
+        if obj is None:
+            return found
+        for k in obj:
+            if isinstance(obj[k], dict):
+                found = found or self.find_unstructured(obj[k])
+            if k == 'unstructured':
+                found = True
+        return found
+
     def deep_links(self):
         '''
         Checks the yaml file for "if field1 is one of [a, b,...] and field2 is one of [c, d,...],
@@ -612,6 +649,16 @@ class YamlValidator:
         '''
         Looks through the yaml file to see if a key at a specific location has the given value
         '''
+        val = self.get_value_at_key(key, yaml)
+        if val is not None:
+            # if we made it to here, we found the key - check the value!
+            return val == value
+        return False
+
+    def get_value_at_key(self, key, yaml):
+        '''
+        Given a key, returns the value matching
+        '''
         data = yaml
         for k in key:
             if '[' in k:
@@ -625,9 +672,121 @@ class YamlValidator:
                 data = data[k]
             else:
                 # key not found
-                return False
-        # if we made it to here, we found the key - check the value!
-        return data == value
+                return None
+        return data
+
+    def value_follows_list(self):
+        '''
+        Checks the yaml file for "field1 value must match one of the values from field2"
+        '''
+        for key in self.dep_json['valueMatch']:
+            # start by compiling a list of all allowed values by using the value of the k-v pair
+            allowed_loc = self.dep_json['valueMatch'][key].split('.')
+            locations = self.property_meets_conditions(allowed_loc, copy.deepcopy(self.loaded_yaml))
+            # gather allowed values
+            allowed_values = []
+            for l in locations:
+                loc = l.split('.')
+                val = self.get_value_at_key(loc, copy.deepcopy(self.loaded_yaml))
+                if val is not None:
+                    allowed_values.append(val)
+            # check if the location matches one of the allowed values
+            locations = self.property_meets_conditions(key.split('.'), copy.deepcopy(self.loaded_yaml))
+            for loc in locations:
+                v = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
+                if v not in allowed_values:
+                    self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
+                    self.invalid_values += 1
+
+
+    def scenes_with_transitions(self):
+        '''
+        Looks through the yaml file to make sure that every scene from 0 to n-1 has 
+        a transitions field
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        for i in range(0, len(scenes)-1):
+            if 'transitions' not in scenes[i]:
+                self.logger.log(LogLevel.WARN, "Key 'transitions'  must be provided within all but the last entry in 'scenes' but is missing at scenes[" + str(i) + "]")
+                self.missing_keys += 1
+
+
+    def validate_action_params(self):
+        '''
+        Ensure that action parameters have valid values
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        api = copy.deepcopy(self.api_yaml)
+        allowed_supplies = api['components']['schemas']['SupplyTypeEnum']['enum']
+        allowed_locations = api['components']['schemas']['InjuryLocationEnum']['enum']
+        allowed_categories = api['components']['schemas']['CharacterTagEnum']['enum']
+
+        scenes = data['scenes']
+        i = 0
+        for scene in scenes:
+            if 'action_mapping' in scene:
+                map = scene['action_mapping']
+                j = 0
+                for action in map:
+                    if 'parameters' in action:
+                        params = action['parameters']
+                        if 'treatment' in params:
+                            if params['treatment'] not in allowed_supplies:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.treatment' must be one of the following values: " + str(allowed_supplies) + " but is '" + params['treatment'] + "' instead.")
+                                self.invalid_values += 1                        
+                        if 'location' in params:
+                            if params['location'] not in allowed_locations:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.location' must be one of the following values: " + str(allowed_locations) + " but is '" + params['location'] + "' instead.")
+                                self.invalid_values += 1 
+                        if 'category' in params:
+                            if params['category'] not in allowed_categories:
+                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters.category' must be one of the following values: " + str(allowed_categories) + " but is '" + params['category'] + "' instead.")
+                                self.invalid_values += 1 
+                    j += 1
+            i += 1
+
+
+    def validate_mission_importance(self):
+        '''
+        Verifies that all characters with their mission importance appear
+        in the critical_ids list.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)['state']
+        allowed_importance = copy.deepcopy(self.api_yaml)['components']['schemas']['MissionImportanceEnum']['enum']
+        characters = data['characters']
+        pairs = {}
+        # gather all id/mission-importance pairs
+        for c in characters:
+            cid = c['id']
+            if 'mission_importance' in c['demographics']:
+                importance = c['demographics']['mission_importance']
+                pairs[cid] = importance 
+            else:
+                pairs[cid] = 'normal'
+        # verify that all pairs appear in character_importance
+        critical_dict = {}
+        if 'mission' in data and 'character_importance' in data['mission']:
+            critical = data['mission']['character_importance']
+            if critical is not None:
+                for c in critical:
+                    critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
+                for k in critical_dict:
+                    if k in pairs:
+                        if pairs[k] != critical_dict[k]:
+                            self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
+                            self.invalid_values += 1     
+                    else:
+                        self.logger.log(LogLevel.WARN, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
+                        self.invalid_keys += 1     
+                    if critical_dict[k] not in allowed_importance:
+                        self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' must be one of " + str(allowed_importance) + "', but instead it is '" + critical_dict[k] + "'")
+                        self.invalid_values += 1              
+        for k in pairs:
+            if k not in critical_dict and pairs[k] != 'normal':
+                self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
+                self.missing_keys += 1         
+
 
 
     def validate_unstructured(self):
@@ -764,7 +923,7 @@ if __name__ == '__main__':
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.missing_keys == 0 else "\033[91m") + "Missing Required Keys: " + str(validator.missing_keys))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.wrong_types == 0 else "\033[91m") + "Incorrect Data Type: " + str(validator.wrong_types))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_keys == 0 else "\033[91m") + "Invalid Keys: " + str(validator.invalid_keys))
-    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_values == 0 else "\033[91m") + "Invalid Values (mismatched enum): " + str(validator.invalid_values))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.invalid_values == 0 else "\033[91m") + "Invalid Values (mismatched enum or dependency): " + str(validator.invalid_values))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.out_of_range == 0 else "\033[91m") + "Invalid Values (out of range): " + str(validator.out_of_range))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.empty_levels == 0 else "\033[91m") + "Properties Missing Data (empty level): " + str(validator.empty_levels))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.unstructured_missing == 0 else "\033[91m") + "Values Missing From Unstructured Data: " + str(validator.unstructured_missing))
