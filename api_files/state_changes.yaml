@@ -788,6 +788,9 @@ components:
           maximum: 100.0
           minimum: 0.0
           type: number
+        ambulatory:
+          description: whether or not the character can walk
+          type: boolean
         avpu:
           $ref: '#/components/schemas/AvpuLevelEnum'
         breathing:

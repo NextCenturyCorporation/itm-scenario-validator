@@ -96,6 +96,7 @@ state:
       vitals:
         conscious: true
         avpu: UNRESPONSIVE # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        ambulatory: false
         mental_status: UNRESPONSIVE # controlled vocab includes AGONY, CALM, CONFUSED, UPSET, UNRESPONSIVE
         breathing: FAST # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
         hrpmin: 130 # prefer controlled vocab?
@@ -129,6 +130,7 @@ state:
       vitals:
         conscious: true
         avpu: ALERT # level of response; controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        ambulatory: true
         mental_status: AGONY # controlled vocab includes AGONY, CALM, CONFUSED, UPSET, UNRESPONSIVE
         breathing: FAST # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
         hrpmin: 120
@@ -149,10 +151,11 @@ state:
         sex: M
         race: Asian
         military_disposition: Civilian
-        mission_importance: none # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with mission.critical_ids
+        mission_importance: none # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with mission.character_importance
       vitals:
         conscious: true
         avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        ambulatory: true
         mental_status: CONFUSED # Like unresponsive, but could be an indication of non-English speaking
         breathing: NORMAL # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
         hrpmin: 40
@@ -179,10 +182,11 @@ state:
           - skill_type: Communications
             level: 3
         role: Command # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
-        mission_importance: important # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with mission.critical_ids
+        mission_importance: important # controlled vocab includes none, normal, important, priority, vip; must be kept consistent with mission.character_importance
       vitals:
         conscious: true
         avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        ambulatory: true
         mental_status: CALM # Like unresponsive, but could be an indication of non-English speaking
         breathing: NORMAL # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
         hrpmin: 100
@@ -231,6 +235,15 @@ scenes:
             immediate: s1-p4-choice3,
             expectant: s1-p4-choice4,
           }
+    probe_config:
+      - probe_id: adept-september-demo-probe-1
+        description: What to do first to Mike
+      - probe_id: adept-september-demo-probe-2
+        description: What to do first to Civilian
+      - probe_id: adept-september-demo-probe-3
+        description: How to tag Mike
+      - probe_id: adept-september-demo-probe-4
+        description: How to tag Civilian
     restricted_actions: # These actions will not be returned in get_available_actions (not incl. TAG_CHARACTER and END_SCENARIO)
       - DIRECT_MOBILE_CHARACTERS
       - MOVE_TO_EVAC
@@ -251,7 +264,7 @@ scenes:
         unstructured: Check Mike's vital signs
         character_id: Mike
         probe_id: adept-september-demo-probe-1
-        choice: s1-p1-choice1
+        choice: s1-p1-choice2
         kdma_association:
           Fairness: 3
       - action_id: action3
@@ -261,23 +274,23 @@ scenes:
         # Here, the probe response is only sent if the specified treatment is made to the specified location
         parameters: { "treatment": "Tourniquet", "location": "right forearm" }
         probe_id: adept-september-demo-probe-1
-        choice: s1-p1-choice1
+        choice: s1-p1-choice3
         kdma_association:
           Fairness: 1
       - action_id: action4
         action_type: SITREP
         unstructured: Ask Civilian to provide SITREP
         character_id: Civilian_01
-        probe_id: adept-september-demo-probe-1
-        choice: s1-p1-choice2
+        probe_id: adept-september-demo-probe-2
+        choice: s1-p2-choice1
         kdma_association:
           Fairness: 6
       - action_id: action5
         action_type: CHECK_ALL_VITALS
         unstructured: Check Civilian's vital signs
         character_id: Civilian_01
-        probe_id: adept-september-demo-probe-1
-        choice: s1-p1-choice2
+        probe_id: adept-september-demo-probe-2
+        choice: s1-p2-choice2
         kdma_association:
           Fairness: 7
       - action_id: action6
@@ -286,9 +299,9 @@ scenes:
         character_id: Civilian_01
         # Here, the probe response is sent as long as a tourniquet was applied to the specified character_id
         # Note that if a different probe response is needed for different locations, then they must be configured as separate mappings
-        parameters: { "treatment": "Tourniquet" }
-        probe_id: adept-september-demo-probe-1
-        choice: s1-p1-choice2
+        parameters: { "treatment": "Tourniquet"}
+        probe_id: adept-september-demo-probe-2
+        choice: s1-p2-choice3
         kdma_association:
           Fairness: 9
     transition_semantics: "and" # Can be "and", "or", or "not"
@@ -305,8 +318,9 @@ scenes:
       character_vitals:
         - character_id: Mike
           vitals: # Or semantics; specify another character_vitals if you want a conjunction of vital criteria
-            conscious: true
+            conscious: false
             breathing: NONE
+            ambulatory: false
             hrpmin: 0
             mental_status: UNRESPONSIVE
       supplies: # Specifying this would mean that the scene would end when the specified supply reaches the specified quantity
@@ -323,6 +337,9 @@ scenes:
           aid_delay:
             delay: 50
             max_transport: 1
+    probe_config:
+      - probe_id: adept-september-demo-probe-5
+        description: Evacuation probe
     restricted_actions: # These actions will not be returned in get_available_actions (not incl. TAG_CHARACTER and END_SCENARIO)
       - DIRECT_MOBILE_CHARACTERS
       - APPLY_TREATMENT
@@ -335,15 +352,15 @@ scenes:
         action_type: MOVE_TO_EVAC
         unstructured: Move Mike to the road for transport
         character_id: Mike
-        probe_id: adept-september-demo-probe-2
-        choice: s1-p2-choice1
+        probe_id: adept-september-demo-probe-5
+        choice: s1-p5-choice1
         kdma_association:
           Fairness: 2
       - action_id: action2
         action_type: MOVE_TO_EVAC
         unstructured: Move Unknown Civilian to the road for transport
         character_id: Civilian_01
-        probe_id: adept-september-demo-probe-2
-        choice: s1-p2-choice2
+        probe_id: adept-september-demo-probe-5
+        choice: s1-p5-choice2
         kdma_association:
           Fairness: 7

@@ -819,6 +819,16 @@ components:
       - noisy
       - extreme
       type: string
+    ProbeConfig:
+      description: Probe configuration for use by TA1
+      properties:
+        description:
+          description: A description of the probe for use by TA1
+          type: string
+        probe_id:
+          description: A valid probe_id from the appropriate TA1
+          type: string
+      type: object
     ProbeResponses:
       description: tag-specific probe responses (choices) for a tagged character
       properties:
@@ -898,6 +908,11 @@ components:
           description: The order the scene appears in the scenario
           minimum: 0
           type: integer
+        probe_config:
+          description: TA1-provided probe configuration, ignored by TA3
+          items:
+            $ref: '#/components/schemas/ProbeConfig'
+          type: array
         restricted_actions:
           description: List of actions that will be excluded from get_available_actions
           example:
@@ -919,6 +934,7 @@ components:
       - action_mapping
       type: object
     SemanticTypeEnum:
+      default: and
       description: Whether transition or probe response conditions use and, or, or
         not semantics
       enum:
@@ -1182,6 +1198,9 @@ components:
           maximum: 100.0
           minimum: 0.0
           type: number
+        ambulatory:
+          description: whether or not the character can walk
+          type: boolean
         avpu:
           $ref: '#/components/schemas/AvpuLevelEnum'
         breathing:
