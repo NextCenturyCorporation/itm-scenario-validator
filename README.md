@@ -106,22 +106,22 @@ In order for a yaml file to be considered "valid", the following conditions must
 #### Conditional Requirements
 * If `scenes[n].action_mapping[m].conditions` has a length of 2 or more, `scenes[n].action_mapping[m].condition_semantics` is required
 * If `scenes[n].transitions` has a length of 2 or more, `scenes[n].transition_semantics` is required 
-* If `state.characters[n].demographics.military_disposition` is “Allied US”, `state.characters[n].demographics.military_branch` is required 
-* If `state.characters[n].injuries[m].name` is “Burn”, `state.characters[n].injuries[m].severity` is required 
-* If `scenes[n].action_mapping[m].action_type` is “APPLY_TREATMENT”, `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is “CHECK_ALL_VITALS”, `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is “CHECK_PULSE”, `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is “CHECK_RESPIRATION”, `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is “MOVE_TO_EVAC”, `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is “TAG_CHARACTER”, `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is “TAG_CHARACTER”, `scenes[n].action_mapping[m].parameters.category` is required
+* If `state.characters[n].demographics.military_disposition` is "Allied US", `state.characters[n].demographics.military_branch` is required 
+* If `state.characters[n].injuries[m].name` is "Burn", `state.characters[n].injuries[m].severity` is required 
+* If `scenes[n].action_mapping[m].action_type` is "APPLY_TREATMENT", `scenes[n].action_mapping[m].character_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "CHECK_ALL_VITALS", `scenes[n].action_mapping[m].character_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "CHECK_PULSE", `scenes[n].action_mapping[m].character_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "CHECK_RESPIRATION", `scenes[n].action_mapping[m].character_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].character_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].character_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].parameters.category` is required
 
 #### Conditional Prohibitions
 * If `scenes[].index` is 0, `scenes[].state` should _not_ be provided
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
 
 #### Dependency Allowed Valuese
-* If `state.characters[n].vitals.conscious` is “False”, `state.characters[n].vitals.avpu` should be “UNRESPONSIVE” and `state.characters[n].vitals.mental_status` should be “UNRESPONSIVE” 
+* If `state.characters[n].vitals.conscious` is "False", `state.characters[n].vitals.avpu` should be "UNRESPONSIVE" and `state.characters[n].vitals.mental_status` should be "UNRESPONSIVE" 
 
 #### Value Matching
 * `scenes[n].action_mapping.character_id` must be one of the `state.characters.character_id`'s 
@@ -136,7 +136,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If there are `N` `scenario.scenes`, then `scenario.scenes[0]` through `N-1` must contain transitions 
 * `scenario.state.characters.demographics.mission_importance` must be consistent with `scenario.state.mission.character_importance `
     * Every character with `mission_importance` should be an entry in `character_importance`, and vice-versa 
-    * This does not include “normal”, which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance “normal”, or a character may specify `mission_importance` with “normal” and `character_importance` may not list that character 
+    * This does not include "normal", which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance "normal", or a character may specify `mission_importance` with "normal" and `character_importance` may not list that character 
 
 #### Injury/Location Matches
 Injuries are only allowed to have specific locations. Please follow the table to create valid matches.
