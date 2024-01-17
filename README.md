@@ -64,11 +64,11 @@ The dependencies json lists specific rules for the validator to follow. When lis
 | -- | -- | -- |
 | `simpleRequired` | "If [field1] is provided, then [field2] is required." | A dictionary where each key is [field1] and the value is a list of [field2] names |
 | `conditionalRequired` | "If [field1] is provided and [conditions] apply, then [field2] is required." | A dictionary where each key is [field1] and the value is a list of objects that define conditions and [field2] names|
-| `conditionalIgnore` | "If [field1] has a value of [value1], then [field2] is ignored (or shouldn't be provided)" | A dictionary where each key is [field1] and the value is a list of objects that define conditions and [field2] names. If [field2] is in the yaml to validate when the conditions are true, a warning will be given. |
+| `conditionalForbid` | "If [field1] has a value of [value1], then [field2] should not be provided" | A dictionary where each key is [field1] and the value is a list of objects that define conditions and [field2] names. If [field2] is in the yaml to validate when the conditions are true, a warning will be given. |
 | `simpleAllowedValues` | "If [field1] has a value of [value1], then [field2] values must be [...]" | A dictionary where each key is a [field1] and the value is an object where each key is a possible value for field 1. Those keys are mapped to objects whose keys are [field2] names with a matching value of an array of possible allowed values for field2 |
 | `deepLinks` | "If [field1] has a value matching one of [a, b, ...] and [field2] has a value matching one of [c, d, ...], then [field3] value must match one of [e, f, ...]" | An object where each key is a shared parent of all fields throughout the rest of the object. For example, fa.fb[].fc is the parent of field1, field2, and field3. Each value contains "sharedParent", "condition" and "requirement".  "condition" is an object where each key-value pair refers to a field (key) and the list of its possible values it must match (value) in order for "requirement" to be required. "requirement" is an object where each key-value pair refers to a field (key) and the list of allowed values (value) for it given the conditions |
 | `valueMatch` | "[field1] must match one of the values from [field2]" | An object in the form [field1]: [field2]. Each value of the object is a field name whose values form the complete list of valid values for the corresponding key, [field1]. The value of [field1] must match one of these values. |
-| `conditions` | An object containing specific conditions that must apply before the appropriate action is taken | An object containing keys such as `length` or `value`, where the value of that key is the length or value that must hold true for the key to be required |
+| `conditions` | An object containing specific conditions that must apply before the appropriate action is taken | An object containing keys such as `length`, `exists`, or `value`, where the value of that key is the length or value that must hold true for the key to be required or ignored, or to require/forbid keys based on the existence of another key |
 
 
 ## Validator Rules
@@ -158,3 +158,4 @@ Injuries are only allowed to have specific locations. Please follow the table to
 * `military_branch` is only allowed if `military_disposition` is "Allied US"
 * `rank` and `rank_title` are not allowed if `military_branch` is not provided
 * `military_branch`, `rank`, and `rank_title` must match the information found [here](https://www.military.com/join-military/military-ranks-everything-you-need-know.html)
+
