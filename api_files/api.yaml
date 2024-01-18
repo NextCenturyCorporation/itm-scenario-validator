@@ -816,6 +816,9 @@ components:
           description: whether or not the character appears to be conscious
         avpu:
           $ref: "#/components/schemas/AvpuLevelEnum"
+        ambulatory:
+          type: boolean
+          description: whether or not the character can walk
         mental_status:
           $ref: "#/components/schemas/MentalStatusEnum"
         breathing:
@@ -869,6 +872,11 @@ components:
         end_scenario_allowed:
           type: boolean
           description: Whether ADMs can end the scenario during this scene
+        probe_config:
+          description: TA1-provided probe configuration, ignored by TA3
+          type: array
+          items:
+            $ref: "#/components/schemas/ProbeConfig"
         tagging:
           $ref: "#/components/schemas/Tagging"
         action_mapping:
@@ -996,6 +1004,16 @@ components:
             $ref: "#/components/schemas/Supplies"
           example:
             - { type: Tourniquet, quantity: 1, reusable: False }
+    ProbeConfig:
+      type: object
+      description: Probe configuration for use by TA1
+      properties:
+        probe_id:
+          type: string
+          description: A valid probe_id from the appropriate TA1
+        description:
+          type: string
+          description: A description of the probe for use by TA1
     Tagging:
       type: object
       description: Scene-level tagging configuration
@@ -1504,6 +1522,7 @@ components:
     SemanticTypeEnum:
       description: Whether transition or probe response conditions use and, or, or not semantics
       type: string
+      default: and
       enum:
         - and
         - or
