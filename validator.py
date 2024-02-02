@@ -445,8 +445,9 @@ class YamlValidator:
                     data = data if data is not None else []
                     for j in range(len(data)):
                         # add in indices where keys were found
-                        detailed_k = simple_k + '[' + str(j) + ']'
-                        found_indices += (self.property_meets_conditions(first_key_list[i+1:], data[j], value=value, length=length, exists=exists, loc='.'.join(loc).replace(k, detailed_k).split('.')))
+                        if (isinstance(data, object) and j in data) or not isinstance(data, object):
+                            detailed_k = simple_k + '[' + str(j) + ']'
+                            found_indices += (self.property_meets_conditions(first_key_list[i+1:], data[j], value=value, length=length, exists=exists, loc='.'.join(loc).replace(k, detailed_k).split('.')))
                 else:
                     # key is not here, don't keep searching
                     skip = True
