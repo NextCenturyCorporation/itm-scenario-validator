@@ -126,7 +126,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `scenes[n].state.characters[m].injuries[p].source_character` must be one of the `scenes[n].state.characters.character_id`'s
 * `scenes[n].action_mapping.character_id` must be one of the `state.characters.character_id`'s 
 * `scenes[n].tagging.probe_responses[m].character_id` must be one of the `state.characters.character_id`'s
-* `scenes[n].action_mapping.conditions.character_vitals.character_id `must be one of the `state.characters.character_id`'s 
+* `scenes[n].action_mapping.conditions.character_vitals.character_id` must be one of the `state.characters.character_id`'s 
 * `scenes[n].tagging.reference` must be one of the `scenes[n].index`'s 
 * `scenes[n].action_mapping[m].next_scene` must be one of the `scenes[n].index`'s
 
