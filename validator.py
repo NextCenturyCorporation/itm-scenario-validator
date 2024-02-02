@@ -801,7 +801,7 @@ class YamlValidator:
                     where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
                     if where_vals_found not in missing_locs:
                         missing_locs.append(where_vals_found)
-                        self.logger.log(LogLevel.WARN, "Key '" + str(where_vals_found) + "' is missing.")
+                        self.logger.log(LogLevel.WARN, "Path '" + str(where_vals_found) + "' does not exist.")
                         self.missing_keys += 1
                     continue
                 # check that the value matches what we expect
