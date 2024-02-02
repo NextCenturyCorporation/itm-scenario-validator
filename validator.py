@@ -404,6 +404,7 @@ class YamlValidator:
         self.validate_mission_importance()
         self.value_follows_list()
         self.character_matching()
+        self.verify_uniqueness()
 
     def simple_requirements(self):
         '''
@@ -808,6 +809,34 @@ class YamlValidator:
                     where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
                     self.logger.log(LogLevel.WARN, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' must have one of the following values " + str(allowed_vals[ind]) + " to match '" + str(where_vals_found) + "', but instead value is '" + str(val) + "'")
                     self.invalid_values += 1
+
+
+    def verify_uniqueness(self):
+        '''
+        Ensure that all values at a certain level are unique
+        '''
+        for k in self.dep_json['unique']:
+            loc = k.split('.')
+            scope = self.dep_json['unique'][k]
+            # find all locations where the property exists
+            locations = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml))
+            scope_locs = self.property_meets_conditions(scope.split('.'), copy.deepcopy(self.loaded_yaml))
+            if scope == "":
+                scope_locs = [""]
+            for scope in scope_locs:
+                vals_found = []
+                if scope[-2:] == '[]':
+                    # not an actual path
+                    continue
+                else:
+                    for loc in locations:
+                        if scope in loc or scope == "":
+                            val = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
+                            if val in vals_found:
+                                self.logger.log(LogLevel.WARN, f"Values from key '{k}' must be unique within scope '{scope if scope != '' else '[whole file]'}', but value '{val}' was found more than once.")
+                                self.invalid_values += 1    
+                            else:
+                                vals_found.append(val)
 
 
     def scenes_with_transitions(self):

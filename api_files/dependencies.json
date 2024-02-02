@@ -1826,5 +1826,10 @@
         "scenes[].tagging.probe_responses[].character_id",
         "scenes[].transitions.character_vitals[].character_id",
         "scenes[].action_mapping[].conditions.character_vitals[].character_id"
-    ]
+    ],
+    "unique": {
+        "scenes[].state.characters[].id": "scenes[]",
+        "scenes[].action_mapping[].action_id": "scenes[]",
+        "state.characters[].id": "state"
+    }
 }
