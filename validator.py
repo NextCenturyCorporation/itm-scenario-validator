@@ -439,6 +439,7 @@ class YamlValidator:
                 simple_k = k.split('[]')[0]
                 if simple_k in data:
                     data = data[simple_k]
+                    data = data if data is not None else []
                     for j in range(len(data)):
                         # add in indices where keys were found
                         detailed_k = simple_k + '[' + str(j) + ']'
