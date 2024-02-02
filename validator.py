@@ -76,6 +76,7 @@ class YamlValidator:
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
 
+
     def __del__(self):
         '''
         Basic cleanup: closing the file loaded in on close.
@@ -402,6 +403,7 @@ class YamlValidator:
         self.validate_action_params()
         self.validate_mission_importance()
         self.value_follows_list()
+        self.character_matching()
 
     def simple_requirements(self):
         '''
@@ -635,7 +637,6 @@ class YamlValidator:
         return found
 
 
-
     def require_unstructured(self):
         '''
         Within every scenes[].state, at least one unstructured field must be provided.
@@ -653,6 +654,7 @@ class YamlValidator:
                     self.missing_keys += 1
             i += 1
 
+
     def find_unstructured(self, obj):
         '''
         Looks through obj for an unstructured field
@@ -666,6 +668,7 @@ class YamlValidator:
             if k == 'unstructured':
                 found = True
         return found
+
 
     def deep_links(self):
         '''
@@ -758,7 +761,55 @@ class YamlValidator:
                     self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
                     self.invalid_values += 1
 
-                    
+
+    def character_matching(self):
+        '''
+        Checks the yaml file for character matches: "characters at scene level 0 must match state characters. 
+        characters at other scene levels must match the characters within that scene"
+        '''
+        # get all locations that have character ids 
+        allowed_loc_0 = "state.characters[].id".split('.')
+        allowed_loc_other = "scenes[].state.characters[].id".split('.')
+        locations_0 = self.property_meets_conditions(allowed_loc_0, copy.deepcopy(self.loaded_yaml))
+        locations_other = self.property_meets_conditions(allowed_loc_other, copy.deepcopy(self.loaded_yaml))
+        allowed_vals = {0: []}
+        # get all allowed values, organizing by the scene index where those values will be allowed
+        for l in locations_0:
+            loc = l.split('.')
+            val = self.get_value_at_key(loc, copy.deepcopy(self.loaded_yaml))
+            if val is not None:
+                allowed_vals[0].append(val)   
+        for l in locations_other:
+            ind = int(l.split('cenes[')[1].split(']')[0])
+            if ind not in allowed_vals:
+                allowed_vals[ind] = []
+            loc = l.split('.')
+            val = self.get_value_at_key(loc, copy.deepcopy(self.loaded_yaml))
+            if val is not None:
+                allowed_vals[ind].append(val)   
+
+        for loc in self.dep_json['characterMatching']:
+            loc = loc.split('.')
+            # find all locations where the property exists
+            locations = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml))
+            for l in locations:
+                # get the scene index
+                ind = int(l.split('cenes[')[1].split(']')[0])
+                # make sure the index exist in the allowed values dict
+                if ind not in allowed_vals:
+                    where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
+                    self.logger.log(LogLevel.WARN, "Key '" + str(where_vals_found) + "' is missing.")
+                    self.missing_keys += 1
+                    continue
+                # check that the value matches what we expect
+                loc = l.split('.')
+                val = self.get_value_at_key(loc, copy.deepcopy(self.loaded_yaml))
+                if val is not None and val not in allowed_vals[ind]:
+                    where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
+                    self.logger.log(LogLevel.WARN, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' must have one of the following values " + str(allowed_vals[ind]) + " to match '" + str(where_vals_found) + "', but instead value is '" + str(val) + "'")
+                    self.invalid_values += 1
+
+
     def scenes_with_transitions(self):
         '''
         Looks through the yaml file to make sure that every scene from 0 to n-1 has 
