@@ -788,7 +788,7 @@ class YamlValidator:
             val = self.get_value_at_key(loc, copy.deepcopy(self.loaded_yaml))
             if val is not None:
                 allowed_vals[ind].append(val)   
-
+        missing_locs = []
         for loc in self.dep_json['characterMatching']:
             loc = loc.split('.')
             # find all locations where the property exists
@@ -796,11 +796,13 @@ class YamlValidator:
             for l in locations:
                 # get the scene index
                 ind = int(l.split('cenes[')[1].split(']')[0])
-                # make sure the index exist in the allowed values dict
+                # make sure the index exists in the allowed values dict
                 if ind not in allowed_vals:
                     where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
-                    self.logger.log(LogLevel.WARN, "Key '" + str(where_vals_found) + "' is missing.")
-                    self.missing_keys += 1
+                    if where_vals_found not in missing_locs:
+                        missing_locs.append(where_vals_found)
+                        self.logger.log(LogLevel.WARN, "Key '" + str(where_vals_found) + "' is missing.")
+                        self.missing_keys += 1
                     continue
                 # check that the value matches what we expect
                 loc = l.split('.')
