@@ -8,12 +8,18 @@ components:
           format: float
           minimum: 1.0
           type: number
+        id:
+          description: An identifier for the evacuation opportunity, unique within
+            the scene
+          type: string
         max_transport:
           description: Maximum number of casualties that can be transported
           minimum: 1
           type: integer
         type:
           $ref: '#/components/schemas/AidTypeEnum'
+      required:
+      - id
       type: object
     AidTypeEnum:
       description: Means of evacuation
@@ -148,7 +154,10 @@ components:
       description: Environmental elements that impact decision-making
       properties:
         aid_delay:
-          $ref: '#/components/schemas/AidDelay'
+          description: A list of evacuation opportunities
+          items:
+            $ref: '#/components/schemas/AidDelay'
+          type: array
         air_quality:
           $ref: '#/components/schemas/AirQualityEnum'
         city_infrastructure:

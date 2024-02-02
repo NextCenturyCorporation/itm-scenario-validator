@@ -602,7 +602,10 @@ components:
           description: Natural language, plain text description of decision-impacting environmental factors
           example: Injuries triggered by an IED detonation.  Helicopter Evac expected in one hour for up to three casualties.
         aid_delay:
-          $ref: "#/components/schemas/AidDelay"
+          type: array
+          description: A list of evacuation opportunities
+          items:
+            $ref: "#/components/schemas/AidDelay"
         movement_restriction:
           $ref: "#/components/schemas/MovementRestrictionEnum"
         sound_restriction:
@@ -620,10 +623,14 @@ components:
           description: Refers to building/city infrastructure that should be noted and known (safe house, etc.)
     AidDelay:
       required:
+        - id
         - delay
       type: object
       description: Properties related to CASEVAC or MEDEVAC
       properties:
+        id:
+          type: string
+          description: An identifier for the evacuation opportunity, unique within the scene
         delay:
           type: number
           format: float

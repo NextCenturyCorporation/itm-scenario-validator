@@ -101,7 +101,7 @@ In order for a yaml file to be considered "valid", the following conditions must
         * Only one `unstructured` property is required in the whole object
         * `Mission`, `Environment`, `DecisionEnvironment`, and `SimEnvironment` only require the `unstructured` property
         * `type` is a prohibted key in `SimEnvironment`
-        * `AidDelay` can be empty
+        * `AidDelay` only requires `id`
 ### Dependencies
 #### Conditional Requirements
 * If `scenes[n].action_mapping[m].conditions` has a length of 2 or more, `scenes[n].action_mapping[m].condition_semantics` is required
@@ -140,9 +140,11 @@ In order for a yaml file to be considered "valid", the following conditions must
     * `scenes[n].action_mapping[].conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
 
 #### Uniqueness
+* `scenes[].state.environment.decision_environment.aid_delay[].id` must not have any repeated values within each `scene`
 * `scenes[].state.characters[].id` must not have any repeated values within each `scene`
 * `scenes[].action_mapping[].action_id` must not have any repeated values within each `scene`
 * `state.characters[].id` must not have any repeated values
+* `state.environment.decision_environment.aid_delay[].id` must not have any repeated values
 
 #### Other Rules
 * `scenes[n].action_mapping[m].parameters.treatment` must come from `SupplyTypeEnum` 

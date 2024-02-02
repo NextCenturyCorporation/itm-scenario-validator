@@ -37,9 +37,10 @@ state:
       unstructured: >
         Isolated jungle island. EVAC is scheduled for 5 minutes.
       aid_delay:
-        delay: 5 # CASEVAC or MEDEVAC timer, in minutes
-        type: ground # controlled vocab includes air, ground, water, unknown
-        max_transport: 1 # Maximum number of characters that can be transported
+        - id: ground_1
+          delay: 5 # CASEVAC or MEDEVAC timer, in minutes
+          type: ground # controlled vocab includes air, ground, water, unknown
+          max_transport: 1 # Maximum number of characters that can be transported
       movement_restriction: unrestricted # operational movement restrictions; controlled vocab includes unrestricted, minimal, moderate, severe, extreme
       sound_restriction: unrestricted # operational sound restrictions; controlled vocab includes unrestricted, minimal, moderate, severe, extreme
       oxygen_levels: normal # controlled vocab includes normal, limited, scarce, none
@@ -115,7 +116,7 @@ state:
       demographics:
         age: 40
         sex: M
-        race: Asian
+        race: Asian # controlled vocab includes American Indian, White, Hispanic, Black, Asian, Pacific Islander
         military_disposition: Civilian
         mission_importance: low # controlled vocab includes low, normal, important, priority, vip; must be kept consistent with mission.character_importance
       vitals:
@@ -293,7 +294,7 @@ scenes:
           demographics:
             age: 25
             sex: M
-            race: White # controlled vocab to be informed by research, TA4.
+            race: White # controlled vocab includes American Indian, White, Hispanic, Black, Asian, Pacific Islander
             military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
             military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
             rank: E-2 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
@@ -324,7 +325,7 @@ scenes:
           demographics:
             age: 35
             sex: F
-            race: White # controlled vocab to be informed by research, TA4.
+            race: White # controlled vocab includes American Indian, White, Hispanic, Black, Asian, Pacific Islander
             military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
             military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
             rank: O-3 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
@@ -351,8 +352,9 @@ scenes:
           unstructured: >
             EVAC has been delayed to 50 minutes out and can only take one patient.
           aid_delay:
-            delay: 50
-            max_transport: 1
+            - id: small_evac
+              delay: 50
+              max_transport: 1
     probe_config:
       - probe_id: adept-september-demo-probe-5
         description: Evacuation probe
