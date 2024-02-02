@@ -131,6 +131,14 @@
             },
             {
                 "conditions": {
+                    "value": "Military Neutral"
+                },
+                "forbid": [
+                    "state.characters[].demographics.military_branch"
+                ]
+            },
+            {
+                "conditions": {
                     "value": "Non-Military Adversary"
                 },
                 "forbid": [
@@ -1808,10 +1816,13 @@
         ]
     },
     "valueMatch": {
+        "state.characters[].injuries[].source_character": "state.characters[].id",
+        "scenes[].state.characters[].injuries[].source_character": "scenes[].state.characters[].id",
         "scenes[].action_mapping[].character_id": "state.characters[].id",
         "scenes[].tagging.probe_responses[].character_id": "state.characters[].id",
         "scenes[].transitions.character_vitals[].character_id": "state.characters[].id",
         "scenes[].action_mapping[].conditions.character_vitals[].character_id": "state.characters[].id",
+        "scenes[].action_mapping[].next_scene": "scenes[].index",
         "scenes[].tagging.reference": "scenes[].index"
     }
 }

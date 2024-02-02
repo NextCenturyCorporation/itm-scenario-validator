@@ -81,23 +81,21 @@ In order for a yaml file to be considered "valid", the following conditions must
 * All keys defined as required by `api.yaml` are required
 * Exceptions to the two rules above include the following:
     * `scenario.scenes` is required
-    * Each action in `scene.action_mapping` requires `scene_id`
-    * Each action in `scene.action_mapping` requires `choice`
     * All vitals properties are required
         * `conscious`
         * `avpu`
         * `mental_status`
         * `breathing`
-        * `hrpmin`
+        * `heart_rate`
         * `Spo2`
     * `injury.status` may only be `hidden`, `discoverable`, or `visible`
-    * `restricted_actions` cannot include `end_scenario` or `tag_character`
-    * `justification` is a prohibited key in `action`
+    * `restricted_actions` cannot include `end_scene`
     * `visited` is a prohibited key in `character`
     * `session_complete` is a prohibited key in `scenario`
     * `scenario_complete` is a prohibited key in `state`
     * `elapsed_time` is a prohibited key in `state`
     * In `scenes.state`:
+        * Only `characters` is required
         * Only one `unstructured` property is required in the whole object
         * `Mission`, `Environment`, `DecisionEnvironment`, and `SimEnvironment` only require the `unstructured` property
         * `type` is a prohibted key in `SimEnvironment`
@@ -124,10 +122,13 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `state.characters[n].vitals.conscious` is "False", `state.characters[n].vitals.avpu` should be "UNRESPONSIVE" and `state.characters[n].vitals.mental_status` should be "UNRESPONSIVE" 
 
 #### Value Matching
+* `state.characters[n].injuries[m].source_character` must be one of the `state.characters.character_id`'s
+* `scenes[n].state.characters[m].injuries[p].source_character` must be one of the `scenes[n].state.characters.character_id`'s
 * `scenes[n].action_mapping.character_id` must be one of the `state.characters.character_id`'s 
-* `scenes[n].tagging.probe_responses[n].character_id` must be one of the `state.characters.character_id`'s 
+* `scenes[n].tagging.probe_responses[m].character_id` must be one of the `state.characters.character_id`'s
 * `scenes[n].action_mapping.conditions.character_vitals.character_id `must be one of the `state.characters.character_id`'s 
 * `scenes[n].tagging.reference` must be one of the `scenes[n].index`'s 
+* `scenes[n].action_mapping[m].next_scene` must be one of the `scenes[n].index`'s
 
 #### Other Rules
 * `scenes[n].action_mapping[m].parameters.treatment` must come from `SupplyTypeEnum` 
