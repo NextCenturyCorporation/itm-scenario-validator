@@ -151,6 +151,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `scenes[n].action_mapping[m].parameters.location` must come from `InjuryLocationEnum` 
 * `scenes[n].action_mapping[m].parameters.category` must come from `CharacterTagEnum` 
 * If there are `N` `scenario.scenes`, then `scenario.scenes[0]` through `N-1` must contain transitions 
+* If there are `N` `scenario.scenes`, then `scenario.scenes[1]` through `N-1` must contain state 
 * `scenario.state.characters.demographics.mission_importance` must be consistent with `scenario.state.mission.character_importance `
     * Every character with `mission_importance` should be an entry in `character_importance`, and vice-versa 
     * This does not include "normal", which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance "normal", or a character may specify `mission_importance` with "normal" and `character_importance` may not list that character 
