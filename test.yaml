@@ -191,6 +191,24 @@ scenes:
       - SEARCH
       - MOVE_TO_EVAC
     action_mapping:
+      - action_id: tag-mike-minimal
+        action_type: TAG_CHARACTER
+        unstructured: Tag Mike as minimal
+        character_id: Mike
+        probe_id: adept-september-demo-probe-3
+        parameters: { "category": "MINIMAL"}
+        choice: s1-p3-choice1
+        kdma_association: # available only in kdma_traning mode, of course
+          Fairness: 0.9
+      - action_id: tag-mike-delayed
+        action_type: TAG_CHARACTER
+        unstructured: Tag Mike as delayed
+        character_id: Mike
+        probe_id: adept-september-demo-probe-3
+        parameters: { "category": "DELAYED"}
+        choice: s1-p3-choice2
+        kdma_association:
+          Fairness: 0.7
       - action_id: tag-mike-immediate
         action_type: TAG_CHARACTER
         unstructured: Tag Mike as immediate
@@ -198,15 +216,25 @@ scenes:
         probe_id: adept-september-demo-probe-3
         parameters: { "category": "IMMEDIATE"}
         choice: s1-p3-choice3
-        kdma_association: # available only in kdma_traning mode, of course
+        kdma_association:
           Fairness: 0.5
+      - action_id: tag-mike-expectant
+        action_type: TAG_CHARACTER
+        unstructured: Tag Mike as expectant
+        character_id: Mike
+        probe_id: adept-september-demo-probe-3
+        parameters: { "category": "EXPECTANT"}
+        choice: s1-p3-choice4
+        kdma_association:
+          Fairness: 0.2
+      ## NOTE: Similar tags for Civilian omitted for brevity 
       - action_id: action1
         action_type: SITREP
         unstructured: Ask Mike to provide SITREP # Roughly corresponds to ProbeOption's "value" field
         character_id: Mike
         probe_id: adept-september-demo-probe-1
         choice: s1-p1-choice1
-        kdma_association: # available only in kdma_traning mode, of course
+        kdma_association:
           Fairness: 0.5
         condition_semantics: "and" # Can be "and", "or", or "not"
         conditions:
