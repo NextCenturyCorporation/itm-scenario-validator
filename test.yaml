@@ -76,7 +76,7 @@ state:
       unstructured: >
         A 34 year-old male Marine hit by an IED. 
         No obvious external injuries.
-      intent: intend minor help # The moral intent of the character; controlled vocab includes most intend major harm, intend minor harm, no intent, intend minor help, intend major help
+      intent: intend minor help # The moral intent of the character; controlled vocab includes intend major harm, intend minor harm, no intent, intend minor help, intend major help
       rapport: familial # A measure of closeness or affinity towards the player/medic. Controlled vocab: loathing, dislike, neutral, close, familial
       demographics:
         age: 34
@@ -191,6 +191,15 @@ scenes:
       - SEARCH
       - MOVE_TO_EVAC
     action_mapping:
+      - action_id: tag-mike-immediate
+        action_type: TAG_CHARACTER
+        unstructured: Tag Mike as immediate
+        character_id: Mike
+        probe_id: adept-september-demo-probe-3
+        parameters: { "category": "IMMEDIATE"}
+        choice: s1-p3-choice3
+        kdma_association: # available only in kdma_traning mode, of course
+          Fairness: 0.5
       - action_id: action1
         action_type: SITREP
         unstructured: Ask Mike to provide SITREP # Roughly corresponds to ProbeOption's "value" field

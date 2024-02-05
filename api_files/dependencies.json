@@ -79,6 +79,7 @@
                     "value": "MOVE_TO_EVAC"
                 },
                 "required": [
+                    "scenes[].action_mapping[].parameters.evac_id",
                     "scenes[].action_mapping[].character_id"
                 ]
             },
