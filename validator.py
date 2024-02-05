@@ -406,6 +406,7 @@ class YamlValidator:
         self.value_follows_list()
         self.character_matching()
         self.verify_uniqueness()
+        self.end_scene_allowed()
 
     def simple_requirements(self):
         '''
@@ -867,6 +868,19 @@ class YamlValidator:
             if 'state' not in scenes[i]:
                 self.logger.log(LogLevel.WARN, "Key 'state' must be provided within all but the first entry in 'scenes' but is missing at scenes[" + str(i) + "]")
                 self.missing_keys += 1
+
+
+    def end_scene_allowed(self):
+        '''
+        Looks through the yaml file to make sure that at least one scene has end_scene_allowed=true
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        for i in range(0, len(scenes)):
+            if 'end_scene_allowed' in scenes[i] and scenes[i]['end_scene_allowed'] == True:
+                return
+        self.logger.log(LogLevel.WARN, "Key 'end_scene_allowed' must have value 'true' in at least one scene, but does not.")
+        self.invalid_values += 1
 
 
     def validate_action_params(self):
