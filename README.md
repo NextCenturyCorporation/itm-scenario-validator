@@ -113,6 +113,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_PULSE", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_RESPIRATION", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].character_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].parameters.evac_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].parameters.category` is required
 
@@ -147,6 +148,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `state.environment.decision_environment.aid_delay[].id` must not have any repeated values
 
 #### Other Rules
+* At least one scene must have `end_scene_allowed=true`
 * `scenes[n].action_mapping[m].parameters.treatment` must come from `SupplyTypeEnum` 
 * `scenes[n].action_mapping[m].parameters.location` must come from `InjuryLocationEnum` 
 * `scenes[n].action_mapping[m].parameters.category` must come from `CharacterTagEnum` 
