@@ -68,6 +68,8 @@ The dependencies json lists specific rules for the validator to follow. When lis
 | `simpleAllowedValues` | "If [field1] has a value of [value1], then [field2] values must be [...]" | A dictionary where each key is a [field1] and the value is an object where each key is a possible value for field 1. Those keys are mapped to objects whose keys are [field2] names with a matching value of an array of possible allowed values for field2 |
 | `deepLinks` | "If [field1] has a value matching one of [a, b, ...] and [field2] has a value matching one of [c, d, ...], then [field3] value must match one of [e, f, ...]" | An object where each key is a shared parent of all fields throughout the rest of the object. For example, fa.fb[].fc is the parent of field1, field2, and field3. Each value contains "sharedParent", "condition" and "requirement".  "condition" is an object where each key-value pair refers to a field (key) and the list of its possible values it must match (value) in order for "requirement" to be required. "requirement" is an object where each key-value pair refers to a field (key) and the list of allowed values (value) for it given the conditions |
 | `valueMatch` | "[field1] must match one of the values from [field2]" | An object in the form [field1]: [field2]. Each value of the object is a field name whose values form the complete list of valid values for the corresponding key, [field1]. The value of [field1] must match one of these values. |
+| `characterMatching` | Character ids in found at the locations in this list must match state.characters[].id if the scene index is 0, and scenes[ind].state.characters[].id otherwise | A list of locations that must follow this rule |
+| `unique` | "all values of [field1] must be unique within the scope of [field2]" | An object in the form [field1]: [field2]. Both must be a complete path. `field1` refers to the path where unique values must live. `field2` refers to the path that begins the uniqueness. For example, `scenes[]` as `field2`  means that `field1` cannot have a repeated value in each individual scene. To get uniqueness for an id throughout the entire yaml, `field2` should be `""` |
 | `conditions` | An object containing specific conditions that must apply before the appropriate action is taken | An object containing keys such as `length`, `exists`, or `value`, where the value of that key is the length or value that must hold true for the key to be required or ignored, or to require/forbid keys based on the existence of another key |
 
 
@@ -81,27 +83,25 @@ In order for a yaml file to be considered "valid", the following conditions must
 * All keys defined as required by `api.yaml` are required
 * Exceptions to the two rules above include the following:
     * `scenario.scenes` is required
-    * Each action in `scene.action_mapping` requires `scene_id`
-    * Each action in `scene.action_mapping` requires `choice`
     * All vitals properties are required
         * `conscious`
         * `avpu`
         * `mental_status`
         * `breathing`
-        * `hrpmin`
+        * `heart_rate`
         * `Spo2`
     * `injury.status` may only be `hidden`, `discoverable`, or `visible`
-    * `restricted_actions` cannot include `end_scenario` or `tag_character`
-    * `justification` is a prohibited key in `action`
+    * `restricted_actions` cannot include `end_scene`
     * `visited` is a prohibited key in `character`
     * `session_complete` is a prohibited key in `scenario`
     * `scenario_complete` is a prohibited key in `state`
     * `elapsed_time` is a prohibited key in `state`
     * In `scenes.state`:
+        * Only `characters` is required
         * Only one `unstructured` property is required in the whole object
         * `Mission`, `Environment`, `DecisionEnvironment`, and `SimEnvironment` only require the `unstructured` property
         * `type` is a prohibted key in `SimEnvironment`
-        * `AidDelay` can be empty
+        * `AidDelay` only requires `id`
 ### Dependencies
 #### Conditional Requirements
 * If `scenes[n].action_mapping[m].conditions` has a length of 2 or more, `scenes[n].action_mapping[m].condition_semantics` is required
@@ -113,6 +113,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_PULSE", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_RESPIRATION", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].character_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].parameters.evac_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].parameters.category` is required
 
@@ -124,16 +125,35 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `state.characters[n].vitals.conscious` is "False", `state.characters[n].vitals.avpu` should be "UNRESPONSIVE" and `state.characters[n].vitals.mental_status` should be "UNRESPONSIVE" 
 
 #### Value Matching
-* `scenes[n].action_mapping.character_id` must be one of the `state.characters.character_id`'s 
-* `scenes[n].tagging.probe_responses[n].character_id` must be one of the `state.characters.character_id`'s 
-* `scenes[n].action_mapping.conditions.character_vitals.character_id `must be one of the `state.characters.character_id`'s 
+* `state.characters[n].injuries[m].source_character` must be one of the `state.characters.character_id`'s
 * `scenes[n].tagging.reference` must be one of the `scenes[n].index`'s 
+* `scenes[n].action_mapping[m].next_scene` must be one of the `scenes[n].index`'s
+
+#### Character Matching
+* `scenes[0].action_mapping[].character_id`: `state.characters[].id`,
+* `scenes[0].tagging.probe_responses[].character_id`: `state.characters[].id`,
+* `scenes[0].transitions.character_vitals[].character_id`: `state.characters[].id`,
+* `scenes[0].action_mapping[].conditions.character_vitals[].character_id`: `state.characters[].id`
+* For scenes[n] where (n>0):
+    * `scenes[n].action_mapping[].character_id`: `scenes[n].state.characters[].id`,
+    * `scenes[n].tagging.probe_responses[].character_id`: `scenes[n].state.characters[].id`,
+    * `scenes[n].transitions.character_vitals[].character_id`: `scenes[n].state.characters[].id`,
+    * `scenes[n].action_mapping[].conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
+
+#### Uniqueness
+* `scenes[].state.environment.decision_environment.aid_delay[].id` must not have any repeated values within each `scene`
+* `scenes[].state.characters[].id` must not have any repeated values within each `scene`
+* `scenes[].action_mapping[].action_id` must not have any repeated values within each `scene`
+* `state.characters[].id` must not have any repeated values
+* `state.environment.decision_environment.aid_delay[].id` must not have any repeated values
 
 #### Other Rules
+* At least one scene must have `end_scene_allowed=true`
 * `scenes[n].action_mapping[m].parameters.treatment` must come from `SupplyTypeEnum` 
 * `scenes[n].action_mapping[m].parameters.location` must come from `InjuryLocationEnum` 
 * `scenes[n].action_mapping[m].parameters.category` must come from `CharacterTagEnum` 
 * If there are `N` `scenario.scenes`, then `scenario.scenes[0]` through `N-1` must contain transitions 
+* If there are `N` `scenario.scenes`, then `scenario.scenes[1]` through `N-1` must contain state 
 * `scenario.state.characters.demographics.mission_importance` must be consistent with `scenario.state.mission.character_importance `
     * Every character with `mission_importance` should be an entry in `character_importance`, and vice-versa 
     * This does not include "normal", which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance "normal", or a character may specify `mission_importance` with "normal" and `character_importance` may not list that character 

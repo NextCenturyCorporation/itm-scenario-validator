@@ -76,6 +76,7 @@ class YamlValidator:
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
 
+
     def __del__(self):
         '''
         Basic cleanup: closing the file loaded in on close.
@@ -399,9 +400,13 @@ class YamlValidator:
         self.value_follows_list()
         self.require_unstructured()
         self.scenes_with_transitions()
+        self.scenes_with_state()
         self.validate_action_params()
         self.validate_mission_importance()
         self.value_follows_list()
+        self.character_matching()
+        self.verify_uniqueness()
+        self.end_scene_allowed()
 
     def simple_requirements(self):
         '''
@@ -439,10 +444,12 @@ class YamlValidator:
                 simple_k = k.split('[]')[0]
                 if simple_k in data:
                     data = data[simple_k]
+                    data = data if data is not None else []
                     for j in range(len(data)):
                         # add in indices where keys were found
-                        detailed_k = simple_k + '[' + str(j) + ']'
-                        found_indices += (self.property_meets_conditions(first_key_list[i+1:], data[j], value=value, length=length, exists=exists, loc='.'.join(loc).replace(k, detailed_k).split('.')))
+                        if (isinstance(data, object) and j in data) or isinstance(data, list):
+                            detailed_k = simple_k + '[' + str(j) + ']'
+                            found_indices += (self.property_meets_conditions(first_key_list[i+1:], data[j], value=value, length=length, exists=exists, loc='.'.join(loc).replace(k, detailed_k).split('.')))
                 else:
                     # key is not here, don't keep searching
                     skip = True
@@ -634,7 +641,6 @@ class YamlValidator:
         return found
 
 
-
     def require_unstructured(self):
         '''
         Within every scenes[].state, at least one unstructured field must be provided.
@@ -652,6 +658,7 @@ class YamlValidator:
                     self.missing_keys += 1
             i += 1
 
+
     def find_unstructured(self, obj):
         '''
         Looks through obj for an unstructured field
@@ -665,6 +672,7 @@ class YamlValidator:
             if k == 'unstructured':
                 found = True
         return found
+
 
     def deep_links(self):
         '''
@@ -757,7 +765,85 @@ class YamlValidator:
                     self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
                     self.invalid_values += 1
 
-                    
+
+    def character_matching(self):
+        '''
+        Checks the yaml file for character matches: "characters at scene level 0 must match state characters. 
+        characters at other scene levels must match the characters within that scene"
+        '''
+        # get all locations that have character ids 
+        allowed_loc_0 = "state.characters[].id".split('.')
+        allowed_loc_other = "scenes[].state.characters[].id".split('.')
+        locations_0 = self.property_meets_conditions(allowed_loc_0, copy.deepcopy(self.loaded_yaml))
+        locations_other = self.property_meets_conditions(allowed_loc_other, copy.deepcopy(self.loaded_yaml))
+        allowed_vals = {0: []}
+        # get all allowed values, organizing by the scene index where those values will be allowed
+        for l in locations_0:
+            loc = l.split('.')
+            val = self.get_value_at_key(loc, copy.deepcopy(self.loaded_yaml))
+            if val is not None:
+                allowed_vals[0].append(val)   
+        for l in locations_other:
+            ind = int(l.split('cenes[')[1].split(']')[0])
+            if ind not in allowed_vals:
+                allowed_vals[ind] = []
+            loc = l.split('.')
+            val = self.get_value_at_key(loc, copy.deepcopy(self.loaded_yaml))
+            if val is not None:
+                allowed_vals[ind].append(val)   
+        missing_locs = []
+        for loc in self.dep_json['characterMatching']:
+            loc = loc.split('.')
+            # find all locations where the property exists
+            locations = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml))
+            for l in locations:
+                # get the scene index
+                ind = int(l.split('cenes[')[1].split(']')[0])
+                # make sure the index exists in the allowed values dict
+                if ind not in allowed_vals:
+                    where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
+                    if where_vals_found not in missing_locs:
+                        missing_locs.append(where_vals_found)
+                        self.logger.log(LogLevel.WARN, "Path '" + str(where_vals_found) + "' does not exist.")
+                        self.missing_keys += 1
+                    continue
+                # check that the value matches what we expect
+                loc = l.split('.')
+                val = self.get_value_at_key(loc, copy.deepcopy(self.loaded_yaml))
+                if val is not None and val not in allowed_vals[ind]:
+                    where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
+                    self.logger.log(LogLevel.WARN, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' must have one of the following values " + str(allowed_vals[ind]) + " to match '" + str(where_vals_found) + "', but instead value is '" + str(val) + "'")
+                    self.invalid_values += 1
+
+
+    def verify_uniqueness(self):
+        '''
+        Ensure that all values at a certain level are unique
+        '''
+        for k in self.dep_json['unique']:
+            loc = k.split('.')
+            scope = self.dep_json['unique'][k]
+            # find all locations where the property exists
+            locations = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml))
+            scope_locs = self.property_meets_conditions(scope.split('.'), copy.deepcopy(self.loaded_yaml))
+            if scope == "":
+                scope_locs = [""]
+            for scope in scope_locs:
+                vals_found = []
+                if scope[-2:] == '[]':
+                    # not an actual path
+                    continue
+                else:
+                    for loc in locations:
+                        if scope in loc or scope == "":
+                            val = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
+                            if val in vals_found:
+                                self.logger.log(LogLevel.WARN, f"Values from key '{k}' must be unique within scope '{scope if scope != '' else '[whole file]'}', but value '{val}' was found more than once.")
+                                self.invalid_values += 1    
+                            else:
+                                vals_found.append(val)
+
+
     def scenes_with_transitions(self):
         '''
         Looks through the yaml file to make sure that every scene from 0 to n-1 has 
@@ -767,8 +853,34 @@ class YamlValidator:
         scenes = data['scenes']
         for i in range(0, len(scenes)-1):
             if 'transitions' not in scenes[i]:
-                self.logger.log(LogLevel.WARN, "Key 'transitions'  must be provided within all but the last entry in 'scenes' but is missing at scenes[" + str(i) + "]")
+                self.logger.log(LogLevel.WARN, "Key 'transitions' must be provided within all but the last entry in 'scenes' but is missing at scenes[" + str(i) + "]")
                 self.missing_keys += 1
+
+
+    def scenes_with_state(self):
+        '''
+        Looks through the yaml file to make sure that every scene from 1 to n-1 has 
+        a state field
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        for i in range(1, len(scenes)-1):
+            if 'state' not in scenes[i]:
+                self.logger.log(LogLevel.WARN, "Key 'state' must be provided within all but the first entry in 'scenes' but is missing at scenes[" + str(i) + "]")
+                self.missing_keys += 1
+
+
+    def end_scene_allowed(self):
+        '''
+        Looks through the yaml file to make sure that at least one scene has end_scene_allowed=true
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        for i in range(0, len(scenes)):
+            if 'end_scene_allowed' in scenes[i] and scenes[i]['end_scene_allowed'] == True:
+                return
+        self.logger.log(LogLevel.WARN, "Key 'end_scene_allowed' must have value 'true' in at least one scene, but does not.")
+        self.invalid_values += 1
 
 
     def validate_action_params(self):
@@ -804,8 +916,8 @@ class YamlValidator:
                                 self.invalid_values += 1 
                         # validate params only includes expected values
                         for key in params:
-                            if key not in ['treatment', 'location', 'category']:
-                                self.logger.log(LogLevel.WARN, "'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(['treatment', 'location', 'category']) + " but has key '" + key + "'.")
+                            if key not in ['treatment', 'location', 'category', 'evac_id']:
+                                self.logger.log(LogLevel.WARN, "'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(['treatment', 'location', 'category', 'evac_id']) + " but has key '" + key + "'.")
                                 self.invalid_keys += 1 
                     j += 1
             i += 1

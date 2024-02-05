@@ -8,20 +8,36 @@ components:
           format: float
           minimum: 1.0
           type: number
+        id:
+          description: An identifier for the evacuation opportunity, unique within
+            the scene
+          type: string
         max_transport:
           description: Maximum number of casualties that can be transported
           minimum: 1
           type: integer
         type:
           $ref: '#/components/schemas/AidTypeEnum'
+      required:
+      - id
       type: object
     AidTypeEnum:
       description: Means of evacuation
       enum:
-      - AMEV
-      - truck
-      - helicopter
+      - air
+      - ground
+      - water
       - unknown
+      type: string
+    AirQualityEnum:
+      description: Air Quality Index (AQI); see [airnow.gov](https://www.airnow.gov/aqi/aqi-basics/)
+      enum:
+      - green
+      - yellow
+      - orange
+      - red
+      - purple
+      - maroon
       type: string
     AmbientNoiseEnum:
       description: Descriptor for background noise level
@@ -46,6 +62,7 @@ components:
       enum:
       - NORMAL
       - FAST
+      - SLOW
       - RESTRICTED
       - NONE
       type: string
@@ -55,6 +72,8 @@ components:
       properties:
         demographics:
           $ref: '#/components/schemas/Demographics'
+        directness_of_causality:
+          $ref: '#/components/schemas/DirectnessEnum'
         id:
           description: A unique character ID throughout the scenario
           example: Soldier_01
@@ -64,18 +83,16 @@ components:
           items:
             $ref: '#/components/schemas/Injury'
           type: array
+        intent:
+          $ref: '#/components/schemas/IntentEnum'
         name:
           description: display name, as in a dashboard
           example: Mike
           type: string
         rapport:
-          description: A measure of closeness or affinity towards the player/medic;
-            0 represents strong dislike, 10 represents very close relationships like
-            family
-          format: float
-          maximum: 10.0
-          minimum: 0.0
-          type: number
+          $ref: '#/components/schemas/RapportEnum'
+        tag:
+          $ref: '#/components/schemas/CharacterTagEnum'
         unstructured:
           description: Natural language, plain text description of the character
           example: 22 YO male Marine hit by an IED. Puncture wound on the left side
@@ -106,6 +123,15 @@ components:
       - Specialist
       - Communications
       type: string
+    CharacterTagEnum:
+      description: the tag assigned to a character
+      enum:
+      - MINIMAL
+      - DELAYED
+      - IMMEDIATE
+      - EXPECTANT
+      example: DELAYED
+      type: string
     CivilianPresenceEnum:
       description: Indicator of how many civilians are present in the mission
       enum:
@@ -116,24 +142,24 @@ components:
       - crowd
       type: string
     CommunicationCapabilityEnum:
-      description: current operational communication capability and limitations
+      default: both
+      description: current availability of internal and external communication
       enum:
-      - all
-      - satellite
-      - radio
-      - voice
-      - visual
+      - internal
+      - external
+      - both
+      - neither
       type: string
     DecisionEnvironment:
       description: Environmental elements that impact decision-making
       properties:
         aid_delay:
-          $ref: '#/components/schemas/AidDelay'
+          description: A list of evacuation opportunities
+          items:
+            $ref: '#/components/schemas/AidDelay'
+          type: array
         air_quality:
-          description: Air Quality Index (AQI); see [airnow.gov](https://www.airnow.gov/aqi/aqi-basics/)
-          maximum: 500
-          minimum: 0
-          type: integer
+          $ref: '#/components/schemas/AirQualityEnum'
         city_infrastructure:
           description: Refers to building/city infrastructure that should be noted
             and known (safe house, etc.)
@@ -145,11 +171,7 @@ components:
         oxygen_levels:
           $ref: '#/components/schemas/OxygenLevelsEnum'
         population_density:
-          description: Population per square mile
-          format: float
-          maximum: 50000.0
-          minimum: 0.0
-          type: number
+          $ref: '#/components/schemas/PopulationDensityEnum'
         sound_restriction:
           $ref: '#/components/schemas/SoundRestrictionEnum'
         unstructured:
@@ -184,8 +206,7 @@ components:
         mission_importance:
           $ref: '#/components/schemas/MissionImportanceEnum'
         race:
-          description: Race or ethnicity
-          type: string
+          $ref: '#/components/schemas/RaceEnum'
         rank:
           $ref: '#/components/schemas/MilitaryRankEnum'
         rank_title:
@@ -195,11 +216,11 @@ components:
         sex:
           $ref: '#/components/schemas/DemographicSexEnum'
         skills:
-          description: A list of pairs of skill type and numeric skill level
+          description: A list of pairs of skill type and descriptive skill level
           example:
-          - level: 0.7
+          - level: skilled
             skill_type: Combat
-          - level: 0.3
+          - level: novice
             skill_type: Medical
           items:
             $ref: '#/components/schemas/Skills'
@@ -208,6 +229,15 @@ components:
       - sex
       - race
       type: object
+    DirectnessEnum:
+      description: How directly a character is responsible for injury
+      enum:
+      - direct
+      - somewhat direct
+      - somewhat indirect
+      - indirect
+      - none
+      type: string
     Environment:
       description: Environmental parameters that impact either decision-making, the
         simulation environment, or both
@@ -235,6 +265,14 @@ components:
       - lush
       - extensive
       type: string
+    HeartRateEnum:
+      description: Descriptive heart rate
+      enum:
+      - NONE
+      - FAINT
+      - NORMAL
+      - FAST
+      type: string
     Injury:
       description: An injury on a character.
       properties:
@@ -243,12 +281,11 @@ components:
         name:
           $ref: '#/components/schemas/InjuryTypeEnum'
         severity:
-          description: A numerical indication of the severity of the injury from low
-            (0.0) to high (1.0)
-          format: float
-          maximum: 1.0
-          minimum: 0.0
-          type: number
+          $ref: '#/components/schemas/InjurySeverityEnum'
+        source_character:
+          description: The character id of the person responsible for the injury,
+            subject to the character's `directness_of_causality`
+          type: string
         status:
           $ref: '#/components/schemas/InjuryStatusEnum'
       required:
@@ -284,6 +321,16 @@ components:
       - internal
       - unspecified
       type: string
+    InjurySeverityEnum:
+      description: The severity of the injury; for revelant injuries, impacts blood
+        pool sizes
+      enum:
+      - minor
+      - moderate
+      - substantial
+      - major
+      - extreme
+      type: string
     InjuryStatusEnum:
       description: Whether the injury is known prior- and post-assessment, and whether
         it's been treated
@@ -293,16 +340,19 @@ components:
       - visible
       type: string
     InjuryTriggerEnum:
-      description: What source caused character injuries.
+      description: What source caused character injuries
       enum:
       - explosion
       - firearm
       - fall
+      - fight
       - pathogen
+      - poison
       - animal
       - plant
       - water
       - collision
+      - electrical
       - equipment
       - attack
       - fire
@@ -324,6 +374,15 @@ components:
       - Broken Bone
       - Internal
       type: string
+    IntentEnum:
+      description: The intent of the character
+      enum:
+      - intend major harm
+      - intend minor harm
+      - no intent
+      - intend minor help
+      - intend major help
+      type: string
     LightingTypeEnum:
       description: Descriptor of available natural or man-made lighting
       enum:
@@ -339,6 +398,7 @@ components:
       - AGONY
       - CALM
       - CONFUSED
+      - SHOCK
       - UPSET
       - UNRESPONSIVE
       type: string
@@ -359,6 +419,7 @@ components:
       - Allied
       - Civilian
       - Military Adversary
+      - Military Neutral
       - Non-Military Adversary
       type: string
     MilitaryRankEnum:
@@ -483,7 +544,7 @@ components:
             description: A character id with an indicator of how mission-critical
               that character is
             example:
-            - Mike: none
+            - Mike: normal
             - Intelligence Officer: priority
             type: object
           type: array
@@ -514,7 +575,7 @@ components:
       default: normal
       description: How important the character is to the mission
       enum:
-      - none
+      - low
       - normal
       - important
       - priority
@@ -523,6 +584,12 @@ components:
     MissionTypeEnum:
       description: enumeration of possible mission types
       enum:
+      - Attack
+      - Defend
+      - Delay
+      - Patrol
+      - Reconnaissance
+      - Ambush
       - Listening/Observation
       - Direct Action
       - Hostage rescue
@@ -565,6 +632,37 @@ components:
       - normal
       - noisy
       - extreme
+      type: string
+    PopulationDensityEnum:
+      description: persons per square meter, each successive term is one more person
+        per square meter
+      enum:
+      - none
+      - sparse
+      - some
+      - busy
+      - crowded
+      - very crowded
+      - extreme
+      type: string
+    RaceEnum:
+      description: Race or ethnicity
+      enum:
+      - American Indian
+      - White
+      - Hispanic
+      - Black
+      - Asian
+      - Pacific Islander
+      type: string
+    RapportEnum:
+      description: A measure of closeness or affinity towards the player/medic
+      enum:
+      - loathing
+      - dislike
+      - neutral
+      - close
+      - familial
       type: string
     SimEnvironment:
       description: Environmental elements that impact simulation configuration
@@ -612,6 +710,15 @@ components:
       - urban
       - desert
       type: string
+    SkillLevelEnum:
+      description: the level of expertise the character has in the skill
+      enum:
+      - novice
+      - qualified
+      - competent
+      - skilled
+      - expert
+      type: string
     SkillTypeEnum:
       description: the type of skill the character has
       enum:
@@ -625,12 +732,7 @@ components:
       description: A skill possessed by a character at a certain level of proficiency
       properties:
         level:
-          description: the level of expertise (from 0-10) the character has in the
-            skill
-          format: float
-          maximum: 10.0
-          minimum: 0.0
-          type: number
+          $ref: '#/components/schemas/SkillLevelEnum'
         skill_type:
           $ref: '#/components/schemas/SkillTypeEnum'
       required:
@@ -670,7 +772,8 @@ components:
         unstructured:
           description: Natural language, plain text description of a scene's state
           type: string
-      required: []
+      required:
+      - characters
       type: object
     Supplies:
       description: a single type of medical supply available to the medic
@@ -686,6 +789,7 @@ components:
           minimum: 0
           type: integer
         reusable:
+          default: false
           description: Whether or not item is consumable/reusable
           type: boolean
         type:
@@ -693,7 +797,6 @@ components:
       required:
       - quantity
       - type
-      - reusable
       type: object
     SupplyTypeEnum:
       description: an enumeration of available supply types
@@ -710,6 +813,8 @@ components:
       - Pain Medications
       - Splint
       - Blood
+      - IV Bag
+      - Burn Dressing
       type: string
     TerrainTypeEnum:
       description: Descriptor for the scenario terrain
@@ -732,31 +837,33 @@ components:
       description: threats in the environment that could affect decision-making
       properties:
         severity:
-          description: how severe/imminent the threat is, from 0 (no threat) to 1
-            (max severity)
-          format: float
-          maximum: 1.0
-          minimum: 0.0
-          type: number
+          $ref: '#/components/schemas/ThreatSeverityEnum'
         threat_type:
-          description: the type or nature of the threat, may become a controlled vocabulary
-          example: gunfire
-          type: string
+          $ref: '#/components/schemas/ThreatTypeEnum'
       required:
       - threat_type
       - severity
       type: object
+    ThreatSeverityEnum:
+      description: how dangerous and/or imminent the threat is
+      enum:
+      - low
+      - moderate
+      - substantial
+      - severe
+      - extreme
+      type: string
     ThreatState:
       description: Description of the current threat to the characters, including
         the medic
       example:
         threats:
-        - severity: 0.5
+        - severity: severe
           type: gunfire
         unstructured: Gunfire can be heard in the surrounding area
       properties:
         threats:
-          description: A list of pairs of threat types with a numeric severity indicator
+          description: A list of pairs of threat types with a severity descriptor
           items:
             $ref: '#/components/schemas/Threat'
           type: array
@@ -768,16 +875,31 @@ components:
       - unstructured
       - threats
       type: object
+    ThreatTypeEnum:
+      description: the type or nature of the threat
+      enum:
+      - Civil unrest
+      - Drone activity
+      - Extreme weather
+      - Fire
+      - Gunfire
+      - IED activity
+      - Mines
+      - Poisonous vegetation
+      - Predators
+      - Unknown
+      - Unstable structure
+      type: string
     VisibilityTypeEnum:
       description: Descriptor for operational visibility; affected by time of day,
         lighting, weather, terrain, etc.
       enum:
       - none
+      - very low
       - low
-      - normal
+      - moderate
       - good
       - excellent
-      - variable
       type: string
     Vitals:
       description: Vital levels and other indications of health
@@ -798,12 +920,8 @@ components:
         conscious:
           description: whether or not the character appears to be conscious
           type: boolean
-        hrpmin:
-          description: heart rate in beats per minute
-          format: int16
-          maximum: 300
-          minimum: 0
-          type: integer
+        heart_rate:
+          $ref: '#/components/schemas/HeartRateEnum'
         mental_status:
           $ref: '#/components/schemas/MentalStatusEnum'
       required:
@@ -811,7 +929,7 @@ components:
       - avpu
       - mental_status
       - breathing
-      - hrpmin
+      - heart_rate
       - Spo2
       type: object
     WeatherTypeEnum:

@@ -79,6 +79,7 @@
                     "value": "MOVE_TO_EVAC"
                 },
                 "required": [
+                    "scenes[].action_mapping[].parameters.evac_id",
                     "scenes[].action_mapping[].character_id"
                 ]
             },
@@ -124,6 +125,14 @@
             {
                 "conditions": {
                     "value": "Military Adversary"
+                },
+                "forbid": [
+                    "state.characters[].demographics.military_branch"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "Military Neutral"
                 },
                 "forbid": [
                     "state.characters[].demographics.military_branch"
@@ -1808,10 +1817,22 @@
         ]
     },
     "valueMatch": {
-        "scenes[].action_mapping[].character_id": "state.characters[].id",
-        "scenes[].tagging.probe_responses[].character_id": "state.characters[].id",
-        "scenes[].transitions.character_vitals[].character_id": "state.characters[].id",
-        "scenes[].action_mapping[].conditions.character_vitals[].character_id": "state.characters[].id",
+        "state.characters[].injuries[].source_character": "state.characters[].id",
+        "scenes[].action_mapping[].next_scene": "scenes[].index",
         "scenes[].tagging.reference": "scenes[].index"
+    },
+    "characterMatching": [
+        "scenes[].state.characters[].injuries[].source_character",
+        "scenes[].action_mapping[].character_id",
+        "scenes[].tagging.probe_responses[].character_id",
+        "scenes[].transitions.character_vitals[].character_id",
+        "scenes[].action_mapping[].conditions.character_vitals[].character_id"
+    ],
+    "unique": {
+        "state.environment.decision_environment.aid_delay[].id": "state",
+        "scenes[].state.environment.decision_environment.aid_delay[].id" : "scenes[]",
+        "scenes[].state.characters[].id": "scenes[]",
+        "scenes[].action_mapping[].action_id": "scenes[]",
+        "state.characters[].id": "state"
     }
 }
