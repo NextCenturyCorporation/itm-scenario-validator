@@ -64,12 +64,12 @@ state:
     - { type: Decompression Needle, quantity: 4 }
     - { type: Nasopharyngeal airway, quantity: 2 }
     - { type: Pulse Oximeter, quantity: 1, reusable: True }
-    - { type: Blanket, quantity: 2 } # Not yet available in sim
-    - { type: Epi Pen, quantity: 1, reusable: True } # Not yet available in sim
-    - { type: Vented Chest Seal, quantity: 2 } # Not yet available in sim
-    - { type: Pain Medications, quantity: 2 } # Not yet available in sim
-    - { type: Splint, quantity: 2 } # Not yet available in sim
-    - { type: Blood, quantity: 5 }  # Not yet available in sim; quantity is in units
+    - { type: Blanket, quantity: 2 } # Available for training scenarios only
+    - { type: Epi Pen, quantity: 1, reusable: True } # Available for training scenarios only
+    - { type: Vented Chest Seal, quantity: 2 } # Available for training scenarios only
+    - { type: Pain Medications, quantity: 2 }
+    - { type: Splint, quantity: 2 }
+    - { type: Blood, quantity: 5 }  # quantity is in units; no notion of blood type
   characters:
     - id: Mike # Internal name, can be same as name
       name: Mike # Name used in display/speech
@@ -101,8 +101,8 @@ state:
         heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
         Spo2: 92 # a percentage
       injuries:
-        - name: Internal # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, TBD more
-          location: internal # controlled vocab includes forearm, calf, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified, TBD more.  Most locations allow a left and right designation.
+        - name: Internal # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
+          location: internal # controlled vocab includes forearm, calf, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
           status: hidden # controlled vocab: hidden, discoverable, visible (at runtime can change to discovered, treated)
           source_character: Civilian_01 # The character id of the person responsible for the injury
     - id: Civilian_01
@@ -349,8 +349,8 @@ scenes:
             heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
             Spo2: 97 # a percentage
           injuries:
-            - name: Burn # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, TBD more
-              location: unspecified # controlled vocab includes forearm, calf, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified, TBD more.  Most locations allow a left and right designation.
+            - name: Burn # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
+              location: unspecified # controlled vocab includes forearm, calf, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
               severity: substantial # controlled vocab: minor, moderate, substantial, major, extreme
               status: discoverable # controlled vocab: hidden, discoverable, visible (at runtime can change to discovered, treated)
         - id: Captain_01
