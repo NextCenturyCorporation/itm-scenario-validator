@@ -813,6 +813,8 @@ components:
       - Pain Medications
       - Splint
       - Blood
+      - IV Bag
+      - Burn Dressing
       type: string
     TerrainTypeEnum:
       description: Descriptor for the scenario terrain

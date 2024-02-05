@@ -1236,6 +1236,8 @@ components:
       - Pain Medications
       - Splint
       - Blood
+      - IV Bag
+      - Burn Dressing
       type: string
     Tagging:
       description: Scene-level tagging configuration
