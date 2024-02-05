@@ -916,8 +916,8 @@ class YamlValidator:
                                 self.invalid_values += 1 
                         # validate params only includes expected values
                         for key in params:
-                            if key not in ['treatment', 'location', 'category']:
-                                self.logger.log(LogLevel.WARN, "'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(['treatment', 'location', 'category']) + " but has key '" + key + "'.")
+                            if key not in ['treatment', 'location', 'category', 'evac_id']:
+                                self.logger.log(LogLevel.WARN, "'scenes[" + str(i) + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(['treatment', 'location', 'category', 'evac_id']) + " but has key '" + key + "'.")
                                 self.invalid_keys += 1 
                     j += 1
             i += 1

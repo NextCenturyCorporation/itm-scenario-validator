@@ -380,6 +380,7 @@ scenes:
         action_type: MOVE_TO_EVAC
         unstructured: Move Katie to the road for transport
         character_id: Captain_01
+        parameters: {"evac_id": "small_evac"}
         probe_id: adept-september-demo-probe-5
         choice: s1-p5-choice1
         kdma_association:
@@ -388,6 +389,7 @@ scenes:
         action_type: MOVE_TO_EVAC
         unstructured: Move Bob to the road for transport
         character_id: Marine_burns_01
+        parameters: {"evac_id": "small_evac"}
         probe_id: adept-september-demo-probe-5
         choice: s1-p5-choice2
         kdma_association:
