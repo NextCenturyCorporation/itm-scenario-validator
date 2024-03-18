@@ -417,7 +417,7 @@ class YamlConverter:
             "bodyNormalMap": 0,
             "bodyColor": "original",
             "bodyColorBrightness": "#808080",
-            "hairTexture": random.choice([0, 1, 2]) if patient_type != 'Bob' and patient_type != 'Mike' else 0 if patient_type == 'Bob' else random.choice([0, 1]),
+            "hairTexture": random.choice([0, 1, 2]) if patient_type != 'Bob' and patient_type != 'Military Mike' else 0 if patient_type == 'Bob' else random.choice([0, 1]),
             "hairColor": "original", # TODO: Random hair colors?
             "eyeColor": "blue"
         }
