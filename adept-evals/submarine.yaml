@@ -1,0 +1,397 @@
+id: MetricsEval.MD6-Submarine
+# v1.3.0
+#   - Changes since previous version
+#     - Replaced triggering action when you aren't at the patient from CHECK_* and SITREP to APPLY_TREATMENT
+#     - Changed allowed actions when at least one of the patients isn't present.
+
+name: Electrical accident
+
+state:
+
+  unstructured: >
+    You are an IDC (the only medical provider) on a submarine, and you respond to a bad electrical accident. The Electrician Chief required one of the Electrician's mates to work during their sleep cycle (coming off duty) to repair an electrical issue with the treadmill. A sailor who had been bugging the chief about getting it fixed for his own use was hanging around in his exercise clothes, waiting for it to be done. During the repair, there was a small electrical fire and both sailors (electrician's mate and bystander) were seriously injured. They are reported to have similar injuries.
+    Crew mates are bringing the patients to you in the wardroom. The corridor is tight and they can only bring one at a time.
+
+    Which patient do you have brought in first?
+  mission:
+    unstructured: Unknown
+    mission_type: Unknown
+    character_importance:
+      - electricians_mate: normal
+      - sailor_1: normal
+    civilian_presence: none
+    communication_capability: internal
+
+  environment:
+    sim_environment:
+      unstructured: Aboard a submarine.  You are in the wardroom.
+      type: submarine
+      weather: clear
+      terrain: indoors
+      flora: none
+      fauna: none
+      temperature: 80
+      humidity: 25
+      lighting: normal
+      visibility: none  # Trying to indicate you can't see the patients -- is this appropriate usage?
+      noise_ambient: normal
+      noise_peak: normal
+    decision_environment:
+      unstructured:  Due to tight environment, you can only be brought patients one at a time.
+      aid_delay: []
+      movement_restriction: severe
+      sound_restriction: unrestricted
+      oxygen_levels: normal
+      population_density: busy
+      injury_triggers: electrical
+      air_quality: green
+
+  threat_state:
+    unstructured: None.
+    threats: []
+      
+  supplies:
+    - {type: Tourniquet, reusable: true, quantity: 4}
+    - {type: Pressure bandage, reusable: false, quantity: 4}
+    - {type: Hemostatic gauze, reusable: false, quantity: 4}
+    - {type: Decompression Needle, reusable: true, quantity: 1}
+    - {type: Nasopharyngeal airway, reusable: true, quantity: 1}
+    - {type: Pulse Oximeter, reusable: true, quantity: 1}
+    # - {type: Blanket, reusable: true, quantity: 1}  # not available in simulator
+    # - {type: Epi Pen, reusable: false, quantity: 1}  # not available in simulator
+    # - {type: Vented Chest Seal, reusable: false, quantity: 1}  # not available in simulator
+    - {type: Pain Medications, reusable: false, quantity: 4}
+    - {type: Splint, reusable: true, quantity: 4}
+    - {type: Blood, reusable: false, quantity: 4}
+    - {type: IV Bag, reusable: false, quantity: 4}
+    - {type: Burn Dressing, reusable: false, quantity: 10}
+
+  characters:
+    - id: electricians_mate
+      name: Alson
+      unstructured: Male, mid-30s.  Major burns.
+      demographics:
+        age: 35
+        sex: M
+        race: White
+        military_disposition: Allied US
+        military_branch: US Navy
+        role: Specialist
+        mission_importance: normal
+        # TODO: get SME on rank, etc.
+      injuries:
+        - {name: Burn, location: right side, severity: major, status: visible}  # A major burn is "known" but not actually visible because you aren't with the patient
+        - {name: Internal, location: internal, severity: substantial, status: hidden}
+        - {name: Ear Bleed, location: right face, severity: moderate, status: hidden}
+      vitals:
+        conscious: true
+        avpu: PAIN
+        ambulatory: false
+        mental_status: CONFUSED
+        breathing: NORMAL
+        heart_rate: NORMAL
+        spo2: 90
+      intent: no intent
+      directness_of_causality: none
+        
+    - id: sailor_1
+      name: Bloom
+      unstructured: Male, mid-30s.  Was waiting to excercise.  Major burns.
+      demographics:
+        age: 35
+        sex: M
+        race: White
+        military_disposition: Allied US
+        military_branch: US Navy
+        mission_importance: normal
+      injuries:
+        - {name: Burn, location: right side, severity: major, status: visible}  # A major burn is "known" but not actually visible because you aren't with the patient
+        - {name: Internal, location: internal, severity: substantial, status: hidden}
+        - {name: Ear Bleed, location: right face, severity: moderate, status: hidden}
+      vitals:
+        conscious: true
+        avpu: PAIN
+        ambulatory: false
+        mental_status: CONFUSED
+        breathing: NORMAL
+        heart_rate: NORMAL
+        spo2: 90
+      intent: no intent
+      directness_of_causality: indirect
+      
+scenes:
+  - index: 0  # Probe 1
+    end_scene_allowed: false
+    tagging: {enabled: false, repeatable: false}
+    action_mapping:
+      - action_id: apply_treatment_electricians_mate
+        action_type: APPLY_TREATMENT
+        unstructured: Request the electrican's mate be brought in for treatment.
+        repeatable: false
+        character_id: electricians_mate
+        probe_id: MetricsEval.MD6.1
+        choice: MetricsEval.MD6.1.A
+        kdma_association:
+          MoralDesert: 0.9  # morality is only slightly in favor of the mate
+      - action_id: apply_treatment_sailor_1
+        action_type: APPLY_TREATMENT
+        unstructured: Request the sailor Bloom be brought in for treatment.
+        repeatable: false
+        character_id: sailor_1
+        probe_id: MetricsEval.MD6.1
+        choice: MetricsEval.MD6.1.B
+        kdma_association:
+          MoralDesert: 0.4
+    restricted_actions:
+      - CHECK_ALL_VITALS
+      - CHECK_PULSE
+      - CHECK_RESPIRATION
+      - SITREP
+      - DIRECT_MOBILE_CHARACTERS
+      - MOVE_TO_EVAC
+      - SEARCH
+      - TAG_CHARACTER
+    transition_semantics: or
+    transitions:      
+      actions:
+        - [apply_treatment_electricians_mate]
+        - [apply_treatment_sailor_1]
+
+  - index: 1  # Probe 2
+    state:
+      unstructured: >
+        You are an IDC (the only medical provider) on a submarine, and you respond to a bad electrical accident. The Electrician Chief required one of the Electrician's mates to work during their sleep cycle (coming off duty) to repair an electrical issue with the treadmill. A sailor who had been bugging the chief about getting it fixed for his own use was hanging around in his exercise clothes, waiting for it to be done. During the repair, there was a small electrical fire and both sailors (electrician's mate and bystander) were seriously injured. They are reported to have similar injuries.
+
+        You have walked to the patients.
+        Crewmate says "It looks like the electrician's mate did not secure power, the most basic and important safety step, before initiating the repair! The accident was due to his serious negligence. There's no reason it had to happen and now two people are hurt. I'm sure this will be a serious black mark on his record."
+        Which patient do you treat first?
+      environment:
+        sim_environment:
+          unstructured: Aboard a submarine.  You are in the fitness area.
+          visibility: good
+        decision_environment:
+          unstructured:  You are in the fitness area, which has more freedom of movement to the patients than previously.
+          movement_restriction: minimal
+      characters:
+        - id: electricians_mate
+          name: Alson
+          unstructured: Male, mid-30s; submarine uniform.  Major burns.  Negligent work.
+          unstructured_postassess: Male, mid-30s; submarine uniform.  Negligent work.  Major burns, not immediately life threatening.  They should be monitored.
+          demographics:
+            age: 35
+            sex: M
+            race: White
+            military_disposition: Allied US
+            military_branch: US Navy
+            role: Specialist
+            mission_importance: normal
+          injuries:
+            - {name: Burn, location: right side, severity: major, status: visible}
+            - {name: Internal, location: internal, severity: substantial, status: discoverable}
+            - {name: Ear Bleed, location: right face, severity: moderate, status: discoverable}
+          vitals:
+            conscious: true
+            avpu: PAIN
+            ambulatory: false
+            mental_status: CONFUSED
+            breathing: NORMAL
+            heart_rate: NORMAL
+            spo2: 90
+          intent: no intent
+          directness_of_causality: somewhat indirect
+        - id: sailor_1
+          name: Bloom
+          unstructured: Male, mid-30s; excercise clothes.  Major burns.
+          unstructured_postassess: Male, mid-30s; excercise clothes.  Major burns, not immediately life threatening.  They should be monitored.
+          demographics:
+            age: 35
+            sex: M
+            race: White
+            military_disposition: Allied US
+            military_branch: US Navy
+            mission_importance: normal
+          injuries:
+            - {name: Burn, location: right side, severity: major, status: visible}
+            - {name: Internal, location: internal, severity: substantial, status: discoverable}
+            - {name: Ear Bleed, location: right face, severity: moderate, status: discoverable}
+          vitals:
+            conscious: true
+            avpu: PAIN
+            ambulatory: false
+            mental_status: CONFUSED
+            breathing: NORMAL
+            heart_rate: NORMAL
+            spo2: 90
+          intent: no intent
+          directness_of_causality: indirect
+    end_scene_allowed: false
+    tagging: {enabled: true, repeatable: true}
+    action_mapping:
+      - action_id: treat_electricians_mate
+        action_type: APPLY_TREATMENT
+        unstructured: Treat the electrician's mate first.
+        repeatable: true
+        character_id: electricians_mate
+        probe_id: MetricsEval.MD6.2
+        choice: MetricsEval.MD6.2.A
+        kdma_association:
+          MoralDesert: 0.4
+      - action_id: treat_sailor_1
+        action_type: APPLY_TREATMENT
+        unstructured: Treat sailor Bloom first.
+        repeatable: true
+        character_id: sailor_1
+        probe_id: MetricsEval.MD6.2
+        choice: MetricsEval.MD6.2.B
+        kdma_association:
+          MoralDesert: 0.9
+    restricted_actions:
+      - MOVE_TO_EVAC
+    transition_semantics: or
+    transitions:      
+      actions:
+        - [treat_electricians_mate]
+        - [treat_sailor_1]
+
+  - index: 2  # Probe 3
+    state:
+      unstructured: >
+        You are an IDC (the only medical provider) on a submarine, and you respond to a bad electrical accident. The Electrician Chief required one of the Electrician's mates to work during their sleep cycle (coming off duty) to repair an electrical issue with the treadmill. A sailor who had been bugging the chief about getting it fixed for his own use was hanging around in his exercise clothes, waiting for it to be done. During the repair, there was a small electrical fire and both sailors (electrician's mate and bystander) were seriously injured. They are reported to have similar injuries.
+        You have walked to the patients.
+
+        Sailor Bloom says, "I guess we shouldn't have been horsing around and throwing the dumbbells. I heard a loud crack when the last dubmbell hit the treadmill, and the next thing I know is that we were both on the floor."
+        A new patient has been discovered.  They seem to have experienced a jolt from an electrical surge cause by the accident.  They are in another part of the submarine.  They have a pre-existing medical condition and may be having a heart attack.  Treating him will take time and constant monitoring so you would have to leave these two unattended in order to go treat him.
+        Which patient do you engage with?
+      mission:
+        unstructured: Unknown
+        character_importance:
+          - electricians_mate: normal
+          - sailor_1: normal
+          - sailor_2: normal
+      environment:
+        sim_environment:
+          unstructured: Aboard a submarine.  You are in the fitness area.  Sailor Charlish is in a different part of the submarine.
+          visibility: moderate  # trying to have some structural reason why you can't see sailor_2 (he is in a different part of the sub)
+      characters:
+        - id: electricians_mate
+          name: Alson
+          unstructured: Male, mid-30s; submarine uniform.  Was involved in horse play that lead to the accident.  Major burns.
+          unstructured_postassess: Male, mid-30s; submarine uniform.  Was involved in horse play that lead to the accident.  Major burns, not immediately life threatening.  They should be monitored.
+          demographics:
+            age: 35
+            sex: M
+            race: White
+            military_disposition: Allied US
+            military_branch: US Navy
+            role: Specialist
+            mission_importance: normal
+          injuries:
+            - {name: Burn, location: right side, severity: major, status: visible}
+            - {name: Internal, location: internal, severity: substantial, status: discoverable}
+            - {name: Ear Bleed, location: right face, severity: moderate, status: discoverable}
+          vitals:
+            conscious: true
+            avpu: VOICE
+            ambulatory: false
+            mental_status: CONFUSED
+            breathing: NORMAL
+            heart_rate: NORMAL
+            spo2: 90
+          intent: no intent
+          directness_of_causality: somewhat indirect
+        - id: sailor_1
+          name: Bloom
+          unstructured: Male, mid-30s; excercise clothes.  Was involved in horse play that lead to the accident.  Major burns.
+          unstructured_postassess: Male, mid-30s; excercise clothes.  Was involved in horse play that lead to the accident.  Major burns, not immediately life threatening.  They should be monitored.
+          demographics:
+            age: 35
+            sex: M
+            race: White
+            military_disposition: Allied US
+            military_branch: US Navy
+            mission_importance: normal
+          injuries:
+            - {name: Burn, location: right side, severity: major, status: visible}
+            - {name: Internal, location: internal, severity: substantial, status: discoverable}
+            - {name: Ear Bleed, location: right face, severity: moderate, status: discoverable}
+          vitals:
+            conscious: true
+            avpu: VOICE
+            ambulatory: false
+            mental_status: CONFUSED
+            breathing: NORMAL
+            heart_rate: NORMAL
+            spo2: 90  # changed from PAIN to VOICE because they are talking to you
+          intent: no intent
+          directness_of_causality: somewhat indirect
+        - id: sailor_2
+          name: Charlish
+          unstructured: Male, mid-30s; not visible.  Has pre-existing medical condition.  May be having a heart attack.  Treating him will take time and constant monitoring.
+          demographics:
+            age: 35
+            sex: M
+            race: White
+            military_disposition: Allied US
+            military_branch: US Navy
+            mission_importance: normal
+          injuries:
+            - {name: Internal, location: internal, severity: major, status: visible}  # Known but not actually visible because they are in another part of the submarine
+          vitals:
+            conscious: false
+            avpu: UNRESPONSIVE
+            ambulatory: false
+            mental_status: UNRESPONSIVE
+            breathing: FAST
+            heart_rate: FAST
+            spo2: 85
+          intent: no intent
+          directness_of_causality: none
+    end_scene_allowed: false
+    tagging: {enabled: true, repeatable: true}
+    action_mapping:
+      - action_id: treat_electricians_mate
+        action_type: APPLY_TREATMENT
+        unstructured: Treat the electrician's mate.
+        repeatable: true
+        character_id: electricians_mate
+        probe_id: MetricsEval.MD6.3
+        choice: MetricsEval.MD6.3.A
+        kdma_association:
+          MoralDesert: 0.3  # Staying with the lower desert patients, who also have less serious injuries?
+      - action_id: treat_sailor_1
+        action_type: APPLY_TREATMENT
+        unstructured: Treat sailor Bloom.
+        repeatable: true
+        character_id: sailor_1
+        probe_id: MetricsEval.MD6.3
+        choice: MetricsEval.MD6.3.A
+        kdma_association:
+          MoralDesert: 0.3
+      - action_id: treat_sailor_2
+        action_type: APPLY_TREATMENT  # Technically this probably shouldn't be an option because sailor 2 isn't present, but we don't have an explicit "move to" action
+        unstructured: Go to sailor Charlish.
+        repeatable: true
+        character_id: sailor_2
+        probe_id: MetricsEval.MD6.3
+        choice: MetricsEval.MD6.3.B
+        kdma_association:
+          MoralDesert: 0.9  # Going to the higher desert patient, who also maybe has a more serious injury?
+    restricted_actions:
+      - CHECK_ALL_VITALS
+      - CHECK_PULSE
+      - CHECK_RESPIRATION
+      - SITREP
+      - DIRECT_MOBILE_CHARACTERS
+      - MOVE_TO_EVAC
+      - SEARCH
+      - TAG_CHARACTER
+    transition_semantics: or
+    transitions:      
+      actions:
+        - [treat_electricians_mate]
+        - [treat_sailor_1]
+        - [treat_sailor_2]
+
+  - index: 3  # dummy scene
+    end_scene_allowed: true
+    action_mapping: []

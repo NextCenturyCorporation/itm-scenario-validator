@@ -1,4 +1,8 @@
-# ITM Scenario Validator
+# ITM Scenario Validator, Converter, and Probe Matcher
+
+- The ITM Scenario Validator accepts a TA1 yaml file and verifies its validity against the API.
+- The Converter will accept a TA1 yaml file and output a partially completed JSON file for the Unity Simulator.
+- The Probe Matcher takes in participant outputs from the Unity Simulator along with the TA1 created yaml files and outputs matches between user actions and probe actions.
 
 ## Getting Started
 
@@ -35,7 +39,21 @@ deactivate
 pip install -r requirements.txt
 ```
 
-## Running the Program
+## Running the Probe Matcher
+To run the probe matcher, execute the following command:
+```
+python3 probe_matcher.py -i [path_to_directory]
+```
+Ensure that the path leads to the Unity Simulator data.
+
+## Running the Converter
+To run the yaml-to-json converter, execute the following command:
+```
+python3 converter.py -j [path_to_output_json] -y [path_to_input_yaml]
+```
+Ensure that the paths lead to valid files.
+
+## Running the Validator
 To run the validator, execute the following command:
 ```
 python3 validator.py -f [path_to_file]

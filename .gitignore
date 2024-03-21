@@ -6,8 +6,6 @@ __pycache__
 
 # test data
 participant-data/*
-soartech-evals/*
-adept-evals/*
 output/*
 
 *.DS_Store
