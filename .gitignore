@@ -8,3 +8,6 @@ __pycache__
 participant-data/*
 soartech-evals/*
 adept-evals/*
+output/*
+
+*.DS_Store

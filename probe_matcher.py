@@ -1,4 +1,4 @@
-import yaml, argparse, json, os
+import yaml, argparse, json, os, csv
 from logger import LogLevel, Logger
 
 SCENE_MAP = {
@@ -13,15 +13,24 @@ CHARACTER_MAP = {
     "casualty_u": "patient U",
     "casualty_v": "patient V",
     "casualty_w": "patient W",
-    "casualty_x": "patient X"
+    "casualty_x": "patient X",
+    "patient_2_victim": "Adept Victim",
+    "patient_1_shooter": "Adept Shooter",
+    "electricians_mate": "electrician",
+    "sailor_1": "bystander",
+    "local_soldier_1": "Local Soldier 1",
+    "us_soldier_1": "US Soldier 1",
+    "civilian_1": "Civilian 1",
+    "civilian_2": "Civilian 2"
+
 }
 
 TREATMENT_MAP = {
     "Nasopharyngeal airway": "Nasal Trumpet",
     "Pain Medications": "Pain Meds",
     "Splint": "Splint",
-    "Blood": "Blood",
-    "IV Bag": "IV Bag",
+    "Blood": "IV - Blood",
+    "IV Bag": "IV - Saline",
     "Burn Dressing": "Burn Dressing",
     "Vented Chest Seal": "Vented Chest Seal",
     "Decompression Needle": "Decompression Needle",
@@ -30,9 +39,22 @@ TREATMENT_MAP = {
     "Hemostatic gauze": "Hemostatic Gauze"
 }
 
+QA_MAP = {
+    "Electrician": "electrician",
+    "Bystander": "bystander",
+    "Go": "sailor_2",
+    "Stay": "sailor_1", # could be sailor 1 or electricians mate, but kdma is same
+    "Patient 1/Shooter": "Adept Shooter",
+    "Patient 2/Victim": "Adept Victim",
+    "US Soldier": "us_soldier_1",
+    "Local Soldier": "local_soldier_1",
+    "Patient 1: Burn/Puncture": "Civilian 1",
+    "Patient 2: Broken Bone": "Civilian 2"
+}
+
 
 VITALS_ACTIONS = ["SpO2", "Breathing", "Pulse"]
-NO_LOCATION = ["Pain Meds", "Blood", "IV Bag", "Nasal Trumpet"]
+NO_LOCATION = ["Pain Meds", "IV - Blood", "IV - Saline", "Nasal Trumpet", "Decompression Needle", "Splint"]
 
 class ProbeMatcher:
     logger = Logger("probeMatcher")
@@ -44,17 +66,24 @@ class ProbeMatcher:
     json_data = None
     output_soartech = None
     output_adept = None
+    environment = ''
+    csv_file = None
 
-    def __init__(self, json_path):
+    def __init__(self, json_path, csv_path):
         '''
         Load in the file and parse the yaml
         '''
         # get environment from json to choose correct adept/soartech yamls
         self.json_file = open(json_path, 'r')
         self.json_data = json.load(self.json_file)
+        self.csv_file = open(csv_path, 'r')
         pid = self.json_data['participantId']
         pid = pid if pid != '' else self.json_data['sessionId']
-        env = SCENE_MAP[self.json_data["configData"]["scene"]]
+        env = SCENE_MAP.get(self.json_data["configData"]["scene"], '')
+        if env == '':
+            self.logger.log(LogLevel.WARN, "Environment not defined. Unable to process data")
+            return
+        self.environment = env
         # create output files
         try:
             os.mkdir('output')
@@ -90,25 +119,253 @@ class ProbeMatcher:
             self.output_soartech.close()
         if (self.output_adept):
             self.output_adept.close()
+        if (self.csv_file):
+            self.csv_file.close()
 
 
     def match_probes(self):
+        self.logger.log(LogLevel.CRITICAL_INFO, f"Finding matches for {self.environment} environment")
         # adept first
         self.check_adept_probes()
 
         # analyze soartech probes
         self.check_soartech_probes()
 
+
     def check_adept_probes(self):
         '''
         Looks through actions and attempts to match them with adept probes
         '''
-        print("\n** ADEPT **")
+        print()
+        self.logger.log(LogLevel.CRITICAL_INFO, "** ADEPT **")
+        if 'jungle' in self.environment:
+            self.check_adept_urban_jungle()
+        if 'urban' in self.environment:
+            self.check_adept_urban_jungle()
+        if 'desert' in self.environment:
+            self.check_adept_desert()
+        if 'sub' in self.environment:
+            self.check_adept_sub()
+
+
+    def check_adept_urban_jungle(self):
+        '''
+        Finds actions matching to adept urban probes or jungle probes
+        '''
         adept_scenes = self.adept_yaml['scenes']
-        start_adept = self.get_scene_by_index(adept_scenes, 0)
-        actions = start_adept["action_mapping"]
-        for action in actions:
-            print(action['action_type'], action['character_id'])
+        finished = False
+        action_list_start = 0
+        if 'jungle' in self.environment:
+            chars = ["Civilian 1", "Civilian 2"]
+        else:
+            chars = ["Adept Victim", "Adept Shooter"]
+        probe_id = 0
+        match_data = []
+        scene_ind = 0
+        while not finished:
+            scene = self.get_scene_by_index(adept_scenes, scene_ind)
+            if scene is None or scene.get('end_scene_allowed', False):
+                finished = True
+                break
+            found_match = False
+            probe_found = None
+            action_found = None
+            for (ind, action_taken) in enumerate(self.json_data['actionList'][action_list_start:]): 
+                # first probe - who is the first action performed on?
+                if probe_id == 0:
+                    # search through csv to find who was approached first
+                    reader = csv.reader(self.csv_file)
+                    for line in reader:
+                        if 'PATIENT_ENGAGED' in line:
+                            for c in chars:
+                                if c + ' Root' in line:
+                                    for probe_action in scene['action_mapping']:
+                                        if c == CHARACTER_MAP[probe_action.get('character_id')]:
+                                            found_match = True
+                                            probe_id += 1
+                                            probe_found = probe_action
+                                            action_found = "Approached " + c
+                                            break
+                                if found_match:
+                                    break
+                            if found_match:
+                                break
+                    if not found_match:
+                        if action_taken['casualty'] in chars:
+                            # iterate through available actions to find matching character
+                            for probe_action in scene['action_mapping']:
+                                if self.do_characters_match(probe_action, action_taken):
+                                    found_match = True
+                                    probe_id += 1
+                                    probe_found = probe_action
+                                    action_found = action_taken
+                                    action_list_start += ind
+                                    break
+                            if found_match:
+                                break
+                    else:
+                        break
+                elif probe_id == 1 and action_taken['casualty'] in chars and action_taken['actionType'] == 'Treatment':
+                    # second probe - who do they apply a treatment to first?
+                    # iterate through available actions to find matching character
+                    for probe_action in scene['action_mapping']:
+                        if self.do_characters_match(probe_action, action_taken):
+                            found_match = True
+                            probe_id += 1
+                            probe_found = probe_action
+                            action_found = action_taken
+                            action_list_start += ind
+                            break
+                    if found_match:
+                        break
+                elif probe_id == 2 and action_taken['actionType'] == 'Question':
+                    # third probe - answer to question: who to evac
+                    for probe_action in scene['action_mapping']:
+                        if CHARACTER_MAP[probe_action.get('character_id')] == QA_MAP[action_taken['answer']]:
+                            found_match = True
+                            probe_id += 1
+                            probe_found = probe_action
+                            action_found = action_taken
+                            action_list_start += ind
+                            break
+                    if found_match: 
+                        break
+
+            if found_match:
+                match_data.append({
+                    "scene_index": scene_ind,
+                    "probe_id": probe_found['probe_id'],
+                    "found_match": True,
+                    "probe": probe_found,
+                    "user_action": action_found
+                })
+                scene_ind = probe_found.get('next_scene', scene_ind + 1)
+            else:
+                self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
+                scene_ind += 1
+        json.dump(match_data, self.output_adept, indent=4)      
+
+
+    def check_adept_sub(self):
+        '''
+        Finds actions matching to adept submarine probes
+        '''
+        adept_scenes = self.adept_yaml['scenes']
+        finished = False
+        action_list_start = 0
+        probe_id = 0
+        match_data = []
+        scene_ind = 0
+        while not finished:
+            scene = self.get_scene_by_index(adept_scenes, scene_ind)
+            if scene is None or scene.get('end_scene_allowed', False):
+                finished = True
+                break
+            found_match = False
+            probe_found = None
+            action_found = None
+            for (ind, action_taken) in enumerate(self.json_data['actionList'][action_list_start:]): 
+                # first probe - answer to question - who to treat first
+                if probe_id == 0 and action_taken['actionType'] == 'Question' and 'Adept Probe: 1' in action_taken['question']:
+                    for probe_action in scene['action_mapping']:
+                        if CHARACTER_MAP[probe_action.get('character_id')] == QA_MAP[action_taken['answer']]:
+                            found_match = True
+                            probe_id += 1
+                            probe_found = probe_action
+                            action_found = action_taken
+                            action_list_start += ind
+                            break
+                    if found_match:
+                        break
+                elif probe_id == 1 and action_taken['actionType'] == 'Treatment':
+                    # second probe - who is treated first
+                    for probe_action in scene['action_mapping']:
+                        if self.do_characters_match(probe_action, action_taken):
+                            found_match = True
+                            probe_id += 1
+                            probe_found = probe_action
+                            action_found = action_taken
+                            action_list_start += ind
+                            break
+                    if found_match:
+                        break
+                elif probe_id == 2 and action_taken['actionType'] == 'Question' and 'Adept Probe: 2' in action_taken['question']:
+                    for probe_action in scene['action_mapping']:
+                        if probe_action.get('character_id') == QA_MAP[action_taken['answer']]:
+                            found_match = True
+                            probe_id += 1
+                            probe_found = probe_action
+                            action_found = action_taken
+                            action_list_start += ind
+                            break
+                    if found_match:
+                        break        
+
+            if found_match:
+                match_data.append({
+                    "scene_index": scene_ind,
+                    "probe_id": probe_found['probe_id'],
+                    "found_match": True,
+                    "probe": probe_found,
+                    "user_action": action_found
+                })
+                scene_ind = probe_found.get('next_scene', scene_ind + 1)
+            else:
+                self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
+                scene_ind += 1
+        json.dump(match_data, self.output_adept, indent=4)      
+
+
+    def check_adept_desert(self):
+        '''
+        Finds actions matching to adept desert probes
+        '''
+        adept_scenes = self.adept_yaml['scenes']
+        finished = False
+        action_list_start = 0
+        probe_id = 0
+        match_data = []
+        scene_ind = 0
+        while not finished:
+            scene = self.get_scene_by_index(adept_scenes, scene_ind)
+            if scene is None or scene.get('end_scene_allowed', False):
+                finished = True
+                break
+            found_match = False
+            probe_found = None
+            action_found = None
+            for (ind, action_taken) in enumerate(self.json_data['actionList'][action_list_start:]): 
+                # first probe - question from helicopter, who to evac
+                first_probe = probe_id == 0 and action_taken['actionType'] == 'Question' and 'Adept Probe 1' in action_taken['question']
+                # second probe - question from ground, who to evac
+                second_probe = probe_id == 1 and action_taken['actionType'] == 'Question' and 'Adept Probe 2' in action_taken['question']
+                # third probe - after treatment/final inject, who to evac
+                third_probe = probe_id == 2 and action_taken['actionType'] == 'Question' and 'Adept Probe 3' in action_taken['question']
+                if first_probe or second_probe or third_probe:
+                    for probe_action in scene['action_mapping']:
+                        if probe_action.get('character_id') == QA_MAP[action_taken['answer']]:
+                            found_match = True
+                            probe_id += 1
+                            probe_found = probe_action
+                            action_found = action_taken
+                            action_list_start += ind
+                            break
+                    if found_match:
+                        break
+            if found_match:
+                match_data.append({
+                    "scene_index": scene_ind,
+                    "probe_id": probe_found['probe_id'],
+                    "found_match": True,
+                    "probe": probe_found,
+                    "user_action": action_found
+                })
+                scene_ind = probe_found.get('next_scene', scene_ind + 1)
+            else:
+                self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
+                scene_ind += 1
+        json.dump(match_data, self.output_adept, indent=4)  
+
 
     def check_soartech_probes(self):
         '''
@@ -126,7 +383,7 @@ class ProbeMatcher:
         while not found_all:
             # get the next scene to find a match in
             scene = self.get_scene_by_index(soartech_scenes, scene_ind)
-            if scene is None or action_list_start > len(self.json_data['actionList']):
+            if scene is None or scene.get('end_scene_allowed', False) or action_list_start > len(self.json_data['actionList']):
                 found_all = True
                 break
             # iterate through all user actions taken
@@ -152,6 +409,11 @@ class ProbeMatcher:
                         matched = probe_action
                         last_action_matched = ind
                         break
+                    if (probe_action['action_type']) == 'CHECK_PULSE' and action_taken['actionType'] == "Pulse" and self.do_characters_match(probe_action, action_taken):
+                        found_match = True
+                        matched = probe_action
+                        last_action_matched = ind
+                        break     
                     # check for treatment
                     if (probe_action['action_type'] == 'APPLY_TREATMENT') and (action_taken['actionType'] == 'Treatment'):
                         # check specific treatment
@@ -167,15 +429,6 @@ class ProbeMatcher:
                             found_match = True
                             matched = probe_action
                             break 
-                        else:
-                            # find close matches and rank by closest and earliest
-                            tmp_count = char_match*3 + treatment_match*2 + location_match
-                            # print(scene_ind, tmp_count, count_close, ind, close_ind, probe_action['character_id'], action_taken['casualty'])
-                            # if (tmp_count == count_close and ind < close_ind) or tmp_count > count_close:
-                            #     close_match = probe_action
-                            #     action_for_close_match = action_taken  
-                            #     count_close = tmp_count
-                            #     close_ind = ind
                     # check for tagging - handle differently by searching through all actions to find the last tag given to this character
                     if (probe_action['action_type'] == 'TAG_CHARACTER'):
                         char_tag = self.find_last_tag_for_character(CHARACTER_MAP[probe_action['character_id']], self.json_data['actionList'])
@@ -189,14 +442,8 @@ class ProbeMatcher:
                             found_match = True
                             matched = probe_action
                             action_taken = char_tag
-                            break
-                        else:
-                            close_match = probe_action
-                            action_for_close_match = char_tag   
+                            break 
                 if found_match:
-                    print(f'found match for {scene_ind}') 
-                    # matches_found += 1
-                    second_attempt = False
                     # stay at the same action index if it is probe x.1, x.2, or x.3
                     if not last_search and not first_treatment:
                         action_list_start += last_action_matched
@@ -214,311 +461,49 @@ class ProbeMatcher:
                         "user_action": action_taken
                     })
                     # reset variables
-                    all_actions = []
-                    all_probes = []
-                    close_match = None
-                    action_for_close_match = None
-                    count_close = -1
-                    close_ind = float('inf')
+                    last_action_matched = 0
                     # set next scene
                     scene_ind = matched.get('next_scene', scene_ind + 1)
                     break
 
             # if we get out of the for loop without finding a match, we need to skip the scene
-            if not found_match:
-                print('skipping scene')
-                scene_ind += 1
-        # self.logger.log(LogLevel.CRITICAL_INFO, 'SoarTech matches found: ' + str(matches_found) + '/' + str(matches_found+len(skipped_scenes)))
-        # self.logger.log(LogLevel.CRITICAL_INFO, 'SoarTech skipped sccenes: ' + str(skipped_scenes))
+            if not found_match and not found_all:
+                # find the closest match we can out of ALL actions - order no longer matters
+                close_count = -1
+                close_ind = -1
+                close_probe = None
+                close_action = None
+                i = 0
+                for action_taken in self.json_data['actionList']:  
+                    for probe_action in scene['action_mapping']:
+                        if self.do_characters_match(probe_action, action_taken) and (probe_action['action_type'] == 'APPLY_TREATMENT') and (action_taken['actionType'] == 'Treatment'):
+                            treatment_match = 'parameters' not in probe_action or ('treatment' not in probe_action['parameters'] or (TREATMENT_MAP[probe_action['parameters']['treatment']] == action_taken['treatment']))
+                            location_match = 'parameters' not in probe_action or ('location' not in probe_action['parameters']) or (action_taken['treatment'] in NO_LOCATION) or ('location' in probe_action['parameters'] and probe_action['parameters']['location'] == action_taken['treatmentLocation'].lower())
+                            tmp_count = treatment_match*3 + location_match
+                            if tmp_count > close_count or (tmp_count == close_count and abs(action_list_start-i) < abs(action_list_start-close_ind)):
+                                close_ind = i
+                                close_count = tmp_count
+                                close_probe = probe_action
+                                close_action = action_taken
+                    i += 1
+                if close_count == -1:
+                    self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
+                    match_data.append({
+                        "scene_index": scene_ind,
+                        "found_match": False,
+                    })
+                    scene_ind += 1
+                else:
+                    self.logger.log(LogLevel.DEBUG, f'Imperfect match found for scene {scene_ind}')
+                    match_data.append({
+                        "scene_index": scene_ind,
+                        "probe_id": close_probe['probe_id'],
+                        "found_match": False,
+                        "probe": close_probe,
+                        "user_action": close_action
+                    })
+                    scene_ind = close_probe.get('next_scene', scene_ind + 1)
         json.dump(match_data, self.output_soartech, indent=4)
-    
-    # def check_soartech_probes_legacy(self):
-    #     '''
-    #     Looks through actions and attempts to match them with soartech probes
-    #     '''
-    #     print()
-    #     self.logger.log(LogLevel.CRITICAL_INFO, "** SOARTECH **")
-    #     soartech_scenes = self.soartech_yaml['scenes']
-    #     scene_ind = 0
-    #     found_all = False
-    #     action_list_start = 0
-    #     last_action_matched = 0
-    #     second_attempt = False
-    #     matches_found = 0
-    #     skipped_scenes = []
-    #     match_data = []
-    #     last_search = False # was the last probe search/engage?
-    #     first_treatment = False # are we now looking for the first treatment?
-
-    #     while not found_all:
-    #         if action_list_start > len(self.json_data['actionList']):
-    #             break
-    #         all_actions = []
-    #         all_probes = []
-    #         # in case we don't find a perfect match, keep track of close matches
-    #         close_match = None
-    #         action_for_close_match = None
-    #         count_close = -1
-    #         close_ind = float('inf') # so we can choose the earliest one with the highest match value
-    #         for (ind, action_taken) in enumerate(self.json_data['actionList'][action_list_start:]):
-    #             scene = self.get_scene_by_index(soartech_scenes, scene_ind)
-    #             if scene is None:
-    #                 found_all = True
-    #                 break
-    #             all_actions.append(action_taken['actionType'] + ' - ' + action_taken['casualty'])
-    #             actions = scene["action_mapping"]
-    #             found_match = False
-    #             matched = None
-
-    #             # see if it's the end of the simulation
-    #             if 'end_scene_allowed' in scene and scene['end_scene_allowed']:
-    #                 found_all = True
-    #                 break
-    #             # for each action the user took, see if it matches an action in the active scene
-    #             for possible_action in actions:
-    #                 str_act = possible_action['action_type'] + ' - ' + (possible_action['character_id'] if 'character_id' in possible_action else '')
-    #                 if str_act not in all_probes:
-    #                     all_probes.append(str_act)
-    #                 # check for sim sitrep (when "search" is answered for a question)
-    #                 if possible_action['action_type'] == 'SITREP':
-    #                     last_search = True
-    #                 if possible_action['action_type'] == 'SITREP' and action_taken['actionType'] == "Question" and action_taken['answer'] == 'Search':
-    #                     found_match = True
-    #                     matched = possible_action
-    #                     last_action_matched = ind
-    #                     last_search = False
-    #                     break
-    #                 # check for vitals in sim
-    #                 if (possible_action['action_type'] == 'CHECK_ALL_VITALS') and (action_taken['actionType'] in VITALS_ACTIONS) and self.do_characters_match(possible_action, action_taken):
-    #                     found_match = True
-    #                     matched = possible_action
-    #                     last_action_matched = ind
-    #                     break
-    #                 # check for treatment
-    #                 if (possible_action['action_type'] == 'APPLY_TREATMENT') and (action_taken['actionType'] == 'Treatment'):
-    #                     # check specific treatment
-    #                     char_match = self.do_characters_match(possible_action, action_taken)
-    #                     treatment_match = 'parameters' not in possible_action or ('parameters' in possible_action and ('treatment' not in possible_action['parameters'] or ('treatment' in possible_action['parameters'] and TREATMENT_MAP[possible_action['parameters']['treatment']] == action_taken['treatment'])))
-    #                     location_match = 'parameters' not in possible_action or ('location' not in possible_action['parameters']) or (action_taken['treatment'] in NO_LOCATION) or ('location' in possible_action['parameters'] and possible_action['parameters']['location'] == action_taken['treatmentLocation'].lower())
-    #                     if char_match and treatment_match and location_match:
-    #                         found_match = True
-    #                         matched = possible_action
-    #                         last_action_matched = ind
-    #                         break
-    #                     else:
-    #                         tmp_count = char_match*3 + treatment_match*2 + location_match
-    #                         print(scene_ind, tmp_count, count_close, ind, close_ind, possible_action['character_id'], action_taken['casualty'])
-    #                         if tmp_count == count_close and ind < close_ind:
-    #                             close_match = possible_action
-    #                             action_for_close_match = action_taken  
-    #                             count_close = tmp_count
-    #                             close_ind = ind
-    #                         if tmp_count > count_close:
-    #                             close_match = possible_action
-    #                             action_for_close_match = action_taken  
-    #                             count_close = tmp_count
-    #                             close_ind = ind
-    #                 # check for tagging - handle differently by searching through all actions to find the last tag given to this character
-    #                 if (possible_action['action_type'] == 'TAG_CHARACTER'):
-    #                     char_tag = self.find_last_tag_for_character(CHARACTER_MAP[possible_action['character_id']], self.json_data['actionList'])
-    #                     if char_tag is None:
-    #                         # no tag found!
-    #                         self.logger.log(LogLevel.WARN, f"No tag given to {CHARACTER_MAP[possible_action['character_id']]}")
-    #                         continue
-    #                     # check specific tag
-    #                     tag_match = 'parameters' not in possible_action or (('category' not in possible_action['parameters'] or ('category' in possible_action['parameters'] and possible_action['parameters']['category'] == char_tag['tagType'])))
-    #                     if tag_match:
-    #                         found_match = True
-    #                         matched = possible_action
-    #                         action_taken = char_tag
-    #                         break
-    #             # log matching data
-    #             if found_match:
-    #                 matches_found += 1
-    #                 second_attempt = False
-    #                 # stay at the same action index if it is probe x.1, x.2, or x.3
-    #                 if not last_search or not first_treatment:
-    #                     action_list_start += last_action_matched
-    #                 elif last_search:
-    #                     last_search = False
-    #                     first_treatment = True
-    #                 elif first_treatment:
-    #                     first_treatment = False
-    #                 all_actions = []
-    #                 all_probes = []
-    #                 close_match = None
-    #                 action_for_close_match = None
-    #                 count_close = -1
-    #                 close_ind = float('inf')
-    #                 match_data.append({
-    #                     "scene_index": scene_ind,
-    #                     "probe_id": matched['probe_id'],
-    #                     "found_match": True,
-    #                     "probe": matched,
-    #                     "user_action": action_taken
-    #                 })
-    #                 # set next scene
-    #                 if 'next_scene' in matched:
-    #                     scene_ind = matched['next_scene']
-    #                 else:
-    #                     scene_ind += 1
-    #         else:
-    #             if second_attempt:
-    #                 self.logger.log(LogLevel.WARN, f"Did not find any match for SoarTech probe at index {scene_ind}. Skipping scene...")
-    #                 skipped_scenes.append(scene_ind)
-    #                 match_data.append({
-    #                     "scene_index": scene_ind,
-    #                     "probe_id": close_match['probe_id'] if close_match is not None else 'None',
-    #                     "found_match": False,
-    #                     "probe": close_match,
-    #                     "user_action": action_for_close_match,
-    #                     "all_actions": all_actions,
-    #                     "all_probes": all_probes
-    #                 })
-    #                 scene_ind += 1
-    #                 second_attempt = False
-    #                 close_match = None
-    #                 action_for_close_match = None
-    #                 count_close = -1
-    #                 close_ind = float('inf')
-    #             else:
-    #                 second_attempt = True
-    #     self.logger.log(LogLevel.CRITICAL_INFO, 'SoarTech matches found: ' + str(matches_found) + '/' + str(matches_found+len(skipped_scenes)))
-    #     self.logger.log(LogLevel.CRITICAL_INFO, 'SoarTech skipped sccenes: ' + str(skipped_scenes))
-    #     json.dump(match_data, self.output_soartech, indent=4)
-    # def check_soartech_probes(self):
-    #     '''
-    #     Looks through all user actions and attempts to match them to soartech probes
-    #     '''
-    #     print()
-    #     self.logger.log(LogLevel.CRITICAL_INFO, "** SOARTECH **")
-    #     soartech_scenes = self.soartech_yaml['scenes'] # get all soartech scenes so we can get the probes
-    #     scene_ind = 0 # the current scene index for accessing allowed/expected actions
-    #     found_all = False # keep track of when we've reached the end of the scenes
-    #     action_list_start = 0 # the index for looking at user actions
-    #     last_action_matched = 0 # the index of the last user action we used to match a probe
-    #     second_attempt = False # sometimes we need to backtrack and search once more for an action, but we only search through twice
-    #     matches_found = 0 # count how many perfect matches we found
-    #     skipped_scenes = [] # keep a record of which scenes we missed
-    #     match_data = [] # the matches found, for writing to the json
-    #     last_search = False # was the last probe search/engage?
-    #     first_treatment = False # are we now looking for the first treatment?
-
-    #     # continue searching for matches until scenes have been exhausted
-    #     while not found_all:
-    #         if action_list_start > len(self.json_data['actionList']):
-    #             break
-    #         # keep track of all actions taken and all probes allowed in case a match is not found
-    #         all_user_actions = []
-    #         all_probes = []
-    #         # in case we don't find a perfect match, keep track of close matches (right action/character, wrong treatment/tag)
-    #         close_match = None
-    #         action_for_close_match = None
-    #         count_close = -1
-    #         close_ind = float('inf') # so we can choose the earliest one with the highest match value
-    #         # iterate through all user actions starting after the last one matched to a probe
-    #         for (ind, action_taken) in enumerate(self.json_data['actionList'][action_list_start:]):
-    #             scene = self.get_scene_by_index(soartech_scenes, scene_ind)
-    #             if scene is None or scene.get('end_scene_allowed', False):
-    #                 found_all = True
-    #                 break
-    #             # log action taken in case no match is found
-    #             all_user_actions.append(action_taken.get('actionType') + ' - ' + action_taken.get('casualty') + ' - ' + action_taken.get('treatment') + ' - ' + action_taken.get('tagType'))
-    #             yaml_actions = scene["action_mapping"]
-    #             found_match = False
-    #             matched = None
-
-    #             # for each action the user took, see if it matches an action in the active scene
-    #             for possible_action in yaml_actions:
-    #                 # log probe allowed in case no match is found
-    #                 str_act = possible_action['action_type'] + ' - ' + possible_action.get('character_id', '') + ' - ' + str(possible_action.get('parameters', ''))
-    #                 if str_act not in all_probes:
-    #                     all_probes.append(str_act)
-    #                 # check for sim sitrep (when "search" is answered for a question)
-    #                 if possible_action['action_type'] == 'SITREP':
-    #                     # if SITREP is a possible action, we are looking for search vs engage. If engage is chosen, we want to log the action for at least the first two probes
-    #                     last_search = True
-    #                 if possible_action['action_type'] == 'SITREP' and action_taken['actionType'] == "Question" and action_taken['answer'] == 'Search':
-    #                     # user answered search which matches action type of SITREP - match found
-    #                     found_match = True
-    #                     matched = possible_action
-    #                     last_action_matched = ind
-    #                     last_search = False
-    #                     break
-    #                 # check for vitals in sim
-    #                 if (possible_action['action_type'] == 'CHECK_ALL_VITALS') and (action_taken['actionType'] in VITALS_ACTIONS) and self.do_characters_match(possible_action, action_taken):
-    #                     found_match = True
-    #                     matched = possible_action
-    #                     last_action_matched = ind
-    #                     break
-    #                 # check for treatment
-    #                 if (possible_action['action_type'] == 'APPLY_TREATMENT') and (action_taken['actionType'] == 'Treatment'):
-    #                     # check specific treatment
-    #                     char_match = self.do_characters_match(possible_action, action_taken)
-    #                     treatment_match = 'parameters' not in possible_action or ('treatment' not in possible_action['parameters'] or (TREATMENT_MAP[possible_action['parameters']['treatment']] == action_taken['treatment']))
-    #                     location_match = 'parameters' not in possible_action or ('location' not in possible_action['parameters']) or (action_taken['treatment'] in NO_LOCATION) or ('location' in possible_action['parameters'] and possible_action['parameters']['location'] == action_taken['treatmentLocation'].lower())
-    #                     if char_match and treatment_match and location_match:
-    #                         found_match = True
-    #                         matched = possible_action
-    #                         last_action_matched = ind
-    #                         break
-    #                     else:
-    #                         # find close matches and rank by closest and earliest
-    #                         tmp_count = char_match*3 + treatment_match*2 + location_match
-    #                         print(scene_ind, tmp_count, count_close, ind, close_ind, possible_action['character_id'], action_taken['casualty'])
-    #                         if (tmp_count == count_close and ind < close_ind) or tmp_count > count_close:
-    #                             close_match = possible_action
-    #                             action_for_close_match = action_taken  
-    #                             count_close = tmp_count
-    #                             close_ind = ind
-    #                 # check for tagging - handle differently by searching through all actions to find the last tag given to this character
-    #                 if (possible_action['action_type'] == 'TAG_CHARACTER'):
-    #                     char_tag = self.find_last_tag_for_character(CHARACTER_MAP[possible_action['character_id']], self.json_data['actionList'])
-    #                     if char_tag is None:
-    #                         # no tag found!
-    #                         self.logger.log(LogLevel.WARN, f"No tag given to {CHARACTER_MAP[possible_action['character_id']]}")
-    #                         continue
-    #                     # check specific tag to find perfectly matching probe
-    #                     tag_match = 'parameters' not in possible_action or (('category' not in possible_action['parameters'] or  possible_action['parameters']['category'] == char_tag['tagType']))
-    #                     if tag_match:
-    #                         found_match = True
-    #                         matched = possible_action
-    #                         action_taken = char_tag
-    #                         break
-    #                     else:
-    #                         close_match = possible_action
-    #                         action_for_close_match = char_tag 
-                
-    #             # log matching data
-    #             if found_match:
-    #                 matches_found += 1
-    #                 second_attempt = False
-    #                 # stay at the same action index if it is probe x.1, x.2, or x.3
-    #                 if not last_search or not first_treatment:
-    #                     action_list_start += last_action_matched
-    #                 elif last_search:
-    #                     last_search = False
-    #                     first_treatment = True
-    #                 elif first_treatment:
-    #                     first_treatment = False
-    #                 # reset variables
-    #                 all_user_actions = []
-    #                 all_probes = []
-    #                 close_match = None
-    #                 action_for_close_match = None
-    #                 count_close = -1
-    #                 close_ind = float('inf')
-    #                 # add match data to array for json output
-    #                 match_data.append({
-    #                     "scene_index": scene_ind,
-    #                     "probe_id": matched['probe_id'],
-    #                     "found_match": True,
-    #                     "probe": matched,
-    #                     "user_action": action_taken
-    #                 })
-    #                 # set next scene
-    #                 scene_ind = matched.get('next_scene', scene_ind + 1)
-
 
 
     def get_scene_by_index(self, scenes, index):
@@ -548,13 +533,26 @@ class ProbeMatcher:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='ITM - Probe Matcher', usage='converter.py [-h] -y PATH -j PATH')
+    parser = argparse.ArgumentParser(description='ITM - Probe Matcher', usage='probe_matcher.py [-h] -i PATH')
 
-    parser.add_argument('-f', '--file', dest='json_path', type=str, help='The path to the json file to analyze for matching. Required.')
+    parser.add_argument('-i', '--input_dir', dest='input_dir', type=str, help='The path to the directory where all participant files are. Required.')
     args = parser.parse_args()
-    if not args.json_path:
-        print("JSON Path (-f) is required to run the analyzer.")
-        exit(0)
-    json_path = args.json_path
-    matcher = ProbeMatcher(json_path)
-    matcher.match_probes()
+    if not args.input_dir:
+        print("Input directory (-i PATH) is required to run the probe matcher.")
+        exit(1)
+    # go through the input directory and find all sub directories
+    sub_dirs = [name for name in os.listdir(args.input_dir) if os.path.isdir(os.path.join(args.input_dir, name))]
+    # for each subdirectory, see if a json file exists
+    for dir in sub_dirs:
+        grandparent = os.path.join(args.input_dir, dir)
+        for d in os.listdir(grandparent):
+            parent = os.path.join(grandparent, d)
+            if os.path.isdir(parent):
+                for f in os.listdir(parent):
+                    if '.json' in f:
+                        print(f"\n** Processing {f} **")
+                        # json found! grab matching csv and send to the probe matcher
+                        matcher = ProbeMatcher(os.path.join(parent, f), os.path.join(args.input_dir, dir.split('_')[0] + '_.csv'))
+                        if matcher.environment != '':
+                            matcher.match_probes()
+                        break
