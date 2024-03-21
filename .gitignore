@@ -3,3 +3,8 @@ validator
 
 # junk folder
 __pycache__
+
+# test data
+participant-data/*
+soartech-evals/*
+adept-evals/*
