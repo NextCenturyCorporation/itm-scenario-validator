@@ -12,8 +12,8 @@ SCENE_MAP = {
 CHARACTER_MAP = {
     "casualty_u": "patient U",
     "casualty_v": "patient V",
-    "casualty_w": "patient W",
-    "casualty_x": "patient X",
+    "casualty_w": "patient X",
+    "casualty_x": "patient W",
     "patient_2_victim": "Adept Victim",
     "patient_1_shooter": "Adept Shooter",
     "electricians_mate": "electrician",
