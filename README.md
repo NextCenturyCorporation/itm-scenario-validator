@@ -90,9 +90,7 @@ In order for a yaml file to be considered "valid", the following conditions must
         * `breathing`
         * `heart_rate`
         * `Spo2`
-    * `injury.status` may only be `hidden`, `discoverable`, or `visible`
     * `restricted_actions` cannot include `end_scene`
-    * `visited` is a prohibited key in `character`
     * `session_complete` is a prohibited key in `scenario`
     * `scenario_complete` is a prohibited key in `state`
     * `elapsed_time` is a prohibited key in `state`

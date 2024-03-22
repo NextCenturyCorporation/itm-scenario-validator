@@ -100,7 +100,7 @@ paths:
             type: string
         - name: scenario_id
           in: query
-          description: "a scenario id to start, used internally by TA3"
+          description: "the scenario id to run; incompatible with /ta2/startSession's max_scenarios parameter"
           required: false
           style: form
           explode: true
@@ -116,9 +116,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Scenario"
         "400":
-          description: Invalid Session ID or there is already an active scenario
-        "403":
-          description: Specifying a scenario ID is unauthorized
+          description: Invalid Session ID, there is already an active scenario, or scenario_id was specified with max_scenarios
         "404":
           description: Scenario ID not found
         "500":
@@ -128,6 +126,8 @@ paths:
               schema:
                 type: string
                 x-content-type: text/plain
+        "503":
+          description: Could not communicate with TA1 server
       x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
   /ta2/getAlignmentTarget:
     get:
@@ -198,7 +198,7 @@ paths:
             type: string
       responses:
         "200":
-          description: Successful Response
+          description: Successful Response; if server is configured to run without TA1, then session alignment will be empty/None/null.
           content:
             application/json:
               schema:
@@ -214,6 +214,8 @@ paths:
               schema:
                 type: string
                 x-content-type: text/plain
+        "503":
+          description: Could not get session alignment from TA1
       x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
   /ta2/{scenario_id}/getState:
     get:
@@ -811,7 +813,7 @@ components:
           $ref: "#/components/schemas/BreathingLevelEnum"
         heart_rate:
           $ref: "#/components/schemas/HeartRateEnum"
-        Spo2:
+        spo2:
           type: number
           format: float
           description: blood oxygen level (percentage)
