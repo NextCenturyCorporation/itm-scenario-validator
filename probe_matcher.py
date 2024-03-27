@@ -1,5 +1,6 @@
 import yaml, argparse, json, os, csv
 from logger import LogLevel, Logger
+from pymongo import MongoClient
 
 SCENE_MAP = {
     "sim-jungle": "jungle.yaml",
@@ -56,6 +57,8 @@ QA_MAP = {
 VITALS_ACTIONS = ["SpO2", "Breathing", "Pulse"]
 NO_LOCATION = ["Pain Meds", "IV - Blood", "IV - Saline", "Nasal Trumpet", "Decompression Needle", "Splint"]
 
+mongoCollection = None
+
 class ProbeMatcher:
     logger = Logger("probeMatcher")
     soartech_file = None
@@ -66,6 +69,7 @@ class ProbeMatcher:
     json_data = None
     output_soartech = None
     output_adept = None
+    participantId = ''
     environment = ''
     csv_file = None
 
@@ -79,6 +83,7 @@ class ProbeMatcher:
         self.csv_file = open(csv_path, 'r')
         pid = self.json_data['participantId']
         pid = pid if pid != '' else self.json_data['sessionId']
+        self.participantId = pid
         env = SCENE_MAP.get(self.json_data["configData"]["scene"], '')
         if env == '':
             self.logger.log(LogLevel.WARN, "Environment not defined. Unable to process data")
@@ -243,6 +248,7 @@ class ProbeMatcher:
             else:
                 self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
                 scene_ind += 1
+        mongoCollection.insert_one({'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
         json.dump(match_data, self.output_adept, indent=4)      
 
 
@@ -313,6 +319,7 @@ class ProbeMatcher:
             else:
                 self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
                 scene_ind += 1
+        mongoCollection.insert_one({'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
         json.dump(match_data, self.output_adept, indent=4)      
 
 
@@ -364,6 +371,7 @@ class ProbeMatcher:
             else:
                 self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
                 scene_ind += 1
+        mongoCollection.insert_one({'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
         json.dump(match_data, self.output_adept, indent=4)  
 
 
@@ -503,6 +511,7 @@ class ProbeMatcher:
                         "user_action": close_action
                     })
                     scene_ind = close_probe.get('next_scene', scene_ind + 1)
+        mongoCollection.insert_one({'data': match_data, 'ta1': 'st', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_st_' + self.environment.split('.yaml')[0]})
         json.dump(match_data, self.output_soartech, indent=4)
 
 
@@ -540,6 +549,11 @@ if __name__ == '__main__':
     if not args.input_dir:
         print("Input directory (-i PATH) is required to run the probe matcher.")
         exit(1)
+    # instantiate mongo client
+    client = MongoClient("mongodb://simplemongousername:simplemongopassword@localhost:27017/?authSource=dashboard")
+    db = client.dashboard
+    # create new collection for simulation runs
+    mongoCollection = db['simAlignment']
     # go through the input directory and find all sub directories
     sub_dirs = [name for name in os.listdir(args.input_dir) if os.path.isdir(os.path.join(args.input_dir, name))]
     # for each subdirectory, see if a json file exists
