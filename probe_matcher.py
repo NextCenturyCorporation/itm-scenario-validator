@@ -2,6 +2,10 @@ import yaml, argparse, json, os, csv
 from logger import LogLevel, Logger
 from pymongo import MongoClient
 
+SEND_TO_MONGO = True
+EVAL_NUM = 3
+EVAL_NAME = 'Metrics Evaluation'
+
 SCENE_MAP = {
     "sim-jungle": "jungle.yaml",
     "sim-desert": "desert.yaml",
@@ -57,7 +61,9 @@ QA_MAP = {
 VITALS_ACTIONS = ["SpO2", "Breathing", "Pulse"]
 NO_LOCATION = ["Pain Meds", "IV - Blood", "IV - Saline", "Nasal Trumpet", "Decompression Needle", "Splint"]
 
-mongoCollection = None
+mongo_collection_matches = None
+mongo_collection_raw = None
+ENVIRONMENTS_BY_PID = {}
 
 class ProbeMatcher:
     logger = Logger("probeMatcher")
@@ -80,6 +86,12 @@ class ProbeMatcher:
         # get environment from json to choose correct adept/soartech yamls
         self.json_file = open(json_path, 'r')
         self.json_data = json.load(self.json_file)
+        if (self.json_data['configData']['teleportPointOverride'] == 'Tutorial'):
+            self.logger.log(LogLevel.CRITICAL_INFO, "Tutorial level, not processing data")
+            return
+        if (len(self.json_data['actionList']) <= 1):
+            self.logger.log(LogLevel.WARN, "No actions taken")
+            return
         self.csv_file = open(csv_path, 'r')
         pid = self.json_data['participantId']
         pid = pid if pid != '' else self.json_data['sessionId']
@@ -89,6 +101,12 @@ class ProbeMatcher:
             self.logger.log(LogLevel.WARN, "Environment not defined. Unable to process data")
             return
         self.environment = env
+        mongo_collection_raw.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': self.json_data, 'pid': self.participantId, '_id': self.participantId + '_' + self.environment})
+
+        if pid in ENVIRONMENTS_BY_PID:
+            ENVIRONMENTS_BY_PID[pid].append(self.environment)
+        else:
+            ENVIRONMENTS_BY_PID[pid] = [self.environment]
         # create output files
         try:
             os.mkdir('output')
@@ -248,7 +266,8 @@ class ProbeMatcher:
             else:
                 self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
                 scene_ind += 1
-        mongoCollection.insert_one({'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
+        if SEND_TO_MONGO:
+            mongo_collection_matches.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
         json.dump(match_data, self.output_adept, indent=4)      
 
 
@@ -319,7 +338,8 @@ class ProbeMatcher:
             else:
                 self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
                 scene_ind += 1
-        mongoCollection.insert_one({'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
+        if SEND_TO_MONGO:
+            mongo_collection_matches.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
         json.dump(match_data, self.output_adept, indent=4)      
 
 
@@ -371,7 +391,8 @@ class ProbeMatcher:
             else:
                 self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
                 scene_ind += 1
-        mongoCollection.insert_one({'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
+        if SEND_TO_MONGO:
+            mongo_collection_matches.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
         json.dump(match_data, self.output_adept, indent=4)  
 
 
@@ -396,6 +417,7 @@ class ProbeMatcher:
                 break
             # iterate through all user actions taken
             found_match = False
+            no_tag = False
             matched = None
             for (ind, action_taken) in enumerate(self.json_data['actionList'][action_list_start:]):
                 # iterate through all possible actions in the scene
@@ -440,9 +462,12 @@ class ProbeMatcher:
                     # check for tagging - handle differently by searching through all actions to find the last tag given to this character
                     if (probe_action['action_type'] == 'TAG_CHARACTER'):
                         char_tag = self.find_last_tag_for_character(CHARACTER_MAP[probe_action['character_id']], self.json_data['actionList'])
-                        if char_tag is None:
+                        if char_tag is None and not no_tag:
                             # no tag found!
                             self.logger.log(LogLevel.WARN, f"No tag given to {CHARACTER_MAP[probe_action['character_id']]}")
+                            no_tag = True
+                            continue
+                        elif no_tag:
                             continue
                         # check specific tag to find perfectly matching probe
                         tag_match = 'parameters' not in probe_action or (('category' not in probe_action['parameters'] or  probe_action['parameters']['category'] == char_tag['tagType']))
@@ -472,6 +497,16 @@ class ProbeMatcher:
                     last_action_matched = 0
                     # set next scene
                     scene_ind = matched.get('next_scene', scene_ind + 1)
+                    break
+                elif no_tag:
+                    match_data.append({
+                        "scene_index": scene_ind,
+                        "probe_id": None,
+                        "found_match": False,
+                        "probe": None,
+                        "user_action": "No tag given"
+                    })
+                    scene_ind += 1
                     break
 
             # if we get out of the for loop without finding a match, we need to skip the scene
@@ -511,7 +546,8 @@ class ProbeMatcher:
                         "user_action": close_action
                     })
                     scene_ind = close_probe.get('next_scene', scene_ind + 1)
-        mongoCollection.insert_one({'data': match_data, 'ta1': 'st', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_st_' + self.environment.split('.yaml')[0]})
+        if SEND_TO_MONGO:
+            mongo_collection_matches.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'st', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_st_' + self.environment.split('.yaml')[0]})
         json.dump(match_data, self.output_soartech, indent=4)
 
 
@@ -549,11 +585,23 @@ if __name__ == '__main__':
     if not args.input_dir:
         print("Input directory (-i PATH) is required to run the probe matcher.")
         exit(1)
-    # instantiate mongo client
-    client = MongoClient("mongodb://simplemongousername:simplemongopassword@localhost:27017/?authSource=dashboard")
-    db = client.dashboard
-    # create new collection for simulation runs
-    mongoCollection = db['simAlignment']
+    if SEND_TO_MONGO:
+        # instantiate mongo client
+        client = MongoClient("mongodb://simplemongousername:simplemongopassword@localhost:27017/?authSource=dashboard")
+        db = client.dashboard
+        # create new collection for simulation runs
+        mongo_collection_matches = db['humanSimulator']
+        mongo_collection_raw = db['humanSimulatorRaw']
+    # dirs = ['metrics-data/json/json', 'metrics-data/json', 'metrics-data/unknown json id']
+    # for d in dirs:
+    #     for x in os.listdir(d):
+    #         if not os.path.isdir(os.path.join(d, x)):
+    #             try:
+    #                 os.mkdir(f'metrics-data/{x.split(".json")[0]}')
+    #                 os.mkdir(f'metrics-data/{x.split(".json")[0]}/{x.split(".json")[0]}')
+    #                 os.system(f'mv {os.path.join(d, x)} metrics-data/{x.split(".json")[0]}/{x.split(".json")[0]}/{x}')
+    #             except:
+    #                 pass
     # go through the input directory and find all sub directories
     sub_dirs = [name for name in os.listdir(args.input_dir) if os.path.isdir(os.path.join(args.input_dir, name))]
     # for each subdirectory, see if a json file exists
@@ -566,7 +614,11 @@ if __name__ == '__main__':
                     if '.json' in f:
                         print(f"\n** Processing {f} **")
                         # json found! grab matching csv and send to the probe matcher
-                        matcher = ProbeMatcher(os.path.join(parent, f), os.path.join(args.input_dir, dir.split('_')[0] + '_.csv'))
-                        if matcher.environment != '':
-                            matcher.match_probes()
-                        break
+                        try:
+                            matcher = ProbeMatcher(os.path.join(parent, f), os.path.join(args.input_dir, dir.split('_')[0] + '_.csv'))
+                            if matcher.environment != '':
+                                matcher.match_probes()
+                            break
+                        except:
+                            pass
+    print(json.dumps(ENVIRONMENTS_BY_PID, indent=4))

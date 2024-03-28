@@ -1,0 +1,3273 @@
+{
+    "configData": {
+        "scene": "sim-sub",
+        "narrative": {
+            "narrativeSections": [
+                {
+                    "sectionDescription": "Initialization",
+                    "additionalInfo": "You are the independent duty corpsman posted aboard a Virginia class nuclear submarine. You are on an intelligence gathering mission. Your orders are to remain submerged at all costs.",
+                    "triggeredOnStart": true,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Submarine Intro",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": true,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [
+                        {
+                            "mixer": "narrator",
+                            "changeVolume": 0,
+                            "returnVolume": 1,
+                            "duration": -1.0
+                        },
+                        {
+                            "mixer": "voice",
+                            "changeVolume": 0,
+                            "returnVolume": 1,
+                            "duration": -1.0
+                        },
+                        {
+                            "mixer": "environment",
+                            "changeVolume": 0,
+                            "returnVolume": 1,
+                            "duration": -1.0
+                        }
+                    ],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 0,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 0,
+                        "pulseOximeterAvailable": false
+                    },
+                    "autoplay": false,
+                    "hideControls": false
+                },
+                {
+                    "sectionDescription": "Soartech Intro",
+                    "additionalInfo": "There was a fire in the galley, sailors have been injured.  The fire has been secured, and the crew is performing damage control operations. You are working alone. It is unknown if there are more causalities that need help.",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Soartech/Submarine Soartech Intro",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 0,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 0,
+                        "pulseOximeterAvailable": false
+                    },
+                    "autoplay": true,
+                    "hideControls": false
+                },
+                {
+                    "sectionDescription": "First radio call to start scene",
+                    "additionalInfo": "",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Soartech/Radio Edit/Radio 1",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": true
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [
+                        {
+                            "mixer": "environment",
+                            "changeVolume": 0,
+                            "returnVolume": 1,
+                            "duration": -1.0
+                        }
+                    ],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 0,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 0,
+                        "pulseOximeterAvailable": false
+                    },
+                    "autoplay": true,
+                    "hideControls": false
+                },
+                {
+                    "sectionDescription": "Automatically plays after answering the first question. This plays radio audio and enables movement and treatments. Starts automated detection of treatement and tagging.",
+                    "additionalInfo": "Doc, everyone else is accounted for, there are no additional injured sailors.",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Soartech/Radio Edit/Radio 2",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [
+                        "Soartech 1"
+                    ],
+                    "audioVolumeSettings": [],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 1,
+                        "splintCount": 0,
+                        "painMedsCount": 1,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 1,
+                        "pulseOximeterAvailable": true
+                    },
+                    "autoplay": false,
+                    "hideControls": true
+                },
+                {
+                    "sectionDescription": "Automated section here of treatment of both patients. Then transition to tagging both patients",
+                    "additionalInfo": "",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "TreatFirstPatient",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 1,
+                        "splintCount": 0,
+                        "painMedsCount": 1,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 1,
+                        "pulseOximeterAvailable": true
+                    },
+                    "autoplay": false,
+                    "hideControls": false
+                },
+                {
+                    "sectionDescription": "Plays automatically after answering question 2. This plays radio informing of new patients and starts automated detection of treatment and tagging patients.",
+                    "additionalInfo": "We have other crew members searching. Please help these patients.",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Soartech/Radio Edit/Radio 5",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 0,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 0,
+                        "pulseOximeterAvailable": false
+                    },
+                    "autoplay": false,
+                    "hideControls": true
+                },
+                {
+                    "sectionDescription": "Automated section here of treatment and tagging both patients. Then switches back to the original patients",
+                    "additionalInfo": "",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "TreatFirstPatient",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 1,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 1,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 1,
+                        "pulseOximeterAvailable": true
+                    },
+                    "autoplay": false,
+                    "hideControls": true
+                },
+                {
+                    "sectionDescription": "Start Adept Intro after finishing soartech",
+                    "additionalInfo": "ADEPT Intro",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Adept/Submarine Adept Intro",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [
+                        {
+                            "patientName": "patient U",
+                            "activeState": false
+                        },
+                        {
+                            "patientName": "patient V",
+                            "activeState": false
+                        },
+                        {
+                            "patientName": "patient W",
+                            "activeState": false
+                        },
+                        {
+                            "patientName": "patient X",
+                            "activeState": false
+                        },
+                        {
+                            "patientName": "electrician",
+                            "activeState": true
+                        },
+                        {
+                            "patientName": "bystander",
+                            "activeState": true
+                        }
+                    ],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": true,
+                        "fadeInOutDuration": 8.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [
+                        {
+                            "mixer": "environment",
+                            "changeVolume": 0,
+                            "returnVolume": 1,
+                            "duration": -1.0
+                        }
+                    ],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 4,
+                        "pressureBandageCount": 4,
+                        "hemostaticGauzeCount": 4,
+                        "decompressionNeedleCount": 1,
+                        "nasopharyngealAirwayCount": 1,
+                        "splintCount": 4,
+                        "painMedsCount": 4,
+                        "ivBloodCount": 4,
+                        "ivSalineCount": 4,
+                        "burnDressingCount": 10,
+                        "pulseOximeterAvailable": true
+                    },
+                    "autoplay": false,
+                    "hideControls": false
+                },
+                {
+                    "sectionDescription": "After loading into the scene, play this first radio which prompts a question",
+                    "additionalInfo": "Crew mates are bringing the patients to you here. They can only bring one at a time. Which one do you want to see first?",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Adept/Radio Edit/Radio 1",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [
+                        {
+                            "mixer": "environment",
+                            "changeVolume": 0,
+                            "returnVolume": 1,
+                            "duration": -1.0
+                        }
+                    ],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 0,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 0,
+                        "pulseOximeterAvailable": false
+                    },
+                    "autoplay": true,
+                    "hideControls": true
+                },
+                {
+                    "sectionDescription": "Transition to start of scene",
+                    "additionalInfo": "",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 0,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 0,
+                        "pulseOximeterAvailable": false
+                    },
+                    "autoplay": false,
+                    "hideControls": true
+                },
+                {
+                    "sectionDescription": "After answering the question, this automatically plays the next radio call and the teleport points for approaching patients are enabled",
+                    "additionalInfo": "The injured sailors cannot be moved, report to their location instead.",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Adept/Radio Edit/Radio 2",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 0,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 0,
+                        "pulseOximeterAvailable": false
+                    },
+                    "autoplay": true,
+                    "hideControls": true
+                },
+                {
+                    "sectionDescription": "After answering the question this plays the next radio call and teleport points open for treatment",
+                    "additionalInfo": "Doc, It looks like the electrician's mate did not secure power, the most basic and important safety step, before initiating the repair! The accident was due to his serious negligence. There is no reason it had to happen and now two people are hurt. I am sure this will be a serious black mark on his record",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Adept/Radio Edit/Radio 3",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [
+                        "Adept 2"
+                    ],
+                    "audioVolumeSettings": [],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 0,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 0,
+                        "pulseOximeterAvailable": false
+                    },
+                    "autoplay": true,
+                    "hideControls": true
+                },
+                {
+                    "sectionDescription": "Treat one patient",
+                    "additionalInfo": "",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "TreatPatients",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 4,
+                        "pressureBandageCount": 4,
+                        "hemostaticGauzeCount": 4,
+                        "decompressionNeedleCount": 1,
+                        "nasopharyngealAirwayCount": 1,
+                        "splintCount": 4,
+                        "painMedsCount": 4,
+                        "ivBloodCount": 4,
+                        "ivSalineCount": 4,
+                        "burnDressingCount": 10,
+                        "pulseOximeterAvailable": true
+                    },
+                    "autoplay": false,
+                    "hideControls": true
+                },
+                {
+                    "sectionDescription": "Wait until they understand the horsing around situation, this plays the next radio call and asks a question",
+                    "additionalInfo": "Doc, we have another injury. It seems like Charlish received a shock from the electrical surge caused by the accident. He has a pre-existing heart condition and is not responsive. Treating him will take time and constant monitoring so you would have to leave those two unattended in order to go treat him. Are you coming or staying there?",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Adept/Radio Edit/Radio 5",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 0,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 0,
+                        "pulseOximeterAvailable": false
+                    },
+                    "autoplay": true,
+                    "hideControls": true
+                },
+                {
+                    "sectionDescription": "Answer the question first, this starts the final freeform scenario",
+                    "additionalInfo": "It is another day on the same submarine. There was a fire onboard that caused injuries. The fire is secured and the environment deemed safe, but there are injured sailors needing your help.",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "Submarine Narrative Audio/Submarine Freeform Intro",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [
+                        {
+                            "patientName": "electrician",
+                            "activeState": false
+                        },
+                        {
+                            "patientName": "bystander",
+                            "activeState": false
+                        },
+                        {
+                            "patientName": "Navy Soldier 1 Male",
+                            "activeState": true
+                        },
+                        {
+                            "patientName": "Navy Soldier 2 Male",
+                            "activeState": true
+                        },
+                        {
+                            "patientName": "Navy Soldier 3 Male",
+                            "activeState": true
+                        },
+                        {
+                            "patientName": "Navy Soldier 4 Female",
+                            "activeState": true
+                        }
+                    ],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": true,
+                        "fadeInOutDuration": 8.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [],
+                    "audioVolumeSettings": [
+                        {
+                            "mixer": "environment",
+                            "changeVolume": 0,
+                            "returnVolume": 1,
+                            "duration": -1.0
+                        }
+                    ],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 0,
+                        "pressureBandageCount": 0,
+                        "hemostaticGauzeCount": 0,
+                        "decompressionNeedleCount": 0,
+                        "nasopharyngealAirwayCount": 0,
+                        "splintCount": 0,
+                        "painMedsCount": 0,
+                        "ivBloodCount": 0,
+                        "ivSalineCount": 0,
+                        "burnDressingCount": 0,
+                        "pulseOximeterAvailable": false
+                    },
+                    "autoplay": false,
+                    "hideControls": true
+                },
+                {
+                    "sectionDescription": "Enable Movement and Treatment",
+                    "additionalInfo": "",
+                    "triggeredOnStart": false,
+                    "initializationSettings": {
+                        "beginOnStart": false
+                    },
+                    "narratorRadioAudio": {
+                        "audioClip": "",
+                        "audioVolume": 1.0,
+                        "audioPitch": 1.0
+                    },
+                    "characterAudioLineDelivery": {
+                        "characterName": "",
+                        "audioClip": ""
+                    },
+                    "gameObjectTeleportation": [],
+                    "gameObjectStateManagement": {
+                        "objectsToEnable": [],
+                        "objectsToDisable": []
+                    },
+                    "patientsToChangeActiveState": [],
+                    "patientsToChangeVitals": [],
+                    "screenFadeSettings": {
+                        "fadeInOutBlack": false,
+                        "fadeInOutDuration": 1.0,
+                        "instantBlack": false,
+                        "fadeInBlack": false,
+                        "fadeFromBlack": false
+                    },
+                    "inputBlockingSettings": {},
+                    "automatedEntryPoint": "",
+                    "teleportPointsToActivate": [
+                        "Freeform"
+                    ],
+                    "audioVolumeSettings": [
+                        {
+                            "mixer": "environment",
+                            "changeVolume": 0,
+                            "returnVolume": 1,
+                            "duration": -1.0
+                        }
+                    ],
+                    "delayInSeconds": 0,
+                    "availableInventory": {
+                        "tourniquetCount": 999,
+                        "pressureBandageCount": 999,
+                        "hemostaticGauzeCount": 999,
+                        "decompressionNeedleCount": 999,
+                        "nasopharyngealAirwayCount": 999,
+                        "splintCount": 999,
+                        "painMedsCount": 999,
+                        "ivBloodCount": 999,
+                        "ivSalineCount": 999,
+                        "burnDressingCount": 999,
+                        "pulseOximeterAvailable": true
+                    },
+                    "autoplay": true,
+                    "hideControls": true
+                }
+            ]
+        },
+        "questions": [],
+        "teleportPointOverride": "",
+        "scenarioData": {
+            "name": "Submarine Eval",
+            "description": "submarine Eval Scenario",
+            "difficulty": 5
+        },
+        "playerData": {
+            "startPosition": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "startAngle": 180.0
+        },
+        "availableInventory": {
+            "tourniquetCount": 0,
+            "pressureBandageCount": 0,
+            "hemostaticGauzeCount": 0,
+            "decompressionNeedleCount": 0,
+            "nasopharyngealAirwayCount": 1,
+            "splintCount": 0,
+            "painMedsCount": 1,
+            "ivBloodCount": 0,
+            "ivSalineCount": 0,
+            "burnDressingCount": 1,
+            "pulseOximeterAvailable": true
+        },
+        "patientDataList": [
+            {
+                "name": "patient U",
+                "patient": "Military Mike",
+                "enabledOnStart": true,
+                "positionAngle": {
+                    "position": {
+                        "x": -3.3299999237060549,
+                        "y": 0.0,
+                        "z": -0.019999999552965165
+                    },
+                    "angle": 125.0
+                },
+                "vitals": {
+                    "pulse": "fast",
+                    "breath": "normal",
+                    "SpO2": "low",
+                    "hearing": "normal",
+                    "mood": "upset",
+                    "discoverable": true,
+                    "showOnStart": false
+                },
+                "triageStatus": {
+                    "triageLevel": "delayed",
+                    "sort": "still"
+                },
+                "animations": {
+                    "pose": "supine",
+                    "side": "straight"
+                },
+                "overrides": {
+                    "injuriesControlPatientStates": false,
+                    "injuries": [],
+                    "burnVictim": false
+                },
+                "injuries": [
+                    {
+                        "type": "R Forearm Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    }
+                ],
+                "raceEthnicity": {
+                    "preset": "White 1",
+                    "skinEyeHairFromPreset": true,
+                    "hairOverride": false,
+                    "eyeOverride": false,
+                    "skinOverride": false,
+                    "voice": "Clyde_Male",
+                    "voicePitch": "normal",
+                    "firstName": "Adam"
+                },
+                "body": {
+                    "bodyTexture": 0,
+                    "bodyNormalMap": 0,
+                    "bodyColor": "original",
+                    "bodyColorBrightness": "#808080",
+                    "eyeColor": "original",
+                    "hairTexture": 0,
+                    "hairColor": "original"
+                },
+                "clothing": {
+                    "topTexture": 4,
+                    "bottomTexture": 4,
+                    "shoeTexture": 0,
+                    "topColor": "original",
+                    "bottomColor": "original",
+                    "shoeColor": "dark",
+                    "topColorBrightness": "#808080",
+                    "bottomColorBrightness": "#808080",
+                    "topAlphaMask": -1,
+                    "bottomAlphaMask": -1
+                },
+                "militaryGear": {
+                    "headGear": [
+                        6
+                    ],
+                    "faceGear": [],
+                    "backGear": [],
+                    "chestGear": [],
+                    "beltGear": [],
+                    "legGear": [],
+                    "gunGear": []
+                }
+            },
+            {
+                "name": "patient V",
+                "patient": "Lily",
+                "enabledOnStart": true,
+                "positionAngle": {
+                    "position": {
+                        "x": 3.630000114440918,
+                        "y": 0.0,
+                        "z": -0.06800000369548798
+                    },
+                    "angle": -55.0
+                },
+                "vitals": {
+                    "pulse": "fast",
+                    "breath": "normal",
+                    "SpO2": "low",
+                    "hearing": "normal",
+                    "mood": "upset",
+                    "discoverable": true,
+                    "showOnStart": false
+                },
+                "triageStatus": {
+                    "triageLevel": "delayed",
+                    "sort": "still"
+                },
+                "animations": {
+                    "pose": "supine",
+                    "side": "straight"
+                },
+                "overrides": {
+                    "injuriesControlPatientStates": false,
+                    "injuries": [],
+                    "burnVictim": false
+                },
+                "injuries": [
+                    {
+                        "type": "L Forearm Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    }
+                ],
+                "raceEthnicity": {
+                    "preset": "White 3",
+                    "skinEyeHairFromPreset": true,
+                    "hairOverride": true,
+                    "eyeOverride": false,
+                    "skinOverride": false,
+                    "voice": "Grace_Female",
+                    "voicePitch": "normal",
+                    "firstName": "Jessica"
+                },
+                "body": {
+                    "bodyTexture": 0,
+                    "bodyNormalMap": 0,
+                    "bodyColor": "original",
+                    "bodyColorBrightness": "#808080",
+                    "eyeColor": "original",
+                    "hairTexture": -1,
+                    "hairColor": "original"
+                },
+                "clothing": {
+                    "topTexture": 4,
+                    "bottomTexture": 3,
+                    "shoeTexture": -1,
+                    "topColor": "original",
+                    "bottomColor": "original",
+                    "shoeColor": "black",
+                    "topColorBrightness": "#808080",
+                    "bottomColorBrightness": "#808080",
+                    "topAlphaMask": -1,
+                    "bottomAlphaMask": -1
+                },
+                "militaryGear": {
+                    "headGear": [
+                        6
+                    ],
+                    "faceGear": [],
+                    "backGear": [],
+                    "chestGear": [],
+                    "beltGear": [],
+                    "legGear": [],
+                    "gunGear": []
+                }
+            },
+            {
+                "name": "patient W",
+                "patient": "Military Mike",
+                "enabledOnStart": false,
+                "positionAngle": {
+                    "position": {
+                        "x": 0.07900000363588333,
+                        "y": 0.0,
+                        "z": -5.085000038146973
+                    },
+                    "angle": 215.0
+                },
+                "vitals": {
+                    "pulse": "fast",
+                    "breath": "normal",
+                    "SpO2": "low",
+                    "hearing": "normal",
+                    "mood": "upset",
+                    "discoverable": true,
+                    "showOnStart": false
+                },
+                "triageStatus": {
+                    "triageLevel": "delayed",
+                    "sort": "still"
+                },
+                "animations": {
+                    "pose": "supine",
+                    "side": "straight"
+                },
+                "overrides": {
+                    "injuriesControlPatientStates": false,
+                    "injuries": [],
+                    "burnVictim": false
+                },
+                "injuries": [
+                    {
+                        "type": "L Leg Broken",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    }
+                ],
+                "raceEthnicity": {
+                    "preset": "Black 2",
+                    "skinEyeHairFromPreset": true,
+                    "hairOverride": false,
+                    "eyeOverride": false,
+                    "skinOverride": false,
+                    "voice": "Giovanni_Male",
+                    "voicePitch": "normal",
+                    "firstName": "Victor"
+                },
+                "body": {
+                    "bodyTexture": 0,
+                    "bodyNormalMap": 0,
+                    "bodyColor": "original",
+                    "bodyColorBrightness": "#808080",
+                    "eyeColor": "original",
+                    "hairTexture": 0,
+                    "hairColor": "original"
+                },
+                "clothing": {
+                    "topTexture": 4,
+                    "bottomTexture": 4,
+                    "shoeTexture": 0,
+                    "topColor": "original",
+                    "bottomColor": "original",
+                    "shoeColor": "dark",
+                    "topColorBrightness": "#808080",
+                    "bottomColorBrightness": "#808080",
+                    "topAlphaMask": -1,
+                    "bottomAlphaMask": -1
+                },
+                "militaryGear": {
+                    "headGear": [],
+                    "faceGear": [],
+                    "backGear": [],
+                    "chestGear": [],
+                    "beltGear": [],
+                    "legGear": [],
+                    "gunGear": []
+                }
+            },
+            {
+                "name": "patient X",
+                "patient": "Military Mike",
+                "enabledOnStart": false,
+                "positionAngle": {
+                    "position": {
+                        "x": -0.05000000074505806,
+                        "y": 0.0,
+                        "z": -13.399999618530274
+                    },
+                    "angle": 35.0
+                },
+                "vitals": {
+                    "pulse": "fast",
+                    "breath": "collapsedLeft",
+                    "SpO2": "low",
+                    "hearing": "normal",
+                    "mood": "upset",
+                    "discoverable": true,
+                    "showOnStart": false
+                },
+                "triageStatus": {
+                    "triageLevel": "delayed",
+                    "sort": "still"
+                },
+                "animations": {
+                    "pose": "supine",
+                    "side": "straight"
+                },
+                "overrides": {
+                    "injuriesControlPatientStates": false,
+                    "injuries": [],
+                    "burnVictim": false
+                },
+                "injuries": [
+                    {
+                        "type": "L Shoulder Broken",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "L Chest Collapse",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    }
+                ],
+                "raceEthnicity": {
+                    "preset": "White 3",
+                    "skinEyeHairFromPreset": true,
+                    "hairOverride": false,
+                    "eyeOverride": false,
+                    "skinOverride": false,
+                    "voice": "Lev_Male",
+                    "voicePitch": "normal",
+                    "firstName": "Jeff"
+                },
+                "body": {
+                    "bodyTexture": 0,
+                    "bodyNormalMap": 0,
+                    "bodyColor": "original",
+                    "bodyColorBrightness": "#808080",
+                    "eyeColor": "original",
+                    "hairTexture": 0,
+                    "hairColor": "original"
+                },
+                "clothing": {
+                    "topTexture": 4,
+                    "bottomTexture": 4,
+                    "shoeTexture": 0,
+                    "topColor": "original",
+                    "bottomColor": "original",
+                    "shoeColor": "dark",
+                    "topColorBrightness": "#808080",
+                    "bottomColorBrightness": "#808080",
+                    "topAlphaMask": -1,
+                    "bottomAlphaMask": -1
+                },
+                "militaryGear": {
+                    "headGear": [],
+                    "faceGear": [],
+                    "backGear": [],
+                    "chestGear": [],
+                    "beltGear": [],
+                    "legGear": [],
+                    "gunGear": []
+                }
+            },
+            {
+                "name": "electrician",
+                "patient": "Military Mike",
+                "enabledOnStart": false,
+                "positionAngle": {
+                    "position": {
+                        "x": 0.3160000145435333,
+                        "y": 0.0,
+                        "z": -5.0
+                    },
+                    "angle": -19.0
+                },
+                "vitals": {
+                    "pulse": "normal",
+                    "breath": "normal",
+                    "SpO2": "low",
+                    "hearing": "normal",
+                    "mood": "upset",
+                    "discoverable": true,
+                    "showOnStart": false
+                },
+                "triageStatus": {
+                    "triageLevel": "delayed",
+                    "sort": "still"
+                },
+                "animations": {
+                    "pose": "fetal",
+                    "side": "left"
+                },
+                "overrides": {
+                    "injuriesControlPatientStates": false,
+                    "injuries": [],
+                    "burnVictim": false
+                },
+                "injuries": [
+                    {
+                        "type": "R Forearm Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Chest Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Lower Leg Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "Ear Bleed",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    }
+                ],
+                "raceEthnicity": {
+                    "preset": "Hispanic",
+                    "skinEyeHairFromPreset": true,
+                    "hairOverride": false,
+                    "eyeOverride": false,
+                    "skinOverride": true,
+                    "voice": "Lev_Male",
+                    "voicePitch": "low",
+                    "firstName": "Adam"
+                },
+                "body": {
+                    "bodyTexture": 1,
+                    "bodyNormalMap": 0,
+                    "bodyColor": "white",
+                    "bodyColorBrightness": "#808080",
+                    "eyeColor": "original",
+                    "hairTexture": 0,
+                    "hairColor": "original"
+                },
+                "clothing": {
+                    "topTexture": 4,
+                    "bottomTexture": 4,
+                    "shoeTexture": 0,
+                    "topColor": "original",
+                    "bottomColor": "original",
+                    "shoeColor": "dark",
+                    "topColorBrightness": "#808080",
+                    "bottomColorBrightness": "#808080",
+                    "topAlphaMask": -1,
+                    "bottomAlphaMask": -1
+                },
+                "militaryGear": {
+                    "headGear": [
+                        6
+                    ],
+                    "faceGear": [],
+                    "backGear": [],
+                    "chestGear": [],
+                    "beltGear": [],
+                    "legGear": [],
+                    "gunGear": []
+                }
+            },
+            {
+                "name": "bystander",
+                "patient": "Bob",
+                "enabledOnStart": false,
+                "positionAngle": {
+                    "position": {
+                        "x": 0.3160000145435333,
+                        "y": 0.0,
+                        "z": -8.631999969482422
+                    },
+                    "angle": -33.0
+                },
+                "vitals": {
+                    "pulse": "normal",
+                    "breath": "normal",
+                    "SpO2": "low",
+                    "hearing": "normal",
+                    "mood": "upset",
+                    "discoverable": true,
+                    "showOnStart": false
+                },
+                "triageStatus": {
+                    "triageLevel": "delayed",
+                    "sort": "still"
+                },
+                "animations": {
+                    "pose": "fetal",
+                    "side": "left"
+                },
+                "overrides": {
+                    "injuriesControlPatientStates": false,
+                    "injuries": [],
+                    "burnVictim": false
+                },
+                "injuries": [
+                    {
+                        "type": "R Forearm Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Chest Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Lower Leg Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "Ear Bleed",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    }
+                ],
+                "raceEthnicity": {
+                    "preset": "White 3",
+                    "skinEyeHairFromPreset": true,
+                    "hairOverride": false,
+                    "eyeOverride": false,
+                    "skinOverride": false,
+                    "voice": "Drew_Male",
+                    "voicePitch": "low",
+                    "firstName": "Adam"
+                },
+                "body": {
+                    "bodyTexture": 0,
+                    "bodyNormalMap": 0,
+                    "bodyColor": "original",
+                    "bodyColorBrightness": "#808080",
+                    "eyeColor": "original",
+                    "hairTexture": -1,
+                    "hairColor": "original"
+                },
+                "clothing": {
+                    "topTexture": 6,
+                    "bottomTexture": 3,
+                    "shoeTexture": 1,
+                    "topColor": "grey",
+                    "bottomColor": "navy",
+                    "shoeColor": "black",
+                    "topColorBrightness": "#808080",
+                    "bottomColorBrightness": "#808080",
+                    "topAlphaMask": -1,
+                    "bottomAlphaMask": -1
+                },
+                "militaryGear": {
+                    "headGear": [
+                        0
+                    ],
+                    "faceGear": [],
+                    "backGear": [],
+                    "chestGear": [],
+                    "beltGear": [],
+                    "legGear": [],
+                    "gunGear": []
+                }
+            },
+            {
+                "name": "Navy Soldier 1 Male",
+                "patient": "Military Mike",
+                "enabledOnStart": false,
+                "positionAngle": {
+                    "position": {
+                        "x": 0.16200000047683717,
+                        "y": 0.0,
+                        "z": 0.3009999990463257
+                    },
+                    "angle": 90.0
+                },
+                "vitals": {
+                    "pulse": "fast",
+                    "breath": "fast",
+                    "SpO2": "normal",
+                    "hearing": "normal",
+                    "mood": "dead",
+                    "discoverable": true,
+                    "showOnStart": false
+                },
+                "triageStatus": {
+                    "triageLevel": "expectant",
+                    "sort": "still"
+                },
+                "animations": {
+                    "pose": "supine",
+                    "side": "straight"
+                },
+                "overrides": {
+                    "injuriesControlPatientStates": false,
+                    "injuries": [],
+                    "burnVictim": false
+                },
+                "injuries": [
+                    {
+                        "type": "L Neck Puncture",
+                        "bloodPool": "Large",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Upper Leg Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "L Upper Leg Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "L Chest Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Chest Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "L Forearm Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Forearm Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    }
+                ],
+                "raceEthnicity": {
+                    "preset": "Asian 1",
+                    "skinEyeHairFromPreset": false,
+                    "hairOverride": true,
+                    "eyeOverride": false,
+                    "skinOverride": false,
+                    "voice": "Clyde_Male",
+                    "voicePitch": "none",
+                    "firstName": "Adam"
+                },
+                "body": {
+                    "bodyTexture": 10,
+                    "bodyNormalMap": 0,
+                    "bodyColor": "original",
+                    "bodyColorBrightness": "#808080",
+                    "eyeColor": "original",
+                    "hairTexture": -1,
+                    "hairColor": "original"
+                },
+                "clothing": {
+                    "topTexture": 4,
+                    "bottomTexture": 4,
+                    "shoeTexture": 0,
+                    "topColor": "original",
+                    "bottomColor": "original",
+                    "shoeColor": "dark",
+                    "topColorBrightness": "#808080",
+                    "bottomColorBrightness": "#808080",
+                    "topAlphaMask": -1,
+                    "bottomAlphaMask": -1
+                },
+                "militaryGear": {
+                    "headGear": [],
+                    "faceGear": [],
+                    "backGear": [],
+                    "chestGear": [],
+                    "beltGear": [],
+                    "legGear": [],
+                    "gunGear": []
+                }
+            },
+            {
+                "name": "Navy Soldier 2 Male",
+                "patient": "Military Mike",
+                "enabledOnStart": false,
+                "positionAngle": {
+                    "position": {
+                        "x": 0.05000000074505806,
+                        "y": 0.0,
+                        "z": -6.2769999504089359
+                    },
+                    "angle": 220.0
+                },
+                "vitals": {
+                    "pulse": "fast",
+                    "breath": "fast",
+                    "SpO2": "normal",
+                    "hearing": "normal",
+                    "mood": "agony",
+                    "discoverable": true,
+                    "showOnStart": false
+                },
+                "triageStatus": {
+                    "triageLevel": "immediate",
+                    "sort": "waver"
+                },
+                "animations": {
+                    "pose": "supine",
+                    "side": "striaght"
+                },
+                "overrides": {
+                    "injuriesControlPatientStates": false,
+                    "injuries": [],
+                    "burnVictim": false
+                },
+                "injuries": [
+                    {
+                        "type": "R Lower Leg Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Forearm Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Shoulder Puncture",
+                        "bloodPool": "Medium",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "L Shoulder Broken",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "L Leg Broken",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    }
+                ],
+                "raceEthnicity": {
+                    "preset": "Black 2",
+                    "skinEyeHairFromPreset": true,
+                    "hairOverride": false,
+                    "eyeOverride": false,
+                    "skinOverride": false,
+                    "voice": "Drew_Male",
+                    "voicePitch": "normal",
+                    "firstName": "Matthew"
+                },
+                "body": {
+                    "bodyTexture": 2,
+                    "bodyNormalMap": 0,
+                    "bodyColor": "original",
+                    "bodyColorBrightness": "#808080",
+                    "eyeColor": "original",
+                    "hairTexture": 0,
+                    "hairColor": "black"
+                },
+                "clothing": {
+                    "topTexture": 4,
+                    "bottomTexture": 4,
+                    "shoeTexture": 0,
+                    "topColor": "original",
+                    "bottomColor": "original",
+                    "shoeColor": "dark",
+                    "topColorBrightness": "#808080",
+                    "bottomColorBrightness": "#808080",
+                    "topAlphaMask": -1,
+                    "bottomAlphaMask": -1
+                },
+                "militaryGear": {
+                    "headGear": [
+                        6
+                    ],
+                    "faceGear": [],
+                    "backGear": [],
+                    "chestGear": [],
+                    "beltGear": [],
+                    "legGear": [],
+                    "gunGear": []
+                }
+            },
+            {
+                "name": "Navy Soldier 3 Male",
+                "patient": "Gary",
+                "enabledOnStart": false,
+                "positionAngle": {
+                    "position": {
+                        "x": -0.03999999910593033,
+                        "y": 0.0,
+                        "z": 3.569999933242798
+                    },
+                    "angle": 143.0
+                },
+                "vitals": {
+                    "pulse": "fast",
+                    "breath": "fast",
+                    "SpO2": "normal",
+                    "hearing": "normal",
+                    "mood": "agony",
+                    "discoverable": true,
+                    "showOnStart": false
+                },
+                "triageStatus": {
+                    "triageLevel": "immediate",
+                    "sort": "waver"
+                },
+                "animations": {
+                    "pose": "sittingGround",
+                    "side": "right"
+                },
+                "overrides": {
+                    "injuriesControlPatientStates": false,
+                    "injuries": [],
+                    "burnVictim": false
+                },
+                "injuries": [
+                    {
+                        "type": "L Bicep Puncture",
+                        "bloodPool": "Medium",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Thigh Puncture",
+                        "bloodPool": "Medium",
+                        "pretreated": false
+                    }
+                ],
+                "raceEthnicity": {
+                    "preset": "White 1",
+                    "skinEyeHairFromPreset": true,
+                    "hairOverride": true,
+                    "eyeOverride": false,
+                    "skinOverride": false,
+                    "voice": "Michael_Male",
+                    "voicePitch": "normal",
+                    "firstName": "Richard"
+                },
+                "body": {
+                    "bodyTexture": 0,
+                    "bodyNormalMap": 0,
+                    "bodyColor": "original",
+                    "bodyColorBrightness": "#808080",
+                    "eyeColor": "original",
+                    "hairTexture": 2,
+                    "hairColor": "original"
+                },
+                "clothing": {
+                    "topTexture": 4,
+                    "bottomTexture": 4,
+                    "shoeTexture": 1,
+                    "topColor": "original",
+                    "bottomColor": "lightGrey",
+                    "shoeColor": "dark",
+                    "topColorBrightness": "#808080",
+                    "bottomColorBrightness": "#808080",
+                    "topAlphaMask": -1,
+                    "bottomAlphaMask": -1
+                },
+                "militaryGear": {
+                    "headGear": [],
+                    "faceGear": [],
+                    "backGear": [],
+                    "chestGear": [],
+                    "beltGear": [],
+                    "legGear": [],
+                    "gunGear": []
+                }
+            },
+            {
+                "name": "Navy Soldier 4 Female",
+                "patient": "Lily",
+                "enabledOnStart": false,
+                "positionAngle": {
+                    "position": {
+                        "x": -4.699999809265137,
+                        "y": 0.0,
+                        "z": -0.1120000034570694
+                    },
+                    "angle": 121.0
+                },
+                "vitals": {
+                    "pulse": "fast",
+                    "breath": "fast",
+                    "SpO2": "normal",
+                    "hearing": "normal",
+                    "mood": "agony",
+                    "discoverable": true,
+                    "showOnStart": false
+                },
+                "triageStatus": {
+                    "triageLevel": "immediate",
+                    "sort": "waver"
+                },
+                "animations": {
+                    "pose": "supine",
+                    "side": "straight"
+                },
+                "overrides": {
+                    "injuriesControlPatientStates": false,
+                    "injuries": [],
+                    "burnVictim": false
+                },
+                "injuries": [
+                    {
+                        "type": "L Chest Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "L Lower Leg Burn",
+                        "bloodPool": "Small",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Lower Leg Burn",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    },
+                    {
+                        "type": "R Leg Broken",
+                        "bloodPool": "None",
+                        "pretreated": false
+                    }
+                ],
+                "raceEthnicity": {
+                    "preset": "Black 2",
+                    "skinEyeHairFromPreset": true,
+                    "hairOverride": true,
+                    "eyeOverride": false,
+                    "skinOverride": false,
+                    "voice": "Grace_Female",
+                    "voicePitch": "normal",
+                    "firstName": "Sarah"
+                },
+                "body": {
+                    "bodyTexture": 0,
+                    "bodyNormalMap": 0,
+                    "bodyColor": "original",
+                    "bodyColorBrightness": "#808080",
+                    "eyeColor": "original",
+                    "hairTexture": -1,
+                    "hairColor": "original"
+                },
+                "clothing": {
+                    "topTexture": 4,
+                    "bottomTexture": 3,
+                    "shoeTexture": -1,
+                    "topColor": "original",
+                    "bottomColor": "original",
+                    "shoeColor": "black",
+                    "topColorBrightness": "#808080",
+                    "bottomColorBrightness": "#808080",
+                    "topAlphaMask": -1,
+                    "bottomAlphaMask": -1
+                },
+                "militaryGear": {
+                    "headGear": [
+                        6
+                    ],
+                    "faceGear": [],
+                    "backGear": [],
+                    "chestGear": [],
+                    "beltGear": [],
+                    "legGear": [],
+                    "gunGear": []
+                }
+            }
+        ]
+    },
+    "actionList": [
+        {
+            "actionType": "Question",
+            "casualty": "",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "Soartech Probe 1: Are you going to search for more patients or help those two first?",
+            "answerChoices": [
+                "Search",
+                "Engage"
+            ],
+            "answer": "Engage"
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "patient U",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Forearm",
+            "injuryType": "Burn",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "SpO2",
+            "casualty": "patient U",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "low",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient U",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient U",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient U",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient U",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Breathing",
+            "casualty": "patient U",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "normal",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Tag",
+            "casualty": "patient U",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "orange",
+            "tagType": "DELAYED",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "patient V",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Left Forearm",
+            "injuryType": "Burn",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Tag",
+            "casualty": "patient V",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "orange",
+            "tagType": "DELAYED",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Question",
+            "casualty": "",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "Soartech Probe: 2: Are you going to search for more patients or help those two first?",
+            "answerChoices": [
+                "Search",
+                "Engage"
+            ],
+            "answer": "Engage"
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient W",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient W",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "patient W",
+            "treatment": "Splint",
+            "treatmentLocation": "Left Leg",
+            "injuryType": "Broken",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient W",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient W",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Breathing",
+            "casualty": "patient X",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "collapsedLeft",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "patient X",
+            "treatment": "Decompression Needle",
+            "treatmentLocation": "Left Chest",
+            "injuryType": "Collapse",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient X",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient X",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient X",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient X",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Tag",
+            "casualty": "patient X",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "red",
+            "tagType": "IMMEDIATE",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Tag",
+            "casualty": "patient W",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "blue",
+            "tagType": "MINIMAL",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient W",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "patient W",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Question",
+            "casualty": "",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "Adept Probe: 1: Which one do you want to see first?",
+            "answerChoices": [
+                "Electrician",
+                "Bystander"
+            ],
+            "answer": "Bystander"
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "bystander",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Forearm",
+            "injuryType": "Burn",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "bystander",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Lower",
+            "injuryType": "Leg",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Breathing",
+            "casualty": "bystander",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "normal",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "bystander",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Chest",
+            "injuryType": "Burn",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "bystander",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "normal",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Question",
+            "casualty": "",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "Adept Probe: 2: Are you coming or staying there?",
+            "answerChoices": [
+                "Go",
+                "Stay"
+            ],
+            "answer": "Stay"
+        },
+        {
+            "actionType": "Breathing",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "fast",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "Decompression Needle",
+            "treatmentLocation": "Right Chest",
+            "injuryType": "None",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "Hemostatic Gauze",
+            "treatmentLocation": "Left Neck",
+            "injuryType": "Puncture",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Chest",
+            "injuryType": "Burn",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Left Chest",
+            "injuryType": "Burn",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Forearm",
+            "injuryType": "Burn",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Upper",
+            "injuryType": "Leg",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Upper",
+            "injuryType": "Leg",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "SpO2",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "normal",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Left Upper",
+            "injuryType": "Leg",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Left Forearm",
+            "injuryType": "Burn",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Breathing",
+            "casualty": "Navy Soldier 3 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "fast",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 3 Male",
+            "treatment": "Tourniquet",
+            "treatmentLocation": "Right Thigh",
+            "injuryType": "Puncture",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 3 Male",
+            "treatment": "Tourniquet",
+            "treatmentLocation": "LeftArm",
+            "injuryType": "None",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 3 Male",
+            "treatment": "Hemostatic Gauze",
+            "treatmentLocation": "Left Bicep",
+            "injuryType": "Puncture",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 3 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Breathing",
+            "casualty": "Navy Soldier 2 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "fast",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 2 Male",
+            "treatment": "Hemostatic Gauze",
+            "treatmentLocation": "Right Shoulder",
+            "injuryType": "Puncture",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 2 Male",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Forearm",
+            "injuryType": "Burn",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 2 Male",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Lower",
+            "injuryType": "Leg",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 2 Male",
+            "treatment": "Splint",
+            "treatmentLocation": "Left Leg",
+            "injuryType": "Broken",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Tag",
+            "casualty": "Navy Soldier 2 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "orange",
+            "tagType": "DELAYED",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Tag",
+            "casualty": "Navy Soldier 1 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "red",
+            "tagType": "IMMEDIATE",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 3 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 3 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "SpO2",
+            "casualty": "Navy Soldier 3 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "normal",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Tag",
+            "casualty": "Navy Soldier 3 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "orange",
+            "tagType": "DELAYED",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 3 Male",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Left Lower",
+            "injuryType": "Leg",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Right Lower",
+            "injuryType": "Leg",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "Splint",
+            "treatmentLocation": "Right Leg",
+            "injuryType": "Broken",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Breathing",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "fast",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Treatment",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "Burn Dressing",
+            "treatmentLocation": "Left Chest",
+            "injuryType": "Burn",
+            "successfulTreatment": true,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "SpO2",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "normal",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Pulse",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "",
+            "tagType": "",
+            "pulse": "fast",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        },
+        {
+            "actionType": "Tag",
+            "casualty": "Navy Soldier 4 Female",
+            "treatment": "",
+            "treatmentLocation": "",
+            "injuryType": "",
+            "successfulTreatment": false,
+            "tagColor": "orange",
+            "tagType": "DELAYED",
+            "pulse": "",
+            "breathing": "",
+            "SpO2": "",
+            "question": "",
+            "answerChoices": [],
+            "answer": ""
+        }
+    ],
+    "images": [
+        {
+            "name": "patient U",
+            "filename": "c6d3a90f-68c0-4948-bd96-537e80973605_2024216_patient U.jpg"
+        },
+        {
+            "name": "patient V",
+            "filename": "c6d3a90f-68c0-4948-bd96-537e80973605_2024216_patient V.jpg"
+        },
+        {
+            "name": "patient W",
+            "filename": "c6d3a90f-68c0-4948-bd96-537e80973605_2024216_patient W.jpg"
+        },
+        {
+            "name": "patient X",
+            "filename": "c6d3a90f-68c0-4948-bd96-537e80973605_2024216_patient X.jpg"
+        },
+        {
+            "name": "electrician",
+            "filename": "c6d3a90f-68c0-4948-bd96-537e80973605_2024216_electrician.jpg"
+        },
+        {
+            "name": "bystander",
+            "filename": "c6d3a90f-68c0-4948-bd96-537e80973605_2024216_bystander.jpg"
+        },
+        {
+            "name": "Navy Soldier 1 Male",
+            "filename": "c6d3a90f-68c0-4948-bd96-537e80973605_2024216_Navy Soldier 1 Male.jpg"
+        },
+        {
+            "name": "Navy Soldier 2 Male",
+            "filename": "c6d3a90f-68c0-4948-bd96-537e80973605_2024216_Navy Soldier 2 Male.jpg"
+        },
+        {
+            "name": "Navy Soldier 3 Male",
+            "filename": "c6d3a90f-68c0-4948-bd96-537e80973605_2024216_Navy Soldier 3 Male.jpg"
+        },
+        {
+            "name": "Navy Soldier 4 Female",
+            "filename": "c6d3a90f-68c0-4948-bd96-537e80973605_2024216_Navy Soldier 4 Female.jpg"
+        }
+    ],
+    "runId": "c6d3a90f-68c0-4948-bd96-537e80973605",
+    "sessionId": "c6d3a90f-68c0-4948-bd96-537e80973605",
+    "participantId": "2024216"
+}
