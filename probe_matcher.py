@@ -1,6 +1,7 @@
 import yaml, argparse, json, os, csv
 from logger import LogLevel, Logger
 from pymongo import MongoClient
+from datetime import datetime
 
 SEND_TO_MONGO = True
 EVAL_NUM = 3
@@ -78,6 +79,7 @@ class ProbeMatcher:
     participantId = ''
     environment = ''
     csv_file = None
+    timestamp = None
 
     def __init__(self, json_path, csv_path):
         '''
@@ -93,6 +95,9 @@ class ProbeMatcher:
             self.logger.log(LogLevel.WARN, "No actions taken")
             return
         self.csv_file = open(csv_path, 'r')
+        str_time = next(csv.reader(self.csv_file))[2]
+        self.timestamp = datetime.strptime(str_time, "%m/%d/%Y %I:%M:%S %p").timestamp()*1000
+
         pid = self.json_data['participantId']
         pid = pid if pid != '' else self.json_data['sessionId']
         self.participantId = pid
@@ -101,8 +106,13 @@ class ProbeMatcher:
             self.logger.log(LogLevel.WARN, "Environment not defined. Unable to process data")
             return
         self.environment = env
-        mongo_collection_raw.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': self.json_data, 'pid': self.participantId, '_id': self.participantId + '_' + self.environment})
-
+        if SEND_TO_MONGO:
+            try:
+                mongo_collection_raw.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': self.json_data, 'pid': self.participantId, '_id': self.participantId + '_' + self.environment})
+            except:
+                # not overwriting document in mongo
+                pass
+        
         if pid in ENVIRONMENTS_BY_PID:
             ENVIRONMENTS_BY_PID[pid].append(self.environment)
         else:
@@ -267,7 +277,10 @@ class ProbeMatcher:
                 self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
                 scene_ind += 1
         if SEND_TO_MONGO:
-            mongo_collection_matches.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
+            try:
+                mongo_collection_matches.insert_one({'timestamp': self.timestamp, 'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
+            except: 
+                pass
         json.dump(match_data, self.output_adept, indent=4)      
 
 
@@ -339,7 +352,10 @@ class ProbeMatcher:
                 self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
                 scene_ind += 1
         if SEND_TO_MONGO:
-            mongo_collection_matches.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
+            try:
+                mongo_collection_matches.insert_one({'timestamp': self.timestamp, 'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
+            except:
+                pass
         json.dump(match_data, self.output_adept, indent=4)      
 
 
@@ -392,7 +408,10 @@ class ProbeMatcher:
                 self.logger.log(LogLevel.WARN, f'No match found for scene {scene_ind}')
                 scene_ind += 1
         if SEND_TO_MONGO:
-            mongo_collection_matches.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
+            try:
+                mongo_collection_matches.insert_one({'timestamp': self.timestamp, 'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'ad', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_ad_' + self.environment.split('.yaml')[0]})
+            except:
+                pass
         json.dump(match_data, self.output_adept, indent=4)  
 
 
@@ -547,7 +566,10 @@ class ProbeMatcher:
                     })
                     scene_ind = close_probe.get('next_scene', scene_ind + 1)
         if SEND_TO_MONGO:
-            mongo_collection_matches.insert_one({'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'st', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_st_' + self.environment.split('.yaml')[0]})
+            try:
+                mongo_collection_matches.insert_one({'timestamp': self.timestamp, 'evalNumber': EVAL_NUM, 'evalName': EVAL_NAME, 'data': match_data, 'ta1': 'st', 'env': self.environment.split('.yaml')[0], 'pid': self.participantId, '_id': self.participantId + '_st_' + self.environment.split('.yaml')[0]})
+            except:
+                pass
         json.dump(match_data, self.output_soartech, indent=4)
 
 
