@@ -442,7 +442,7 @@ class YamlValidator:
             # check through each element of the array for keys
             if '[]' in k:
                 simple_k = k.split('[]')[0]
-                if simple_k in data:
+                if data is not None and simple_k in data:
                     data = data[simple_k]
                     data = data if data is not None else []
                     for j in range(len(data)):
@@ -455,7 +455,7 @@ class YamlValidator:
                     skip = True
                     break
             else:
-                if k in data:
+                if data is not None and k in data:
                     data = data[k]
                 else:
                     # key is not here, don't keep searching
