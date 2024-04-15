@@ -705,6 +705,7 @@ components:
         - name
         - unstructured
         - demographics
+        - vitals
       type: object
       description: a character in the scene, including injured patients, civilians, medics, etc.
       properties:
@@ -843,6 +844,7 @@ components:
         - index
         - end_scene_allowed
         - action_mapping
+        - state
       type: object
       description: the specification for a scene in the scenario
       properties:

@@ -320,6 +320,7 @@ components:
       - name
       - unstructured
       - demographics
+      - vitals
       type: object
     CharacterRoleEnum:
       description: The primary role a character has in the mission, in terms of the
@@ -1079,6 +1080,7 @@ components:
       - index
       - end_scene_allowed
       - action_mapping
+      - state
       type: object
     SemanticTypeEnum:
       default: and

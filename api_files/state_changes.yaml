@@ -115,6 +115,7 @@ components:
       - name
       - unstructured
       - demographics
+      - vitals
       type: object
     CharacterRoleEnum:
       description: The primary role a character has in the mission, in terms of the

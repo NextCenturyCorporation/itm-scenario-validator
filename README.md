@@ -116,7 +116,6 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].parameters.category` is required
 
 #### Conditional Prohibitions
-* If `scenes[].index` is 0, `scenes[].state` should _not_ be provided
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
 
 #### Dependency Allowed Valuese

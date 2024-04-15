@@ -95,16 +95,6 @@
         ]
     },
     "conditionalForbid": {
-        "scenes[].index": [
-            {
-                "conditions": {
-                    "value": 0
-                },
-                "forbid": [
-                    "scenes[].state"
-                ]
-            }
-        ],
         "state.characters[].demographics.military_disposition": [
             {
                 "conditions": {

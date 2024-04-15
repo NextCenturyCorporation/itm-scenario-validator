@@ -158,6 +158,9 @@ scenes:
   - index: 0
     # The scene with index = 0 uses the state defined at the scenario level
     end_scene_allowed: false
+    state:
+      unstructured: first scene
+      characters: []
     # NOTE: The tagging property is NOT planned to be supported in the Metrics Evaluation.  Tagging can be achieved with explicit action_mappings.
     tagging:
       enabled: true # If false, then TAG_CHARACTER will not be an available action to ADMs unless added explicitly in actions block
