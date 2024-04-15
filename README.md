@@ -89,7 +89,7 @@ In order for a yaml file to be considered "valid", the following conditions must
         * `mental_status`
         * `breathing`
         * `heart_rate`
-        * `Spo2`
+        * `spo2`
     * `restricted_actions` cannot include `end_scene`
     * `session_complete` is a prohibited key in `scenario`
     * `scenario_complete` is a prohibited key in `state`
@@ -109,6 +109,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[n].action_mapping[m].action_type` is "APPLY_TREATMENT", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_ALL_VITALS", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_PULSE", `scenes[n].action_mapping[m].character_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "CHECK_BLOOD_OXYGEN", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_RESPIRATION", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].parameters.evac_id` is required
@@ -118,7 +119,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 #### Conditional Prohibitions
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
 
-#### Dependency Allowed Valuese
+#### Dependency Allowed Values
 * If `state.characters[n].vitals.conscious` is "False", `state.characters[n].vitals.avpu` should be "UNRESPONSIVE" and `state.characters[n].vitals.mental_status` should be "UNRESPONSIVE" 
 
 #### Value Matching
@@ -165,10 +166,10 @@ Injuries are only allowed to have specific locations. Please follow the table to
 | `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh` |
 | `Shrapnel` | `left face`, `right face`, `left calf`, `right calf` |
 | `Chest Collapse` | `left chest`, `right chest` |
-| `Amputation` | `left wrist`, `right wrist`, `left calf`, `right calf` |
-| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
-| `Abrasion` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
-| `Broken Bone` | `right forearm`, `left forearm`, `right thigh`, `left thigh`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right wrist`, `left wrist`, `left neck`, `right neck`, `unspecified` |
+| `Amputation` | `left wrist`, `right wrist`, `left leg`, `right leg` |
+| `Burn` | `right forearm`, `left forearm`, `right arm`, `left arm`, `right leg`, `left leg`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
+| `Abrasion` | `right forearm`, `left forearm`, `right arm`, `left arm`, `right leg`, `left leg`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
+| `Broken Bone` | `right forearm`, `left forearm`, `right arm`, `left arm`, `right leg`, `left leg`, `right thigh`, `left thigh`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right wrist`, `left wrist`, `left neck`, `right neck`, `unspecified` |
 | `Internal` | `internal` | 
 
 #### Military Branches, Ranks, and Rank Titles
