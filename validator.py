@@ -113,6 +113,11 @@ class YamlValidator:
         is_valid = True
         found_keys = []
 
+        # do not require characters if persist_characters is true
+        if level_name == 'Scenes/State' and to_validate.get('persist_characters', False):
+            if 'characters' in required:
+                required.remove('characters')
+
         # see if an object is empty (and if it's allowed to be)
         if to_validate == None and len(required) == 0:
             return True
@@ -406,7 +411,8 @@ class YamlValidator:
         self.value_follows_list()
         self.character_matching()
         self.verify_uniqueness()
-        self.end_scene_allowed()
+        self.verify_allowed_actions()
+        # self.end_scene_allowed() # no longer needed
 
     def simple_requirements(self):
         '''
@@ -881,6 +887,20 @@ class YamlValidator:
                 return
         self.logger.log(LogLevel.WARN, "Key 'end_scene_allowed' must have value 'true' in at least one scene, but does not.")
         self.invalid_values += 1
+
+    def verify_allowed_actions(self):
+        '''
+        Ensures that any action found in action_mapping is not in
+        restricted_actions
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        for i in range(0, len(scenes)):
+            if 'restricted_actions' in scenes[i] and 'action_mapping' in scenes[i]:
+                for x in scenes[i]['action_mapping']:
+                    if x['action_type'] in scenes[i]['restricted_actions']:
+                        self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with index {i}, but appears in the action_mapping within that scene.")
+                        self.invalid_values += 1
 
 
     def validate_action_params(self):

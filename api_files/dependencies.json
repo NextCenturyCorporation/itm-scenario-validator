@@ -52,30 +52,6 @@
             },
             {
                 "conditions": {
-                    "value": "CHECK_ALL_VITALS"
-                },
-                "required": [
-                    "scenes[].action_mapping[].character_id"
-                ]
-            },
-            {
-                "conditions": {
-                    "value": "CHECK_PULSE"
-                },
-                "required": [
-                    "scenes[].action_mapping[].character_id"
-                ]
-            },
-            {
-                "conditions": {
-                    "value": "CHECK_RESPIRATION"
-                },
-                "required": [
-                    "scenes[].action_mapping[].character_id"
-                ]
-            },
-            {
-                "conditions": {
                     "value": "MOVE_TO_EVAC"
                 },
                 "required": [
@@ -88,8 +64,7 @@
                     "value": "TAG_CHARACTER"
                 },
                 "required": [
-                    "scenes[].action_mapping[].character_id",
-                    "scenes[].action_mapping[].parameters.category"
+                    "scenes[].action_mapping[].character_id"
                 ]
             }
         ]
@@ -153,7 +128,8 @@
         "state.characters[].vitals.conscious": {
             "False": {
                 "state.characters[].vitals.avpu": [
-                    "UNRESPONSIVE"
+                    "UNRESPONSIVE",
+                    "PAIN"
                 ],
                 "state.characters[].vitals.mental_status": [
                     "UNRESPONSIVE"
@@ -183,8 +159,8 @@
                     "right thigh",
                     "left calf",
                     "right calf",
-                    "left wrist",
-                    "right wrist"
+                    "left hand",
+                    "right hand"
                 ]
             },
             "Puncture": {
@@ -293,6 +269,8 @@
                     "left wrist",
                     "left neck",
                     "right neck",
+                    "left leg",
+                    "right leg",
                     "unspecified"
                 ]
             },
@@ -1809,7 +1787,8 @@
     "valueMatch": {
         "state.characters[].injuries[].source_character": "state.characters[].id",
         "scenes[].action_mapping[].next_scene": "scenes[].index",
-        "scenes[].tagging.reference": "scenes[].index"
+        "scenes[].tagging.reference": "scenes[].index",
+        "scenes[].action_mapping[].parameters.evac_id": "scenes[].state.environment.decision_environment.aid_delay[].id"
     },
     "characterMatching": [
         "scenes[].state.characters[].injuries[].source_character",
@@ -1820,7 +1799,7 @@
     ],
     "unique": {
         "state.environment.decision_environment.aid_delay[].id": "state",
-        "scenes[].state.environment.decision_environment.aid_delay[].id" : "scenes[]",
+        "scenes[].state.environment.decision_environment.aid_delay[].id": "scenes[]",
         "scenes[].state.characters[].id": "scenes[]",
         "scenes[].action_mapping[].action_id": "scenes[]",
         "state.characters[].id": "state"

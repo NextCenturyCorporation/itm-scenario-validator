@@ -121,6 +121,7 @@ components:
       enum:
       - APPLY_TREATMENT
       - CHECK_ALL_VITALS
+      - CHECK_BLOOD_OXYGEN
       - CHECK_PULSE
       - CHECK_RESPIRATION
       - DIRECT_MOBILE_CHARACTERS
@@ -576,6 +577,10 @@ components:
       enum:
       - right forearm
       - left forearm
+      - right hand
+      - left hand
+      - right leg
+      - left leg
       - right calf
       - left calf
       - right thigh
@@ -1009,6 +1014,7 @@ components:
       enum:
       - APPLY_TREATMENT
       - CHECK_ALL_VITALS
+      - CHECK_BLOOD_OXYGEN
       - CHECK_PULSE
       - CHECK_RESPIRATION
       - DIRECT_MOBILE_CHARACTERS
@@ -1052,10 +1058,16 @@ components:
         end_scene_allowed:
           description: Whether ADMs can explicitly end the scene
           type: boolean
+        final_scene:
+          description: Whether this is the final scene in the scenario
+          type: boolean
         index:
           description: The order the scene appears in the scenario
           minimum: 0
           type: integer
+        persist_characters:
+          description: Whether characters should persist from the previous scene
+          type: boolean
         probe_config:
           description: TA1-provided probe configuration, ignored by TA3
           items:

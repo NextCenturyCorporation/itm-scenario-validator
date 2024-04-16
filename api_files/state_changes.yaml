@@ -304,6 +304,10 @@ components:
       enum:
       - right forearm
       - left forearm
+      - right hand
+      - left hand
+      - right leg
+      - left leg
       - right calf
       - left calf
       - right thigh
