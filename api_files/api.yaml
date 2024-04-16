@@ -844,7 +844,6 @@ components:
         - index
         - end_scene_allowed
         - action_mapping
-        - state
       type: object
       description: the specification for a scene in the scenario
       properties:
@@ -854,12 +853,12 @@ components:
           minimum: 0
         state:
           $ref: "#/components/schemas/State"
-        end_scene_allowed:
-          type: boolean
-          description: Whether ADMs can explicitly end the scene
         final_scene:
           type: boolean
           description: Whether this is the final scene in the scenario
+        end_scene_allowed:
+          type: boolean
+          description: Whether ADMs can explicitly end the scene
         persist_characters:
           type: boolean
           description: Whether characters should persist from the previous scene
