@@ -44,7 +44,7 @@ Ensure that the path leads to a yaml file.
 
 See full usage options below:
 ```
-usage: validator.py [-h] [-u [-f PATH] | -f PATH ]
+usage: validator.py [-h] [-u [-f PATH] [-e] [-t] | -f PATH [-e] [-t]]
 ```
 
 ## API Changes
@@ -151,6 +151,10 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `scenario.state.characters.demographics.mission_importance` must be consistent with `scenario.state.mission.character_importance `
     * Every character with `mission_importance` should be an entry in `character_importance`, and vice-versa 
     * This does not include "normal", which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance "normal", or a character may specify `mission_importance` with "normal" and `character_importance` may not list that character 
+
+#### Eval Mode
+When running in eval mode (-e), additional checks are implemented:
+* No supplies or treatments are allowed that are not in the simulator (no blankets, epi pens, or vented chest seals)
 
 #### Injury/Location Matches
 Injuries are only allowed to have specific locations. Please follow the table to create valid matches.
