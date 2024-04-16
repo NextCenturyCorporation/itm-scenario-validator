@@ -45,8 +45,10 @@ class YamlValidator:
     out_of_range = 0
     invalid_keys = 0
     empty_levels = 0
+    eval_mode = False
+    allowed_supplies = []
 
-    def __init__(self, filename):
+    def __init__(self, filename, eval_mode=False):
         '''
         Load in the file and parse the yaml
         '''
@@ -75,7 +77,9 @@ class YamlValidator:
             self.dep_json = json.load(self.dep_file)
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
-
+        self.eval_mode = eval_mode
+        api = copy.deepcopy(self.api_yaml)
+        self.allowed_supplies = api['components']['schemas']['SupplyTypeEnum']['enum'] if not self.eval_mode else ['Tourniquet', 'Pressure bandage', 'Hemostatic gauze', 'Decompression Needle', 'Nasopharyngeal airway', 'Pulse Oximeter', 'Pain Medications', 'Splint', 'Blood', 'IV Bag', 'Burn Dressing']
 
     def __del__(self):
         '''
@@ -117,6 +121,11 @@ class YamlValidator:
         if level_name == 'Scenes/State' and to_validate.get('persist_characters', False):
             if 'characters' in required:
                 required.remove('characters')
+
+        if level_name == 'supplies':
+            if to_validate.get('type') not in self.allowed_supplies:
+                self.logger.log(LogLevel.WARN, f"Since eval mode is true, supplies must only be one of {self.allowed_supplies}, but '{to_validate.get('type')}' was found.")
+                self.invalid_values += 1
 
         # see if an object is empty (and if it's allowed to be)
         if to_validate == None and len(required) == 0:
@@ -413,6 +422,7 @@ class YamlValidator:
         self.verify_uniqueness()
         self.verify_allowed_actions()
         # self.end_scene_allowed() # no longer needed
+
 
     def simple_requirements(self):
         '''
@@ -888,6 +898,7 @@ class YamlValidator:
         self.logger.log(LogLevel.WARN, "Key 'end_scene_allowed' must have value 'true' in at least one scene, but does not.")
         self.invalid_values += 1
 
+
     def verify_allowed_actions(self):
         '''
         Ensures that any action found in action_mapping is not in
@@ -909,7 +920,7 @@ class YamlValidator:
         '''
         data = copy.deepcopy(self.loaded_yaml)
         api = copy.deepcopy(self.api_yaml)
-        allowed_supplies = api['components']['schemas']['SupplyTypeEnum']['enum']
+        allowed_supplies = self.allowed_supplies
         allowed_locations = api['components']['schemas']['InjuryLocationEnum']['enum']
         allowed_categories = api['components']['schemas']['CharacterTagEnum']['enum']
 
@@ -984,12 +995,13 @@ class YamlValidator:
                 self.missing_keys += 1         
 
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
 
     parser.add_argument('-f', '--filepath', dest='path', type=str, help='The path to the yaml file. Required if -u is not specified.')
     parser.add_argument('-u', '--update', dest='update', action='store_true', help='Switch to update the api files or not. Required if -f is not specified.')
+    parser.add_argument('-e', '--eval', dest='eval', action='store_true', help="Validate an evaluation scenario yaml")
+    parser.add_argument('-t', '--train', dest='train', action='store_true', help="Validate a training scenario yaml (default)") # not really used, just here in case somebody wants to specify it
     args = parser.parse_args()
     if args.update:
         generator = ApiGenerator()
@@ -998,7 +1010,7 @@ if __name__ == '__main__':
     if args.update and not args.path:
         exit(0)
     file = args.path
-    validator = YamlValidator(file)
+    validator = YamlValidator(file, args.eval)
     # validate the field names in the yaml
     validator.validate_field_names()
     # validate additional depdencies between fields
