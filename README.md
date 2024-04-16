@@ -141,6 +141,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `scenes[].state.characters[].id` must not have any repeated values within each `scene`
 * `scenes[].action_mapping[].action_id` must not have any repeated values within each `scene`
 * `state.characters[].id` must not have any repeated values
+* `scenes[].index` must not have any repeated values
 * `state.environment.decision_environment.aid_delay[].id` must not have any repeated values
 
 #### Other Rules
