@@ -818,7 +818,7 @@ class YamlValidator:
                 # make sure the index exists in the allowed values dict
                 if ind not in allowed_vals:
                     where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
-                    if where_vals_found not in missing_locs:
+                    if where_vals_found not in missing_locs and not self.get_value_at_key(where_vals_found.split('.')[:1] + ['persist_characters'], copy.deepcopy(self.loaded_yaml)):
                         missing_locs.append(where_vals_found)
                         self.logger.log(LogLevel.WARN, "Path '" + str(where_vals_found) + "' does not exist.")
                         self.missing_keys += 1
