@@ -990,8 +990,7 @@ class YamlValidator:
         for i in range(0, len(scenes)):
             if 'final_scene_allowed' in scenes[i] and scenes[i]['final_scene_allowed'] == True:
                 return
-        self.logger.log(LogLevel.WARN, "Key 'final_scene_allowed' must have value 'true' in at least one scene, but does not.")
-        self.invalid_values += 1
+        self.logger.log(LogLevel.CRITICAL_INFO, "Key 'final_scene_allowed' should probably have value 'true' in at least one scene, but does not.")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
