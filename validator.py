@@ -421,6 +421,7 @@ class YamlValidator:
         self.character_matching()
         self.verify_uniqueness()
         self.verify_allowed_actions()
+        self.final_scene_allowed()
 
 
     def simple_requirements(self):
@@ -980,6 +981,17 @@ class YamlValidator:
                 self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
                 self.missing_keys += 1         
 
+    def final_scene_allowed(self):
+        '''
+        Looks through the yaml file to make sure that at least one scene has final_scene_allowed=true
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        for i in range(0, len(scenes)):
+            if 'final_scene_allowed' in scenes[i] and scenes[i]['final_scene_allowed'] == True:
+                return
+        self.logger.log(LogLevel.WARN, "Key 'final_scene_allowed' must have value 'true' in at least one scene, but does not.")
+        self.invalid_values += 1
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')

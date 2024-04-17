@@ -150,6 +150,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `state.environment.decision_environment.aid_delay[].id` must not have any repeated values
 
 #### Other Rules
+* At least one scene must have `final_scene=true`
 * `scenes[n].action_mapping[m].parameters.treatment` must come from `SupplyTypeEnum` 
 * `scenes[n].action_mapping[m].parameters.location` must come from `InjuryLocationEnum` 
 * `scenes[n].action_mapping[m].parameters.category` must come from `CharacterTagEnum` 
