@@ -52,6 +52,38 @@
             },
             {
                 "conditions": {
+                    "value": "CHECK_ALL_VITALS"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "CHECK_PULSE"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "CHECK_RESPIRATION"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "CHECK_BLOOD_OXYGEN"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ]
+            },
+            {
+                "conditions": {
                     "value": "MOVE_TO_EVAC"
                 },
                 "required": [
@@ -64,7 +96,8 @@
                     "value": "TAG_CHARACTER"
                 },
                 "required": [
-                    "scenes[].action_mapping[].character_id"
+                    "scenes[].action_mapping[].character_id",
+                    "scenes[].action_mapping[].parameters.category"
                 ]
             }
         ]

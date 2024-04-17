@@ -109,7 +109,7 @@ class YamlValidator:
         return self.validate_one_level('top', self.loaded_yaml, top_level, required, self.api_yaml)
 
 
-    def validate_one_level(self, level_name, to_validate, type_obj, required, api_yaml):
+    def validate_one_level(self, level_name, to_validate, type_obj, required, api_yaml, persist_characters=False):
         '''
         Takes in an object to validate (to_validate) and the yaml schema describing the 
         expected types (type_obj)
@@ -118,7 +118,9 @@ class YamlValidator:
         found_keys = []
 
         # do not require characters if persist_characters is true
-        if level_name == 'Scenes/State' and to_validate.get('persist_characters', False):
+        if level_name == 'scenes':
+            persist_characters = to_validate.get('persist_characters')
+        if level_name == 'Scenes/State' and persist_characters:
             if 'characters' in required:
                 required.remove('characters')
 
@@ -174,7 +176,7 @@ class YamlValidator:
                     location = type_obj[key]['$ref'].split('/')[1:]
                     if level_name == 'scenes' and location[len(location)-1] == 'State':
                         # state at the scenes level should follow state_changes.yaml
-                        if not self.validate_state_change(to_validate[key]):
+                        if not self.validate_state_change(to_validate[key], persist_characters):
                             is_valid = False
                     else:
                         ref_loc = api_yaml
@@ -206,7 +208,7 @@ class YamlValidator:
         return is_valid
 
 
-    def validate_state_change(self, obj_to_validate):
+    def validate_state_change(self, obj_to_validate, persist_characters=False):
         '''
         Under Scenes in the API, state should be defined slightly differently.
         Use state_changes.yaml and perform as before.
@@ -214,7 +216,7 @@ class YamlValidator:
         schema = self.state_changes_yaml['components']['schemas']
         top_level = schema['State']['properties']
         required = schema['State']['required'] if 'required' in schema['State'] else []
-        return self.validate_one_level('Scenes/State', obj_to_validate, top_level, required, self.state_changes_yaml)
+        return self.validate_one_level('Scenes/State', obj_to_validate, top_level, required, self.state_changes_yaml, persist_characters)
 
 
     def validate_enum(self, type_obj, key, level, item):
@@ -409,7 +411,6 @@ class YamlValidator:
         self.conditional_requirements()
         self.conditional_forbid()
         self.simple_value_matching()
-        self.require_unstructured()
         self.deep_links()
         self.value_follows_list()
         self.require_unstructured()
@@ -417,7 +418,6 @@ class YamlValidator:
         self.scenes_with_state()
         self.validate_action_params()
         self.validate_mission_importance()
-        self.value_follows_list()
         self.character_matching()
         self.verify_uniqueness()
         self.verify_allowed_actions()
