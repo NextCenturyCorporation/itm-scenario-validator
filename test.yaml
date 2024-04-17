@@ -310,6 +310,7 @@ scenes:
   - index: 1
     end_scene_allowed: false
     final_scene: true
+    persist_characters: true
     # NOTE: The tagging property is NOT planned to be supported in the Metrics Evaluation.  Tagging can be achieved with explicit action_mappings.
     tagging:
       reference: 0 # Re-use the tagging configuration from the specified scene index
@@ -318,73 +319,6 @@ scenes:
         unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required
         character_importance: # A list of pairs of character ids with an indicator of how mission-critical the character is
           - Captain_01: important # controlled vocab includes low, normal, important, priority, vip; must be kept consistent with demographics.mission_importance
-      characters:
-        - id: Marine_burns_01
-          name: Bob
-          unstructured: >
-            A 25 year-old male Marine hit by an IED. 
-            No obvious external injuries.
-          unstructured_postassess:
-            > # Unstructured text can change after assessment to reflect discovered injuries
-            A 25 year-old male Marine hit by an IED. 
-            No obvious external injuries, but burns over 50% of body.
-          rapport: neutral # A measure of closeness or affinity towards the player/medic. Controlled vocab: loathing, dislike, neutral, close, familial
-          demographics:
-            age: 25
-            sex: M
-            race: White # controlled vocab includes American Indian, White, Hispanic, Black, Asian, Pacific Islander
-            military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
-            military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
-            rank: E-2 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
-            rank_title: Private First Class # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
-            skills: # Describes abilities a character can have; if not listed, assume no skill in the area
-              - skill_type: Combat # controlled vocab includes Medical, Combat, Specialist, Communications, Command
-                level: qualified # controlled vocab includes novice, qualified, competent, skilled, expert
-            role: Infantry # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
-          vitals:
-            conscious: true
-            avpu: ALERT # level of response; controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
-            ambulatory: true
-            mental_status: AGONY # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
-            breathing: FAST # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
-            heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
-            spo2: 97 # a percentage
-          injuries:
-            - name: Burn # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
-              location: unspecified # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
-              severity: substantial # controlled vocab: minor, moderate, substantial, major, extreme
-              status: discoverable # controlled vocab: hidden, discoverable, discovered, treated, visible
-        - id: Captain_01
-          name: Katie
-          unstructured: >
-            An uninjuried 30-40 YO female who escaped harm.
-            No obvious external injuries.
-          rapport: close # A measure of closeness or affinity towards the player/medic. Controlled vocab: loathing, dislike, neutral, close, familial
-          demographics:
-            age: 35
-            sex: F
-            race: White # controlled vocab includes American Indian, White, Hispanic, Black, Asian, Pacific Islander
-            military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
-            military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
-            rank: O-3 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
-            rank_title: Captain # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
-            skills: # Describes abilities a character can have; if not listed, assume no skill in the area
-              - skill_type: Combat # controlled vocab includes Medical, Combat, Specialist, Communications, Command
-                level: skilled # controlled vocab includes novice, qualified, competent, skilled, expert
-              - skill_type: Command
-                level: competent
-              - skill_type: Communications
-                level: qualified
-            role: Command # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
-            mission_importance: important # controlled vocab includes low, normal, important, priority, vip; must be kept consistent with mission.character_importance
-          vitals:
-            conscious: true
-            avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
-            ambulatory: true
-            mental_status: CALM # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
-            breathing: NORMAL # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
-            heart_rate: NORMAL # controlled vocab includes NONE, FAINT, NORMAL, FAST
-            spo2: 99 # a percentage
       environment:
         decision_environment:
           unstructured: >
