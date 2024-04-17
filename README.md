@@ -44,7 +44,7 @@ Ensure that the path leads to a yaml file.
 
 See full usage options below:
 ```
-usage: validator.py [-h] [-u [-f PATH] [-e] [-t] | -f PATH [-e] [-t]]
+usage: validator.py [-h] [-u [-f PATH] [-t] | -f PATH [-t]]
 ```
 
 ## API Changes
@@ -153,7 +153,7 @@ In order for a yaml file to be considered "valid", the following conditions must
     * This does not include "normal", which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance "normal", or a character may specify `mission_importance` with "normal" and `character_importance` may not list that character 
 
 #### Eval Mode
-When running in eval mode (-e), additional checks are implemented:
+When not running in training mode (-t), additional checks are implemented:
 * No supplies or treatments are allowed that are not in the simulator (no blankets, epi pens, or vented chest seals)
 
 #### Injury/Location Matches
