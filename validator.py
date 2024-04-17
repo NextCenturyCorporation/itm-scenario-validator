@@ -125,7 +125,7 @@ class YamlValidator:
                 required.remove('characters')
 
         if level_name == 'supplies':
-            if to_validate.get('type') not in self.allowed_supplies:
+            if to_validate.get('type') not in self.allowed_supplies and to_validate.get('quantity') > 0:
                 self.logger.log(LogLevel.WARN, f"Since eval mode is true, supplies must only be one of {self.allowed_supplies}, but '{to_validate.get('type')}' was found.")
                 self.invalid_values += 1
 
@@ -995,11 +995,11 @@ class YamlValidator:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
+    parser = argparse.ArgumentParser(description='ITM - YAML Validator')
 
     parser.add_argument('-f', '--filepath', dest='path', type=str, help='The path to the yaml file. Required if -u is not specified.')
     parser.add_argument('-u', '--update', dest='update', action='store_true', help='Switch to update the api files or not. Required if -f is not specified.')
-    parser.add_argument('-t', '--train', dest='train', action='store_true', help="Validate a training scenario yaml (default)")
+    parser.add_argument('-t', '--train', dest='train', action='store_true', help="Validate a training scenario yaml")
     args = parser.parse_args()
     if args.update:
         generator = ApiGenerator()

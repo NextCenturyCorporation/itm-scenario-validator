@@ -64,9 +64,9 @@ state:
     - { type: Decompression Needle, quantity: 4 }
     - { type: Nasopharyngeal airway, quantity: 2 }
     - { type: Pulse Oximeter, quantity: 1, reusable: True }
-    - { type: Blanket, quantity: 2 } # Available for training scenarios only
-    - { type: Epi Pen, quantity: 1, reusable: True } # Available for training scenarios only
-    - { type: Vented Chest Seal, quantity: 2 } # Available for training scenarios only
+    - { type: Blanket, quantity: 0 } # Available for training scenarios only
+    - { type: Epi Pen, quantity: 0, reusable: True } # Available for training scenarios only
+    - { type: Vented Chest Seal, quantity: 0 } # Available for training scenarios only
     - { type: Pain Medications, quantity: 2 }
     - { type: Splint, quantity: 2 }
     - { type: Blood, quantity: 5 }  # quantity is in units; no notion of blood type

@@ -44,8 +44,12 @@ Ensure that the path leads to a yaml file.
 
 See full usage options below:
 ```
-usage: validator.py [-h] [-u [-f PATH] [-t] | -f PATH [-t]]
-```
+usage: validator.py [-h] [-f PATH] [-u] [-t]
+options:
+  -h, --help                Show this help message and exit.
+  -f PATH, --filepath PATH  The path to the yaml file. Required if -u is not specified.
+  -u, --update              Switch to update the api files or not. Required if -f is not specified.
+  -t, --train               Validate a training scenario yaml.```
 
 ## API Changes
 - When the Swagger API changes, make sure you upload the newest version as `api.yaml` to the `api_files` directory.
