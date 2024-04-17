@@ -70,6 +70,16 @@
         ]
     },
     "conditionalForbid": {
+        "scenes[].index": [
+            {
+                "conditions": {
+                    "value": 0
+                },
+                "forbid": [
+                    "scenes[].state"
+                ]
+            }
+        ],
         "state.characters[].demographics.military_disposition": [
             {
                 "conditions": {
@@ -1802,6 +1812,7 @@
         "scenes[].state.environment.decision_environment.aid_delay[].id": "scenes[]",
         "scenes[].state.characters[].id": "scenes[]",
         "scenes[].action_mapping[].action_id": "scenes[]",
+        "scenes[].index": "scenes",
         "state.characters[].id": "state"
     }
 }

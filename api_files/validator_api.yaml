@@ -1092,7 +1092,6 @@ components:
       - index
       - end_scene_allowed
       - action_mapping
-      - state
       type: object
     SemanticTypeEnum:
       default: and

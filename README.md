@@ -113,6 +113,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].character_id` is required
 
 #### Conditional Prohibitions
+* If `scenes[].index` is 0, `scenes[].state` should _not_ be provided
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
 
 #### Dependency Allowed Values
@@ -140,6 +141,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `scenes[].state.characters[].id` must not have any repeated values within each `scene`
 * `scenes[].action_mapping[].action_id` must not have any repeated values within each `scene`
 * `state.characters[].id` must not have any repeated values
+* `scenes[].index` must not have any repeated values
 * `state.environment.decision_environment.aid_delay[].id` must not have any repeated values
 
 #### Other Rules
