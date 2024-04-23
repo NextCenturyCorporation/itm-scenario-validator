@@ -166,7 +166,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 
 #### Eval Mode
 When not running in training mode (-t), additional checks are implemented:
-* No supplies or treatments are allowed that are not in the simulator (no blankets, epi pens, or vented chest seals)
+* No supplies or treatments are allowed that are not in the simulator (no blankets or vented chest seals)
 
 #### Injury/Location Matches
 Injuries are only allowed to have specific locations. Please follow the table to create valid matches.
