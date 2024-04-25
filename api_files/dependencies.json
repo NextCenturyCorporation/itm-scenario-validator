@@ -219,7 +219,10 @@
                     "left side",
                     "right side",
                     "left thigh",
-                    "right thigh"
+                    "right thigh",
+                    "left chest",
+                    "right chest",
+                    "center chest"
                 ]
             },
             "Shrapnel": {

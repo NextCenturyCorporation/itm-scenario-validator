@@ -166,7 +166,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 
 #### Eval Mode
 When not running in training mode (-t), additional checks are implemented:
-* No supplies or treatments are allowed that are not in the simulator (no blankets or vented chest seals)
+* No supplies or treatments are allowed that are not in the simulator (no blankets)
 
 #### Injury/Location Matches
 Injuries are only allowed to have specific locations. Please follow the table to create valid matches.
@@ -175,7 +175,7 @@ Injuries are only allowed to have specific locations. Please follow the table to
 | `Ear Bleed` | `left face`, `right face` |
 | `Asthmatic` | `unspecified`, `internal` |
 | `Laceration` | `left forearm`, `right forearm`, `left stomach`, `right stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist` |
-| `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh` |
+| `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest` |
 | `Shrapnel` | `left face`, `right face`, `left calf`, `right calf` |
 | `Chest Collapse` | `left chest`, `right chest` |
 | `Amputation` | `left wrist`, `right wrist`, `left leg`, `right leg` |

@@ -1621,6 +1621,7 @@ components:
         - left side
         - right chest
         - left chest
+        - center chest
         - right wrist
         - left wrist
         - left face

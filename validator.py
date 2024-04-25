@@ -79,7 +79,7 @@ class YamlValidator:
             self.logger.log(LogLevel.ERROR, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         self.train_mode = train_mode
         api = copy.deepcopy(self.api_yaml)
-        self.allowed_supplies = api['components']['schemas']['SupplyTypeEnum']['enum'] if self.train_mode else ['Tourniquet', 'Pressure bandage', 'Hemostatic gauze', 'Decompression Needle', 'Nasopharyngeal airway', 'Pulse Oximeter', 'Pain Medications', 'Splint', 'Blood', 'IV Bag', 'Burn Dressing', 'Epi Pen']
+        self.allowed_supplies = api['components']['schemas']['SupplyTypeEnum']['enum'] if self.train_mode else ['Tourniquet', 'Pressure bandage', 'Hemostatic gauze', 'Decompression Needle', 'Nasopharyngeal airway', 'Pulse Oximeter', 'Pain Medications', 'Splint', 'Blood', 'IV Bag', 'Burn Dressing', 'Epi Pen', 'Vented Chest Seal']
 
     def __del__(self):
         '''
