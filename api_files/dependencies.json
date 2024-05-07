@@ -1850,5 +1850,6 @@
         "scenes[].action_mapping[].action_id": "scenes[]",
         "scenes[].index": "scenes",
         "state.characters[].id": "state"
-    }
+    },
+    "trainingOnlySupplies": []
 }

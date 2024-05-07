@@ -153,6 +153,9 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `scenes[].index` must not have any repeated values
 * `state.environment.decision_environment.aid_delay[].id` must not have any repeated values
 
+#### Training Only Supplies
+Any supply name placed in this array will be excluded from the allowed supplies if eval mode is true.
+
 #### Other Rules
 * At least one scene must have `final_scene=true`
 * `scenes[n].action_mapping[m].parameters.treatment` must come from `SupplyTypeEnum` 
@@ -166,7 +169,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 
 #### Eval Mode
 When not running in training mode (-t), additional checks are implemented:
-* No supplies or treatments are allowed that are not in the simulator (no blankets)
+* No supplies or treatments are allowed that are not in the simulator. Put the names of these treatments in the trainingOnlySupplies array in dependencies.json
 
 #### Injury/Location Matches
 Injuries are only allowed to have specific locations. Please follow the table to create valid matches.
