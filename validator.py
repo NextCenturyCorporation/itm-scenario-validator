@@ -45,8 +45,10 @@ class YamlValidator:
     out_of_range = 0
     invalid_keys = 0
     empty_levels = 0
+    train_mode = False
+    allowed_supplies = []
 
-    def __init__(self, filename):
+    def __init__(self, filename, train_mode=False):
         '''
         Load in the file and parse the yaml
         '''
@@ -75,7 +77,12 @@ class YamlValidator:
             self.dep_json = json.load(self.dep_file)
         except Exception as e:
             self.logger.log(LogLevel.ERROR, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
-
+        self.train_mode = train_mode
+        api = copy.deepcopy(self.api_yaml)
+        self.allowed_supplies = copy.deepcopy(api['components']['schemas']['SupplyTypeEnum']['enum'])
+        if not self.train_mode:
+            for x in self.dep_json['trainingOnlySupplies']:
+                self.allowed_supplies.remove(x)
 
     def __del__(self):
         '''
@@ -105,13 +112,25 @@ class YamlValidator:
         return self.validate_one_level('top', self.loaded_yaml, top_level, required, self.api_yaml)
 
 
-    def validate_one_level(self, level_name, to_validate, type_obj, required, api_yaml):
+    def validate_one_level(self, level_name, to_validate, type_obj, required, api_yaml, persist_characters=False):
         '''
         Takes in an object to validate (to_validate) and the yaml schema describing the 
         expected types (type_obj)
         '''
         is_valid = True
         found_keys = []
+
+        # do not require characters if persist_characters is true
+        if level_name == 'scenes':
+            persist_characters = to_validate.get('persist_characters')
+        if level_name == 'Scenes/State' and persist_characters:
+            if 'characters' in required:
+                required.remove('characters')
+
+        if level_name == 'supplies':
+            if to_validate.get('type') not in self.allowed_supplies and to_validate.get('quantity') > 0:
+                self.logger.log(LogLevel.WARN, f"Since eval mode is true, supplies must only be one of {self.allowed_supplies}, but '{to_validate.get('type')}' was found.")
+                self.invalid_values += 1
 
         # see if an object is empty (and if it's allowed to be)
         if to_validate == None and len(required) == 0:
@@ -160,7 +179,7 @@ class YamlValidator:
                     location = type_obj[key]['$ref'].split('/')[1:]
                     if level_name == 'scenes' and location[len(location)-1] == 'State':
                         # state at the scenes level should follow state_changes.yaml
-                        if not self.validate_state_change(to_validate[key]):
+                        if not self.validate_state_change(to_validate[key], persist_characters):
                             is_valid = False
                     else:
                         ref_loc = api_yaml
@@ -192,7 +211,7 @@ class YamlValidator:
         return is_valid
 
 
-    def validate_state_change(self, obj_to_validate):
+    def validate_state_change(self, obj_to_validate, persist_characters=False):
         '''
         Under Scenes in the API, state should be defined slightly differently.
         Use state_changes.yaml and perform as before.
@@ -200,7 +219,7 @@ class YamlValidator:
         schema = self.state_changes_yaml['components']['schemas']
         top_level = schema['State']['properties']
         required = schema['State']['required'] if 'required' in schema['State'] else []
-        return self.validate_one_level('Scenes/State', obj_to_validate, top_level, required, self.state_changes_yaml)
+        return self.validate_one_level('Scenes/State', obj_to_validate, top_level, required, self.state_changes_yaml, persist_characters)
 
 
     def validate_enum(self, type_obj, key, level, item):
@@ -395,7 +414,6 @@ class YamlValidator:
         self.conditional_requirements()
         self.conditional_forbid()
         self.simple_value_matching()
-        self.require_unstructured()
         self.deep_links()
         self.value_follows_list()
         self.require_unstructured()
@@ -403,10 +421,11 @@ class YamlValidator:
         self.scenes_with_state()
         self.validate_action_params()
         self.validate_mission_importance()
-        self.value_follows_list()
         self.character_matching()
         self.verify_uniqueness()
-        self.end_scene_allowed()
+        self.verify_allowed_actions()
+        self.final_scene_true()
+
 
     def simple_requirements(self):
         '''
@@ -442,7 +461,7 @@ class YamlValidator:
             # check through each element of the array for keys
             if '[]' in k:
                 simple_k = k.split('[]')[0]
-                if simple_k in data:
+                if data is not None and simple_k in data:
                     data = data[simple_k]
                     data = data if data is not None else []
                     for j in range(len(data)):
@@ -455,7 +474,7 @@ class YamlValidator:
                     skip = True
                     break
             else:
-                if k in data:
+                if data is not None and k in data:
                     data = data[k]
                 else:
                     # key is not here, don't keep searching
@@ -802,7 +821,7 @@ class YamlValidator:
                 # make sure the index exists in the allowed values dict
                 if ind not in allowed_vals:
                     where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
-                    if where_vals_found not in missing_locs:
+                    if where_vals_found not in missing_locs and not self.get_value_at_key(where_vals_found.split('.')[:1] + ['persist_characters'], copy.deepcopy(self.loaded_yaml)):
                         missing_locs.append(where_vals_found)
                         self.logger.log(LogLevel.WARN, "Path '" + str(where_vals_found) + "' does not exist.")
                         self.missing_keys += 1
@@ -870,17 +889,19 @@ class YamlValidator:
                 self.missing_keys += 1
 
 
-    def end_scene_allowed(self):
+    def verify_allowed_actions(self):
         '''
-        Looks through the yaml file to make sure that at least one scene has end_scene_allowed=true
+        Ensures that any action found in action_mapping is not in
+        restricted_actions
         '''
         data = copy.deepcopy(self.loaded_yaml)
         scenes = data['scenes']
         for i in range(0, len(scenes)):
-            if 'end_scene_allowed' in scenes[i] and scenes[i]['end_scene_allowed'] == True:
-                return
-        self.logger.log(LogLevel.WARN, "Key 'end_scene_allowed' must have value 'true' in at least one scene, but does not.")
-        self.invalid_values += 1
+            if 'restricted_actions' in scenes[i] and 'action_mapping' in scenes[i]:
+                for x in scenes[i]['action_mapping']:
+                    if x['action_type'] in scenes[i]['restricted_actions']:
+                        self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with index {i}, but appears in the action_mapping within that scene.")
+                        self.invalid_values += 1
 
 
     def validate_action_params(self):
@@ -889,7 +910,7 @@ class YamlValidator:
         '''
         data = copy.deepcopy(self.loaded_yaml)
         api = copy.deepcopy(self.api_yaml)
-        allowed_supplies = api['components']['schemas']['SupplyTypeEnum']['enum']
+        allowed_supplies = self.allowed_supplies
         allowed_locations = api['components']['schemas']['InjuryLocationEnum']['enum']
         allowed_categories = api['components']['schemas']['CharacterTagEnum']['enum']
 
@@ -964,12 +985,24 @@ class YamlValidator:
                 self.missing_keys += 1         
 
 
+    def final_scene_true(self):
+        '''
+        Looks through the yaml file to make sure that at least one scene has final_scene=true
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        for i in range(0, len(scenes)):
+            if 'final_scene' in scenes[i] and scenes[i]['final_scene'] == True:
+                return
+        self.logger.log(LogLevel.CRITICAL_INFO, "Key 'final_scene' should probably have value 'true' in at least one scene, but does not.")
+
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='ITM - YAML Validator', usage='validator.py [-h] [-u [-f PATH] | -f PATH ]')
+    parser = argparse.ArgumentParser(description='ITM - YAML Validator')
 
     parser.add_argument('-f', '--filepath', dest='path', type=str, help='The path to the yaml file. Required if -u is not specified.')
     parser.add_argument('-u', '--update', dest='update', action='store_true', help='Switch to update the api files or not. Required if -f is not specified.')
+    parser.add_argument('-t', '--train', dest='train', action='store_true', help="Validate a training scenario yaml")
     args = parser.parse_args()
     if args.update:
         generator = ApiGenerator()
@@ -978,7 +1011,7 @@ if __name__ == '__main__':
     if args.update and not args.path:
         exit(0)
     file = args.path
-    validator = YamlValidator(file)
+    validator = YamlValidator(file, args.train)
     # validate the field names in the yaml
     validator.validate_field_names()
     # validate additional depdencies between fields

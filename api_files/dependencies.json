@@ -76,6 +76,14 @@
             },
             {
                 "conditions": {
+                    "value": "CHECK_BLOOD_OXYGEN"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ]
+            },
+            {
+                "conditions": {
                     "value": "MOVE_TO_EVAC"
                 },
                 "required": [
@@ -163,7 +171,8 @@
         "state.characters[].vitals.conscious": {
             "False": {
                 "state.characters[].vitals.avpu": [
-                    "UNRESPONSIVE"
+                    "UNRESPONSIVE",
+                    "PAIN"
                 ],
                 "state.characters[].vitals.mental_status": [
                     "UNRESPONSIVE"
@@ -193,8 +202,8 @@
                     "right thigh",
                     "left calf",
                     "right calf",
-                    "left wrist",
-                    "right wrist"
+                    "left hand",
+                    "right hand"
                 ]
             },
             "Puncture": {
@@ -210,7 +219,10 @@
                     "left side",
                     "right side",
                     "left thigh",
-                    "right thigh"
+                    "right thigh",
+                    "left chest",
+                    "right chest",
+                    "center chest"
                 ]
             },
             "Shrapnel": {
@@ -303,6 +315,8 @@
                     "left wrist",
                     "left neck",
                     "right neck",
+                    "left leg",
+                    "right leg",
                     "unspecified"
                 ]
             },
@@ -1819,7 +1833,8 @@
     "valueMatch": {
         "state.characters[].injuries[].source_character": "state.characters[].id",
         "scenes[].action_mapping[].next_scene": "scenes[].index",
-        "scenes[].tagging.reference": "scenes[].index"
+        "scenes[].tagging.reference": "scenes[].index",
+        "scenes[].action_mapping[].parameters.evac_id": "scenes[].state.environment.decision_environment.aid_delay[].id"
     },
     "characterMatching": [
         "scenes[].state.characters[].injuries[].source_character",
@@ -1830,9 +1845,11 @@
     ],
     "unique": {
         "state.environment.decision_environment.aid_delay[].id": "state",
-        "scenes[].state.environment.decision_environment.aid_delay[].id" : "scenes[]",
+        "scenes[].state.environment.decision_environment.aid_delay[].id": "scenes[]",
         "scenes[].state.characters[].id": "scenes[]",
         "scenes[].action_mapping[].action_id": "scenes[]",
+        "scenes[].index": "scenes",
         "state.characters[].id": "state"
-    }
+    },
+    "trainingOnlySupplies": []
 }

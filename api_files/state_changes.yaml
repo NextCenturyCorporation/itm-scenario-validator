@@ -103,6 +103,11 @@ components:
           example: 22 YO male Marine hit by an IED. Puncture wound on the left side
             of the neck.  Burns cover about 30 of his body.
           type: string
+        visited:
+          default: false
+          description: whether or not this character has been visited by the ADM in
+            the current scenario
+          type: boolean
         vitals:
           $ref: '#/components/schemas/Vitals'
       required:
@@ -110,6 +115,7 @@ components:
       - name
       - unstructured
       - demographics
+      - vitals
       type: object
     CharacterRoleEnum:
       description: The primary role a character has in the mission, in terms of the
@@ -298,6 +304,10 @@ components:
       enum:
       - right forearm
       - left forearm
+      - right hand
+      - left hand
+      - right leg
+      - left leg
       - right calf
       - left calf
       - right thigh
@@ -338,6 +348,8 @@ components:
       - hidden
       - discoverable
       - visible
+      - discovered
+      - treated
       type: string
     InjuryTriggerEnum:
       description: What source caused character injuries
@@ -904,12 +916,6 @@ components:
     Vitals:
       description: Vital levels and other indications of health
       properties:
-        Spo2:
-          description: blood oxygen level (percentage)
-          format: float
-          maximum: 100.0
-          minimum: 0.0
-          type: number
         ambulatory:
           description: whether or not the character can walk
           type: boolean
@@ -924,6 +930,12 @@ components:
           $ref: '#/components/schemas/HeartRateEnum'
         mental_status:
           $ref: '#/components/schemas/MentalStatusEnum'
+        spo2:
+          description: blood oxygen level (percentage)
+          format: float
+          maximum: 100.0
+          minimum: 0.0
+          type: number
       required:
       - conscious
       - avpu

@@ -64,23 +64,12 @@ class ApiGenerator:
         required_vitals.append('Spo2')
         new_api['components']['schemas']['Vitals']['required'] = required_vitals
 
-        # injury status enum should only include hidden, discoverable, or visible
-        new_api['components']['schemas']['InjuryStatusEnum']['enum'] = ['hidden', 'discoverable', 'visible']
-
         # create a new enum for restricted_actions that doesn't include END_SCENE
         new_api['components']['schemas']['RestrictedActionsEnum'] = copy.deepcopy(new_api['components']['schemas']['ActionTypeEnum'])
         new_api['components']['schemas']['RestrictedActionsEnum']['enum'].remove('END_SCENE')
 
         # set restricted_actions to this enum
         new_api['components']['schemas']['Scene']['properties']['restricted_actions']['items']['$ref'] = "#/components/schemas/RestrictedActionsEnum"
-
-        # validator does not allow visited in character
-        try:
-            if 'visited' in new_api['components']['schemas']['Character']['required']:
-                new_api['components']['schemas']['Character']['required'].remove('visited')
-            del new_api['components']['schemas']['Character']['properties']['visited']
-        except: 
-            self.logger.log(LogLevel.INFO, "No 'visited' property found in 'Character'. Not removing anything")
 
         # validator does not allow session complete in scenario
         try:

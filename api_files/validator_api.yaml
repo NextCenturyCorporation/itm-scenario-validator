@@ -121,6 +121,7 @@ components:
       enum:
       - APPLY_TREATMENT
       - CHECK_ALL_VITALS
+      - CHECK_BLOOD_OXYGEN
       - CHECK_PULSE
       - CHECK_RESPIRATION
       - DIRECT_MOBILE_CHARACTERS
@@ -308,6 +309,11 @@ components:
           example: 22 YO male Marine hit by an IED. Puncture wound on the left side
             of the neck.  Burns cover about 30 of his body.
           type: string
+        visited:
+          default: false
+          description: whether or not this character has been visited by the ADM in
+            the current scenario
+          type: boolean
         vitals:
           $ref: '#/components/schemas/Vitals'
       required:
@@ -315,6 +321,7 @@ components:
       - name
       - unstructured
       - demographics
+      - vitals
       type: object
     CharacterRoleEnum:
       description: The primary role a character has in the mission, in terms of the
@@ -570,6 +577,10 @@ components:
       enum:
       - right forearm
       - left forearm
+      - right hand
+      - left hand
+      - right leg
+      - left leg
       - right calf
       - left calf
       - right thigh
@@ -610,6 +621,8 @@ components:
       - hidden
       - discoverable
       - visible
+      - discovered
+      - treated
       type: string
     InjuryTriggerEnum:
       description: What source caused character injuries
@@ -1001,6 +1014,7 @@ components:
       enum:
       - APPLY_TREATMENT
       - CHECK_ALL_VITALS
+      - CHECK_BLOOD_OXYGEN
       - CHECK_PULSE
       - CHECK_RESPIRATION
       - DIRECT_MOBILE_CHARACTERS
@@ -1044,10 +1058,16 @@ components:
         end_scene_allowed:
           description: Whether ADMs can explicitly end the scene
           type: boolean
+        final_scene:
+          description: Whether this is the final scene in the scenario
+          type: boolean
         index:
           description: The order the scene appears in the scenario
           minimum: 0
           type: integer
+        persist_characters:
+          description: Whether characters should persist from the previous scene
+          type: boolean
         probe_config:
           description: TA1-provided probe configuration, ignored by TA3
           items:
@@ -1355,12 +1375,6 @@ components:
     Vitals:
       description: Vital levels and other indications of health
       properties:
-        Spo2:
-          description: blood oxygen level (percentage)
-          format: float
-          maximum: 100.0
-          minimum: 0.0
-          type: number
         ambulatory:
           description: whether or not the character can walk
           type: boolean
@@ -1375,6 +1389,12 @@ components:
           $ref: '#/components/schemas/HeartRateEnum'
         mental_status:
           $ref: '#/components/schemas/MentalStatusEnum'
+        spo2:
+          description: blood oxygen level (percentage)
+          format: float
+          maximum: 100.0
+          minimum: 0.0
+          type: number
       required:
       - conscious
       - avpu
@@ -1477,7 +1497,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AlignmentResults'
-          description: Successful Response
+          description: Successful Response; if server is configured to run without
+            TA1, then session alignment will be empty/None/null.
         '400':
           description: Session ID not found
         '403':
@@ -1489,6 +1510,8 @@ paths:
                 type: string
                 x-content-type: text/plain
           description: An exception occurred on the server; see returned error string.
+        '503':
+          description: Could not get session alignment from TA1
       summary: Retrieve session alignment from TA1
       tags:
       - itm-ta2-eval
@@ -1507,7 +1530,8 @@ paths:
         schema:
           type: string
         style: form
-      - description: a scenario id to start, used internally by TA3
+      - description: the scenario id to run; incompatible with /ta2/startSession's
+          max_scenarios parameter
         explode: true
         in: query
         name: scenario_id
@@ -1524,9 +1548,8 @@ paths:
           description: Successful operation; scenario data returned, or session_complete
             is True
         '400':
-          description: Invalid Session ID or there is already an active scenario
-        '403':
-          description: Specifying a scenario ID is unauthorized
+          description: Invalid Session ID, there is already an active scenario, or
+            scenario_id was specified with max_scenarios
         '404':
           description: Scenario ID not found
         '500':
@@ -1536,6 +1559,8 @@ paths:
                 type: string
                 x-content-type: text/plain
           description: An exception occurred on the server; see returned error string.
+        '503':
+          description: Could not communicate with TA1 server
       summary: Get the next scenario
       tags:
       - itm-ta2-eval

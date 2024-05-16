@@ -44,8 +44,12 @@ Ensure that the path leads to a yaml file.
 
 See full usage options below:
 ```
-usage: validator.py [-h] [-u [-f PATH] | -f PATH ]
-```
+usage: validator.py [-h] [-f PATH] [-u] [-t]
+options:
+  -h, --help                Show this help message and exit.
+  -f PATH, --filepath PATH  The path to the yaml file. Required if -u is not specified.
+  -u, --update              Switch to update the api files or not. Required if -f is not specified.
+  -t, --train               Validate a training scenario yaml.```
 
 ## API Changes
 - When the Swagger API changes, make sure you upload the newest version as `api.yaml` to the `api_files` directory.
@@ -89,15 +93,14 @@ In order for a yaml file to be considered "valid", the following conditions must
         * `mental_status`
         * `breathing`
         * `heart_rate`
-        * `Spo2`
-    * `injury.status` may only be `hidden`, `discoverable`, or `visible`
+        * `spo2`
     * `restricted_actions` cannot include `end_scene`
-    * `visited` is a prohibited key in `character`
     * `session_complete` is a prohibited key in `scenario`
     * `scenario_complete` is a prohibited key in `state`
     * `elapsed_time` is a prohibited key in `state`
+    * `action_type` in `action_mapping` cannot be one of `restricted_actions`
     * In `scenes.state`:
-        * Only `characters` is required
+        * Only `characters` is required (if `persist_characters` is false)
         * Only one `unstructured` property is required in the whole object
         * `Mission`, `Environment`, `DecisionEnvironment`, and `SimEnvironment` only require the `unstructured` property
         * `type` is a prohibted key in `SimEnvironment`
@@ -112,6 +115,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_ALL_VITALS", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_PULSE", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_RESPIRATION", `scenes[n].action_mapping[m].character_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "CHECK_BLOOD_OXYGEN", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].parameters.evac_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].character_id` is required
@@ -121,13 +125,14 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[].index` is 0, `scenes[].state` should _not_ be provided
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
 
-#### Dependency Allowed Valuese
-* If `state.characters[n].vitals.conscious` is "False", `state.characters[n].vitals.avpu` should be "UNRESPONSIVE" and `state.characters[n].vitals.mental_status` should be "UNRESPONSIVE" 
+#### Dependency Allowed Values
+* If `state.characters[n].vitals.conscious` is "False", `state.characters[n].vitals.avpu` should be "UNRESPONSIVE" or "PAIN" and `state.characters[n].vitals.mental_status` should be "UNRESPONSIVE" 
 
 #### Value Matching
 * `state.characters[n].injuries[m].source_character` must be one of the `state.characters.character_id`'s
 * `scenes[n].tagging.reference` must be one of the `scenes[n].index`'s 
 * `scenes[n].action_mapping[m].next_scene` must be one of the `scenes[n].index`'s
+* `scenes[n].action_mapping[m].parameters.evac_id` must be one of the `scenes[n].state.environment.decision_environment.aid_delay[p].id`'s
 
 #### Character Matching
 * `scenes[0].action_mapping[].character_id`: `state.characters[].id`,
@@ -145,10 +150,14 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `scenes[].state.characters[].id` must not have any repeated values within each `scene`
 * `scenes[].action_mapping[].action_id` must not have any repeated values within each `scene`
 * `state.characters[].id` must not have any repeated values
+* `scenes[].index` must not have any repeated values
 * `state.environment.decision_environment.aid_delay[].id` must not have any repeated values
 
+#### Training Only Supplies
+Any supply name placed in this array will be excluded from the allowed supplies if eval mode is true.
+
 #### Other Rules
-* At least one scene must have `end_scene_allowed=true`
+* At least one scene must have `final_scene=true`
 * `scenes[n].action_mapping[m].parameters.treatment` must come from `SupplyTypeEnum` 
 * `scenes[n].action_mapping[m].parameters.location` must come from `InjuryLocationEnum` 
 * `scenes[n].action_mapping[m].parameters.category` must come from `CharacterTagEnum` 
@@ -158,6 +167,10 @@ In order for a yaml file to be considered "valid", the following conditions must
     * Every character with `mission_importance` should be an entry in `character_importance`, and vice-versa 
     * This does not include "normal", which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance "normal", or a character may specify `mission_importance` with "normal" and `character_importance` may not list that character 
 
+#### Eval Mode
+When not running in training mode (-t), additional checks are implemented:
+* No supplies or treatments are allowed that are not in the simulator. Put the names of these treatments in the trainingOnlySupplies array in dependencies.json
+
 #### Injury/Location Matches
 Injuries are only allowed to have specific locations. Please follow the table to create valid matches.
 | Injury name | Allowed Locations |
@@ -165,13 +178,13 @@ Injuries are only allowed to have specific locations. Please follow the table to
 | `Ear Bleed` | `left face`, `right face` |
 | `Asthmatic` | `unspecified`, `internal` |
 | `Laceration` | `left forearm`, `right forearm`, `left stomach`, `right stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist` |
-| `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh` |
+| `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest` |
 | `Shrapnel` | `left face`, `right face`, `left calf`, `right calf` |
 | `Chest Collapse` | `left chest`, `right chest` |
-| `Amputation` | `left wrist`, `right wrist`, `left calf`, `right calf` |
-| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
-| `Abrasion` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
-| `Broken Bone` | `right forearm`, `left forearm`, `right thigh`, `left thigh`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right wrist`, `left wrist`, `left neck`, `right neck`, `unspecified` |
+| `Amputation` | `left wrist`, `right wrist`, `left leg`, `right leg` |
+| `Burn` | `right forearm`, `left forearm`, `right arm`, `left arm`, `right leg`, `left leg`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
+| `Abrasion` | `right forearm`, `left forearm`, `right arm`, `left arm`, `right leg`, `left leg`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
+| `Broken Bone` | `right forearm`, `left forearm`, `right arm`, `left arm`, `right leg`, `left leg`, `right thigh`, `left thigh`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right wrist`, `left wrist`, `left neck`, `right neck`, `unspecified` |
 | `Internal` | `internal` | 
 
 #### Military Branches, Ranks, and Rank Titles
