@@ -417,7 +417,6 @@ class YamlValidator:
         self.deep_links()
         self.value_follows_list()
         self.require_unstructured()
-        self.scenes_with_transitions()
         self.scenes_with_state()
         self.validate_action_params()
         self.validate_mission_importance()
@@ -836,20 +835,6 @@ class YamlValidator:
                                 self.invalid_values += 1    
                             else:
                                 vals_found.append(val)
-
-
-    def scenes_with_transitions(self):
-        '''
-        Looks through the yaml file to make sure that every scene from 0 to n-1 has 
-        a transitions field
-        '''
-        # TODO: update
-        data = copy.deepcopy(self.loaded_yaml)
-        scenes = data['scenes']
-        for i in range(0, len(scenes)-1):
-            if 'transitions' not in scenes[i]:
-                self.logger.log(LogLevel.WARN, "Key 'transitions' must be provided within all but the last entry in 'scenes' but is missing at scenes[" + str(i) + "]")
-                self.missing_keys += 1
 
 
     def scenes_with_state(self):
