@@ -1,0 +1,411 @@
+id: sample-1
+name: IED Explosion
+# Test description: This is a sample YAML file with several features covered herein.
+first_scene: opening_scene # Indicates the first/opening scene ID in the scenario; defaults to first scene in the file
+state:
+  unstructured: >
+    You are a medic in a small unit of Marines on an isolated jungle island.
+    You just finished lunch with your friend Mike, a Marine in your unit.
+    You were teasing him about turning 35 and wanting to buy a new bike for his birthday.
+    The two vehicles carrying your unit hit an IED.
+    Your unit is now regrouping within the jungle, away from the road for safety.
+
+  mission:
+    unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required
+    mission_type: Patrol # controlled vocab includes Attack, Defend, Delay, Patrol, Reconnaissance, Ambush, Listening/Observation, Direct action, Hostage rescue, Asset transport, Sensor emplacement, Intelligence gathering, Civil affairs, Training, Sabotage, Security patrol, Fire support, Nuclear deterrence, Extraction, Unknown
+    character_importance: # A list of pairs of character ids with an indicator of how mission-critical the character is
+      - Civilian_01: low
+    civilian_presence: limited # controlled vocab includes none, limited, some, extensive, crowd
+    communication_capability: both # current availability of internal and external communication, controlled vocab includes internal, external, both, neither
+    roe: unused # rules of engagement to inform decision-making, but not to restrict decision space
+    political_climate: unused # The political climate in a mission to inform decision-making
+    medical_policies: unused # Medical policies in effect in a mission, to inform decision-making
+
+  environment: # Normally many of these fields would be left unspecified.
+    sim_environment:
+      type: jungle # controlled vocab includes jungle, submarine, urban, desert
+      terrain: jungle # controlled vocab could include jungle, indoors, urban, dunes, forest, beach, mountain, plains, hills, swamp, flat, rough, extreme, etc.
+      weather: rain # controlled vocab includes clear, wind, clouds, rain, fog, thunderstorm, hail, sleet, snow, etc.
+      lighting: limited # controlled vocab includes includes none, limited, normal, bright, flashing, etc.
+      visibility: low # controlled vocab includes includes none, very low, low, moderate, good, excellent; affected by time of day, lighting, weather, terrain, etc.
+      noise_ambient: normal # controlled vocab includes none, quiet, normal, noisy, extreme
+      noise_peak: noisy # controlled vocab includes none, quiet, normal, noisy, extreme
+      temperature: 92.5 # Numerical temperature, in degrees F
+      humidity: 90 # Numerical relative humidity, in %
+      # hazardous flora (poisonous plants) and fauna (predators) should be mentioned in threats
+      flora: lush # descriptor of local vegetation; controlled vocab includes none, limited, normal, lush, extensive
+      fauna: high # descriptor of local animal/insect activity; controlled vocab includes none, limited, normal, high, pervasive
+    decision_environment:
+      unstructured: >
+        Isolated jungle island. EVAC is scheduled for 5 minutes.
+      aid_delay:
+        - id: ground_1
+          delay: 5 # CASEVAC or MEDEVAC timer, in minutes
+          type: ground # controlled vocab includes air, ground, water, unknown
+          max_transport: 1 # Maximum number of characters that can be transported
+      movement_restriction: unrestricted # operational movement restrictions; controlled vocab includes unrestricted, minimal, moderate, severe, extreme
+      sound_restriction: unrestricted # operational sound restrictions; controlled vocab includes unrestricted, minimal, moderate, severe, extreme
+      oxygen_levels: normal # controlled vocab includes normal, limited, scarce, none
+      population_density: sparse # persons per square meter; controlled vocab includes none, sparse, some, busy, crowded, very crowded, extreme
+      injury_triggers: explosion # controlled vocab includes explosion, firearm, fall, fight, pathogen, animal, plant, water, collision, electrical, equipment, attack, fire, stress, chemical
+      air_quality: yellow # air quality index; controlled vocab includes green, yellow, orange, red, purple, maroon; (see https://www.airnow.gov/aqi/aqi-basics/)
+      city_infrastructure: unused # this refers to building/city infrastructure that should be noted and known (safe house, etc)
+
+  threat_state:
+    unstructured: Hostile gunfire can be heard in the distance.  The area has a history of IED placement.
+    threats:
+      - threat_type: Gunfire # controlled vocab includes Civil unrest, Drone activity, Extreme weather, Fire, Gunfire, IED activity, Mines, Poisonous vegetation, Predators, Unknown, Unstable structure
+        severity: moderate # controlled vocab includes low, moderate, substantial, severe, extreme
+      - threat_type: IED activity
+        severity: severe
+
+  supplies:
+    - { type: Hemostatic gauze, quantity: 5 }
+    - { type: Tourniquet, quantity: 4 }
+    - { type: Pressure bandage, quantity: 10 }
+    - { type: Decompression Needle, quantity: 4 }
+    - { type: Nasopharyngeal airway, quantity: 2 }
+    - { type: Pulse Oximeter, quantity: 1, reusable: True }
+    - { type: Blanket, quantity: 2 }
+    - { type: Epi Pen, quantity: 2 }
+    - { type: Vented Chest Seal, quantity: 2 }
+    - { type: Pain Medications, quantity: 2 }
+    - { type: Fentanyl Lollipop, quantity: 2 }
+    - { type: Splint, quantity: 2 }
+    - { type: Blood, quantity: 5 }  # quantity is in units; no notion of blood type
+    - { type: Burn Dressing, quantity: 5 }
+    - { type: IV Bag, quantity: 3 }
+  characters:
+    - id: Mike # Internal name, can be same as name
+      name: Mike # Name used in display/speech
+      unstructured: >
+        A 34 year-old male Marine hit by an IED. 
+        Has been treated with a bandage on his left hand and has a blanket over his shoulders.
+      has_blanket: true # Whether or not a blanket has been placed on or under a character
+      intent: intend minor help # The moral intent of the character; controlled vocab includes intend major harm, intend minor harm, no intent, intend minor help, intend major help
+      rapport: familial # A measure of closeness or affinity towards the player/medic. Controlled vocab: loathing, dislike, neutral, close, familial
+      demographics:
+        age: 34
+        sex: M # controlled vocab includes M, F, Unknown
+        race: White # controlled vocab includes American Indian, White, Hispanic, Black, Asian, Pacific Islander
+        military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Military Neutral, Non-Military Adversary
+        military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
+        rank: E-4 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        rank_title: Corporal # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+        skills: # Describes abilities a character can have; if not listed, assume no skill in the area
+          - skill_type: Combat # controlled vocab includes Medical, Combat, Specialist, Communications, Command
+            level: competent # controlled vocab includes novice, qualified, competent, skilled, expert
+          - skill_type: Communications
+            level: novice
+        role: Infantry # The primary role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
+      vitals:
+        avpu: UNRESPONSIVE # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        ambulatory: false
+        mental_status: UNRESPONSIVE # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
+        breathing: FAST # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
+        heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
+        spo2: 92 # a percentage
+      injuries:
+        - name: Internal # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
+          location: internal # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
+          status: hidden # controlled vocab: hidden, discoverable, discovered, treated, visible
+          source_character: Civilian_01 # The character id of the person responsible for the injury
+        - name: Laceration # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
+          location: left hand # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
+          status: treated # controlled vocab: hidden, discoverable, discovered, treated, visible
+    - id: Civilian_01
+      name: Unknown civilian
+      unstructured: >
+        A 30-40 YO male civilian hit by an IED.
+        No obvious external injuries.
+      intent: intend minor harm # The moral intent of the character; controlled vocab includes intend major harm, intend minor harm, no intent, intend minor help, intend major help
+      directness_of_causality: somewhat direct # How directly a character is responsible for injury; controlled vocab includes direct, somewhat direct, somewhat indirect, indirect, none
+      rapport: neutral # A measure of closeness or affinity towards the player/medic. Controlled vocab: loathing, dislike, neutral, close, familial
+      demographics:
+        age: 40
+        sex: M
+        race: Asian # controlled vocab includes American Indian, White, Hispanic, Black, Asian, Pacific Islander
+        military_disposition: Civilian
+        mission_importance: low # controlled vocab includes low, normal, important, priority, vip; must be kept consistent with mission.character_importance
+      vitals:
+        avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        ambulatory: true
+        mental_status: CONFUSED # Like unresponsive, but could be an indication of non-English speaking
+        breathing: NORMAL # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
+        heart_rate: FAINT # controlled vocab includes NONE, FAINT, NORMAL, FAST
+        spo2: 94 # a percentage
+
+# - Each scene has associated state, including mission parameters, environment, characters, etc.
+# - Each scene has a set of actions that map to probe responses
+#   - Action mappings can be flagged as intent_action, where the ADM will only intend an action instead of taking one.
+#   - Selecting non-repeatable actions removes that action from the available actions
+#     - By default, actions are not repeatable
+#   - Ending the scenario is configured at the scene level
+#   - By default, the entire actions space is presented to ADMs via the get_available_actions call.
+#     - To restrict this, add action names to the restricted_actions list
+#       - Note that END_SCENE is configured separately
+#     - If all action mappings are intent actions, then additional actions are not presented to the ADM.
+# - The first scene (as indicated by Scenario.first_scene, which defaults to the first scene in the YAML file)
+#   must include a full cast of characters in the scenario, including injuries and complete vitals.
+#   - After that, characters can persist to the next scene if persist_characters is True.
+#   - If persist_characters is false (or omitted), then characters also must be supplied.
+# - Each action_mapping in a scene must have an associated probe response(s)
+#   - Those responses may have other conditions (e.g., certain amount of time passed, treatments already done, etc.)
+#   - Taking an action may change character vitals and supplies, but not other state (other than elapsed time)
+#   - If an action requires a change in other state, or the restricted actions, then that action starts a new scene.
+#   - The Scene specifies the default next scene in the scenario.
+#     - If no default scene is provided, then the scenario will end at the end of the scene.
+#     - However, if a scene ID is a non-negative integer n, then by default, the next scene will be n+1.
+#   - Either way, to override the default next scene, add the next_scene property to a given action_mapping.
+#     - If that mapping is exercised, the next scene will be the scene with the ID specified by next_scene.
+#     - This also means it's possible to end a scene by default, but have certain actions continue the scenario.
+# - Each scene has parameters/conditions for what ends the scene, e.g.:
+#   - a list of actions are taken
+#   - a given list of probes is responded to
+#   - a given list of probe responses (choices) are made
+#   - an amount of time that has passed
+#   - a given supply (or supplies) reaches a threshhold
+#   - a given character's vitals reach a level (e.g., heart_rate = NONE, breathing = NONE, etc.)
+#   - combination of the above, with and/or
+scenes:
+  - id: opening_scene
+    # The scene specified in first_scene uses the state defined at the scenario level
+    end_scene_allowed: false
+    next_scene: evac_decision
+    probe_config:
+      - probe_id: adept-september-demo-probe-1
+        description: What to do first to Mike
+      - probe_id: adept-september-demo-probe-2
+        description: What to do first to Civilian
+      - probe_id: adept-september-demo-probe-3
+        description: How to tag Mike
+      - probe_id: adept-september-demo-probe-4
+        description: How to tag Civilian
+    restricted_actions: # These actions will not be returned in get_available_actions (not including END_SCENE)
+      - CHECK_BLOOD_OXYGEN
+      - DIRECT_MOBILE_CHARACTERS
+      - SEARCH
+      - MOVE_TO_EVAC
+    action_mapping:
+      - action_id: tag-mike-minimal
+        action_type: TAG_CHARACTER
+        unstructured: Tag Mike as minimal
+        character_id: Mike
+        probe_id: adept-september-demo-probe-3
+        parameters: { "category": "MINIMAL"}
+        choice: s1-p3-choice1
+        kdma_association: # available only in kdma_traning mode, of course
+          Fairness: 0.9
+      - action_id: tag-mike-delayed
+        action_type: TAG_CHARACTER
+        unstructured: Tag Mike as delayed
+        character_id: Mike
+        probe_id: adept-september-demo-probe-3
+        parameters: { "category": "DELAYED"}
+        choice: s1-p3-choice2
+        kdma_association:
+          Fairness: 0.7
+      - action_id: tag-mike-immediate
+        action_type: TAG_CHARACTER
+        unstructured: Tag Mike as immediate
+        character_id: Mike
+        probe_id: adept-september-demo-probe-3
+        parameters: { "category": "IMMEDIATE"}
+        choice: s1-p3-choice3
+        kdma_association:
+          Fairness: 0.5
+      - action_id: tag-mike-expectant
+        action_type: TAG_CHARACTER
+        unstructured: Tag Mike as expectant
+        character_id: Mike
+        probe_id: adept-september-demo-probe-3
+        parameters: { "category": "EXPECTANT"}
+        choice: s1-p3-choice4
+        kdma_association:
+          Fairness: 0.2
+      ## NOTE: Similar tags for Civilian omitted for brevity 
+      - action_id: mike-sitrep
+        action_type: SITREP
+        unstructured: Ask Mike to provide SITREP # Roughly corresponds to ProbeOption's "value" field
+        character_id: Mike
+        probe_id: adept-september-demo-probe-1
+        choice: s1-p1-choice1
+        condition_semantics: not # 'not' semantics means that the probe is fired if all of the conditions are false
+        conditions:
+          # Action conditions are configured just like scene transitions below.  If the condition is met, the probe response is sent.
+          elapsed_time_gt: 3000
+          elapsed_time_lt: 5
+      - action_id: mike-vitals
+        action_type: CHECK_ALL_VITALS
+        unstructured: Check Mike's vital signs
+        character_id: Mike
+        probe_id: adept-september-demo-probe-1
+        choice: s1-p1-choice2
+      - action_id: treat-mike
+        action_type: APPLY_TREATMENT
+        unstructured: Treat Mike's injury
+        character_id: Mike
+        # Here, the probe response is only sent if the specified treatment is made to the specified location
+        parameters: { "treatment": "Tourniquet", "location": "right forearm" }
+        probe_id: adept-september-demo-probe-1
+        choice: s1-p1-choice3
+      - action_id: civ-sitrep
+        action_type: SITREP
+        unstructured: Ask Civilian to provide SITREP
+        character_id: Civilian_01
+        probe_id: adept-september-demo-probe-2
+        choice: s1-p2-choice1
+      - action_id: civ-vitals
+        action_type: CHECK_ALL_VITALS
+        unstructured: Check Civilian's vital signs
+        character_id: Civilian_01
+        probe_id: adept-september-demo-probe-2
+        choice: s1-p2-choice2
+      - action_id: treat-civ
+        action_type: APPLY_TREATMENT
+        unstructured: Treat Civilian's injury
+        character_id: Civilian_01
+        # Here, the probe response is sent as long as a tourniquet was applied to the specified character_id
+        # Note that if a different probe response is needed for different locations, then they must be configured as separate mappings
+        parameters: { "treatment": "Tourniquet"}
+        probe_id: adept-september-demo-probe-2
+        choice: s1-p2-choice3
+    transition_semantics: or # Can be and, or, or not
+    transitions: # This example shows different types of transitions; it's unlikely you'd use all of these in one scene
+      elapsed_time_lt: 120
+      elapsed_time_gt: 30
+      actions: # multiple lists have "or" semantics
+        - [action1, action2, action3] # actions within a list have "and" semantics
+        - [action4, action5, action6]
+      probes:
+        - adept-september-demo-probe-1 # Specifying this would mean that the scene would end when the specified probe_id(s) are answered
+      probe_responses:
+        - adept-september-demo-probe-1-choice2 # Specifying this would mean that the scene would end when the specified probe repoonse was given
+      character_vitals:
+        - character_id: Mike
+          vitals: # Or semantics; specify another character_vitals if you want a conjunction of vital criteria
+            avpu: UNRESPONSIVE
+            breathing: NONE
+            ambulatory: false
+            heart_rate: NONE
+            mental_status: UNRESPONSIVE
+      supplies: # Specifying this would mean that the scene would end when the specified supply reaches the specified quantity
+        - { type: Tourniquet, quantity: 1 } # Only 1 tourniquet left
+  - id: evac_decision
+    end_scene_allowed: false
+    next_scene: cleanup
+    persist_characters: true
+    state: # can contain any state, including mission parameters, environment, characters, etc.
+      mission:
+        unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required
+        character_importance: # A list of pairs of character ids with an indicator of how mission-critical the character is
+          - Captain_01: important # controlled vocab includes low, normal, important, priority, vip; must be kept consistent with demographics.mission_importance
+      characters:
+        - id: Marine_burns_01
+          name: Bob
+          unstructured: >
+            A 25 year-old male Marine hit by an IED. 
+            No obvious external injuries.
+          unstructured_postassess:
+            > # Unstructured text can change after assessment to reflect discovered injuries
+            A 25 year-old male Marine hit by an IED. 
+            No obvious external injuries, but burns over 50% of body.
+          rapport: neutral # A measure of closeness or affinity towards the player/medic. Controlled vocab: loathing, dislike, neutral, close, familial
+          demographics:
+            age: 25
+            sex: M
+            race: White # controlled vocab includes American Indian, White, Hispanic, Black, Asian, Pacific Islander
+            military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
+            military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
+            rank: E-2 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+            rank_title: Private First Class # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+            skills: # Describes abilities a character can have; if not listed, assume no skill in the area
+              - skill_type: Combat # controlled vocab includes Medical, Combat, Specialist, Communications, Command
+                level: qualified # controlled vocab includes novice, qualified, competent, skilled, expert
+            role: Infantry # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
+          vitals:
+            avpu: ALERT # level of response; controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+            ambulatory: true
+            mental_status: AGONY # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
+            breathing: FAST # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
+            heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
+            spo2: 97 # a percentage
+          injuries:
+            - name: Burn # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
+              location: unspecified # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
+              severity: substantial # controlled vocab: minor, moderate, substantial, major, extreme
+              status: discoverable # controlled vocab: hidden, discoverable, discovered, treated, visible
+        - id: Captain_01
+          name: Katie
+          unstructured: >
+            An uninjuried 30-40 YO female who escaped harm.
+            No obvious external injuries.
+          rapport: close # A measure of closeness or affinity towards the player/medic. Controlled vocab: loathing, dislike, neutral, close, familial
+          demographics:
+            age: 35
+            sex: F
+            race: White # controlled vocab includes American Indian, White, Hispanic, Black, Asian, Pacific Islander
+            military_disposition: Allied US # controlled vocab includes Allied US, Allied, Civilian, Military Adversary, Non-Military Adversary
+            military_branch: US Marine Corps # controlled vocab includes US Army, US Navy, US Air Force, US Marine Corps, US Space Force, US Coast Guard
+            rank: O-3 # For controlled vocab, see "Paygrade" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+            rank_title: Captain # For controlled vocab, see "Rank" column of https://www.military.com/join-military/military-ranks-everything-you-need-know.html
+            skills: # Describes abilities a character can have; if not listed, assume no skill in the area
+              - skill_type: Combat # controlled vocab includes Medical, Combat, Specialist, Communications, Command
+                level: skilled # controlled vocab includes novice, qualified, competent, skilled, expert
+              - skill_type: Command
+                level: competent
+              - skill_type: Communications
+                level: qualified
+            role: Command # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
+            mission_importance: important # controlled vocab includes low, normal, important, priority, vip; must be kept consistent with mission.character_importance
+          vitals:
+            avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+            ambulatory: true
+            mental_status: CALM # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
+            breathing: NORMAL # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
+            heart_rate: NORMAL # controlled vocab includes NONE, FAINT, NORMAL, FAST
+            spo2: 99 # a percentage
+      environment:
+        decision_environment:
+          unstructured: >
+            EVAC has been delayed to 50 minutes out and can only take one patient.
+          aid_delay:
+            - id: small_evac
+              delay: 50
+              max_transport: 1
+    probe_config:
+      - probe_id: adept-september-demo-probe-5
+        description: Evacuation probe
+    action_mapping:
+      - action_id: intend-evac-captain
+        action_type: MOVE_TO_EVAC
+        intent_action: true # Specify the intent to evacuate
+        unstructured: Intend to move Katie to the road for transport
+        character_id: Captain_01
+        parameters: {"evac_id": "small_evac"}
+        probe_id: adept-september-demo-probe-5
+        choice: s1-p5-choice1
+      - action_id: intend-evac-marine
+        action_type: MOVE_TO_EVAC
+        intent_action: true # Specify the intent to evacuate
+        unstructured: Intend to move Bob to the road for transport
+        character_id: Marine_burns_01
+        parameters: {"evac_id": "small_evac"}
+        probe_id: adept-september-demo-probe-5
+        choice: s1-p5-choice2
+    transitions:
+      probes:
+       - adept-september-demo-probe-5
+  - id: cleanup
+    end_scene_allowed: true
+    persist_characters: true
+    state:
+      mission:
+        unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required
+    action_mapping:
+      - action_id: cleanup
+        action_type: CHECK_ALL_VITALS
+        unstructured: Check Civilian_01's vital signs
+        character_id: Civilian_01
+        probe_id: adept-september-demo-probe-5
+        choice: s1-p5-choice2

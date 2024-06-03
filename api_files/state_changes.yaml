@@ -49,7 +49,8 @@ components:
       - extreme
       type: string
     AvpuLevelEnum:
-      description: Character level of response.  See [Levels of Response](https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response)
+      description: Character level of response; anything but ALERT is considered unconscious.  See
+        [Levels of Response](https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response)
         for details
       enum:
       - ALERT
@@ -74,6 +75,11 @@ components:
           $ref: '#/components/schemas/Demographics'
         directness_of_causality:
           $ref: '#/components/schemas/DirectnessEnum'
+        has_blanket:
+          default: false
+          description: whether or not this character has a blanket (either wrapped
+            around or underneath)
+          type: boolean
         id:
           description: A unique character ID throughout the scenario
           example: Soldier_01
@@ -115,7 +121,6 @@ components:
       - name
       - unstructured
       - demographics
-      - vitals
       type: object
     CharacterRoleEnum:
       description: The primary role a character has in the mission, in terms of the
@@ -322,6 +327,7 @@ components:
       - left side
       - right chest
       - left chest
+      - center chest
       - right wrist
       - left wrist
       - left face
@@ -823,6 +829,7 @@ components:
       - Epi Pen
       - Vented Chest Seal
       - Pain Medications
+      - Fentanyl Lollipop
       - Splint
       - Blood
       - IV Bag
@@ -923,9 +930,6 @@ components:
           $ref: '#/components/schemas/AvpuLevelEnum'
         breathing:
           $ref: '#/components/schemas/BreathingLevelEnum'
-        conscious:
-          description: whether or not the character appears to be conscious
-          type: boolean
         heart_rate:
           $ref: '#/components/schemas/HeartRateEnum'
         mental_status:
