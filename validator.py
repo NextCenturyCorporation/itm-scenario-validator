@@ -791,6 +791,8 @@ class YamlValidator:
                 # get the scene index
                 ind = int(l.split('cenes[')[1].split(']')[0])
                 s = scenes[ind]
+                if 'characters' not in s:
+                    continue
                 # make sure the index exists in the allowed values dict
                 if ind not in allowed_vals and s['id'] != first_scene:
                     where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
