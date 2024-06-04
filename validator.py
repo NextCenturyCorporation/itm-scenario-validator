@@ -988,7 +988,7 @@ class YamlValidator:
                 new_type = scene['state']['environment']['sim_environment'].get('type', None)
                 if new_type is not None and new_type != orig_type:
                     self.warning_count += 1
-                    self.logger.log(LogLevel.INFO, f"Key 'type' should not be redefined in scene states, but changes from '{orig_type}' to '{new_type}' in scene '{scene['id']}'. This redefinition will be ignored by the adm server.")
+                    self.logger.log(LogLevel.INFO, f"Key 'type' should not be redefined in scene states, but changes from '{orig_type}' to '{new_type}' in scene '{scene['id']}'. This redefinition will be ignored.")
 
 
 if __name__ == '__main__':
