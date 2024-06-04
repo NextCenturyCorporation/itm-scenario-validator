@@ -709,6 +709,8 @@ components:
           type: number
         terrain:
           $ref: '#/components/schemas/TerrainTypeEnum'
+        type:
+          $ref: '#/components/schemas/SimEnvironmentTypeEnum'
         unstructured:
           description: Natural language, plain text description of the environment
           example: It was a dark and stormy night.
