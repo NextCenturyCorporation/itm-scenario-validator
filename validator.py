@@ -841,7 +841,7 @@ class YamlValidator:
 
     def scenes_with_state(self):
         '''
-        Looks through the yaml file to make sure that every scene from 1 to n has 
+        Looks through the yaml file to make sure that every scene except the first has 
         a state field
         '''
         data = copy.deepcopy(self.loaded_yaml)
@@ -869,7 +869,7 @@ class YamlValidator:
             if 'restricted_actions' in scenes[i] and 'action_mapping' in scenes[i]:
                 for x in scenes[i]['action_mapping']:
                     if x['action_type'] in scenes[i]['restricted_actions']:
-                        self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with index {i}, but appears in the action_mapping within that scene.")
+                        self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with id '{scenes[i]['id']}', but appears in the action_mapping within that scene.")
                         self.invalid_values += 1
 
 
