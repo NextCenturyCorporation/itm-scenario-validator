@@ -805,6 +805,8 @@ class YamlValidator:
                 # get the scene index
                 ind = int(l.split('cenes[')[1].split(']')[0])
                 s = scenes[ind]
+                if 'characters' not in s:
+                    continue
                 # make sure the index exists in the allowed values dict
                 if ind not in allowed_vals and s['id'] != first_scene:
                     where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
@@ -853,7 +855,7 @@ class YamlValidator:
 
     def scenes_with_state(self):
         '''
-        Looks through the yaml file to make sure that every scene from 1 to n has 
+        Looks through the yaml file to make sure that every scene except the first has 
         a state field
         '''
         data = copy.deepcopy(self.loaded_yaml)
@@ -880,9 +882,8 @@ class YamlValidator:
         for i in range(0, len(scenes)):
             if 'restricted_actions' in scenes[i] and 'action_mapping' in scenes[i]:
                 for x in scenes[i]['action_mapping']:
-                    action_type = x['action_type']
-                    if action_type in scenes[i]['restricted_actions']:
-                        self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with index {i}, but appears in the action_mapping within that scene.")
+                    if x['action_type'] in scenes[i]['restricted_actions']:
+                        self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with id '{scenes[i]['id']}', but appears in the action_mapping within that scene.")
                         self.invalid_values += 1
 
     def pulse_ox_info(self, scene_id):
