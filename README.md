@@ -88,7 +88,6 @@ In order for a yaml file to be considered "valid", the following conditions must
 * Exceptions to the two rules above include the following:
     * `scenario.scenes` is required
     * All vitals properties are required
-        * `conscious`
         * `avpu`
         * `mental_status`
         * `breathing`
@@ -123,10 +122,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 
 #### Conditional Prohibitions
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
-
-#### Dependency Allowed Values
-* If `state.characters[n].vitals.conscious` is "False", `state.characters[n].vitals.avpu` should be "UNRESPONSIVE" or "PAIN" and `state.characters[n].vitals.mental_status` should be "UNRESPONSIVE" 
-
+ 
 #### Value Matching
 * `state.characters[n].injuries[m].source_character` must be one of the `state.characters.character_id`'s
 * `scenes[n].tagging.reference` must be one of the `scenes[n].id`'s 

@@ -84,6 +84,12 @@ class YamlValidator:
             for x in self.dep_json['trainingOnlySupplies']:
                 self.allowed_supplies.remove(x)
 
+            for character in self.loaded_yaml.get('state', {'characters': []})['characters']:
+                if not character.get('has_blanket', False):
+                   self.invalid_keys += 1 
+                   self.logger.log(LogLevel.WARN, f"Blankets can't appear on characters at startup unless in training mode but '{character.get('id')}' has 'has_blanket' set to True.")
+
+
     def __del__(self):
         '''
         Basic cleanup: closing the file loaded in on close.
@@ -208,6 +214,13 @@ class YamlValidator:
                     is_valid = False
                 else:
                     self.logger.log(LogLevel.DEBUG, "Optional key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
+        
+        if level_name == 'characters':
+            if 'injuries' in to_validate:
+                injury_count = sum(1 for injury in to_validate['injuries'] if injury['name'] not in ['Ear Bleed', 'Asthmatic', 'Internal'] and 'Broken' not in injury['name'])
+                if injury_count > 8 and not self.train_mode:
+                    self.logger.log(LogLevel.WARN, f"Character '{to_validate.get('name')}' has {injury_count} 'masked' injuries (punctures, lacerations, burns), which exceeds the maximum of 8 allowed in the simulation.")
+                 
         return is_valid
 
 
@@ -424,6 +437,7 @@ class YamlValidator:
         self.verify_uniqueness()
         self.verify_allowed_actions()
         self.check_first_scene()
+        self.is_pulse_oximeter_configured()
 
 
     def simple_requirements(self):
@@ -866,10 +880,77 @@ class YamlValidator:
         for i in range(0, len(scenes)):
             if 'restricted_actions' in scenes[i] and 'action_mapping' in scenes[i]:
                 for x in scenes[i]['action_mapping']:
-                    if x['action_type'] in scenes[i]['restricted_actions']:
+                    action_type = x['action_type']
+                    if action_type in scenes[i]['restricted_actions']:
                         self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with index {i}, but appears in the action_mapping within that scene.")
                         self.invalid_values += 1
 
+    def pulse_ox_info(self, scene_id):
+        self.invalid_values += 1
+        self.logger.log(LogLevel.INFO, f"There might be an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
+
+    def is_pulse_oximeter_configured(self): 
+        '''
+        Checks if Pulse Oximeter is configured in the supplies.
+        '''
+        # inital variables for getting specific data 
+        data = copy.deepcopy(self.loaded_yaml)
+        supplies = data['state']['supplies']
+        scenes = data['scenes']
+
+        # checking whether 'first_scene' exists, otherwise calling the first indexed scene as the first scene
+        first_scene = data['first_scene'] if 'first_scene' in data else None
+        if first_scene is None:
+            first_scene = scenes[0]
+        else:
+            for x in scenes:
+                if x['id'] == first_scene:
+                    first_scene = x
+                    break
+
+        # checking whether the pulse oximeter exists in the inital state 
+        first_scene_po = False   
+        for item in supplies:
+            if item['type'] == 'Pulse Oximeter' and item['quantity'] > 0:
+                first_scene_po = True
+
+        # checking whether the first defined scene is valid based on the pulse oximeter in the inital state
+        first_map = first_scene['action_mapping']   
+        if not first_scene_po:
+            for action in first_map:
+                if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
+                    self.pulse_ox_info(first_scene['id'])
+                    break
+
+        # testing all other scenes if they are valid in terms of their actions and the pulse oximeter   
+        for scene in scenes:
+            if scene is not first_scene:
+                if 'state' in scene:
+                    scene_state = scene['state']
+                    # if supplies are not defined in the state and there is no pulse oximeter originally available
+                    if 'supplies' not in scene_state and not first_scene_po:
+                        # check if invalid action type exists when the pulse oximeter is not available
+                        map = scene['action_mapping']
+                        for action in map:
+                            if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
+                                self.pulse_ox_info(scene['id'])
+                                break
+                    # if supplies are defined in the scene
+                    if 'supplies' in scene_state:
+                        pulse_ox = False
+                        # decide whether to use the originally pulse oximeter defined in the inital state or the newly added one in supplies
+                        supplies = data['state']['supplies'] if first_scene_po else scene_state['supplies']
+                        for item in supplies:
+                            if item['type'] == 'Pulse Oximeter' and item['quantity'] > 0:
+                                pulse_ox = True
+                        # check if invalid action type exists when the pulse oximeter is not available
+                        map = scene['action_mapping']
+                        for action in map:
+                            if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
+                                if not pulse_ox:
+                                    self.pulse_ox_info(scene['id'])
+                                    break
+                                    
 
     def validate_action_params(self):
         '''

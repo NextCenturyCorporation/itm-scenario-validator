@@ -941,7 +941,6 @@ components:
           minimum: 0.0
           type: number
       required:
-      - conscious
       - avpu
       - mental_status
       - breathing

@@ -168,17 +168,6 @@
         ]
     },
     "simpleAllowedValues": {
-        "state.characters[].vitals.conscious": {
-            "False": {
-                "state.characters[].vitals.avpu": [
-                    "UNRESPONSIVE",
-                    "PAIN"
-                ],
-                "state.characters[].vitals.mental_status": [
-                    "UNRESPONSIVE"
-                ]
-            }
-        },
         "state.characters[].injuries[].name": {
             "Ear Bleed": {
                 "state.characters[].injuries[].location": [
