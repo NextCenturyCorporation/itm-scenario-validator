@@ -137,9 +137,6 @@ class ApiGenerator:
         # sim environment must have unstructured
         new_api['components']['schemas']['SimEnvironment']['required'] = ['unstructured']
 
-        # sim environment does not have type
-        del new_api['components']['schemas']['SimEnvironment']['properties']['type']
-
         # aid delay can be empty, but id is still required
         new_api['components']['schemas']['AidDelay']['required'] = ['id']
 
