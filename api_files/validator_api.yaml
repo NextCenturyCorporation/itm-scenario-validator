@@ -26,6 +26,10 @@ components:
         character_id:
           description: The ID of the character being acted upon
           type: string
+        intent_action:
+          default: false
+          description: Whether this action is to be taken or intended
+          type: boolean
         justification:
           description: A justification of the action taken
           example: Character is the VIP of the scenario
@@ -75,6 +79,10 @@ components:
           $ref: '#/components/schemas/SemanticTypeEnum'
         conditions:
           $ref: '#/components/schemas/Conditions'
+        intent_action:
+          default: false
+          description: Whether this mapping is to take an action or to intend one
+          type: boolean
         kdma_association:
           additionalProperties:
             format: float
@@ -86,9 +94,8 @@ components:
           - Mission: 0.8
           type: object
         next_scene:
-          description: The next scene in the scenario, by index
-          minimum: 0
-          type: integer
+          description: The ID of the next scene in the scenario; overrides Scene.next_scene
+          type: string
         parameters:
           additionalProperties:
             type: string
@@ -255,7 +262,8 @@ components:
       - extreme
       type: string
     AvpuLevelEnum:
-      description: Character level of response.  See [Levels of Response](https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response)
+      description: Character level of response; anything but ALERT is considered unconscious.  See
+        [Levels of Response](https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response)
         for details
       enum:
       - ALERT
@@ -280,6 +288,11 @@ components:
           $ref: '#/components/schemas/Demographics'
         directness_of_causality:
           $ref: '#/components/schemas/DirectnessEnum'
+        has_blanket:
+          default: false
+          description: whether or not this character has a blanket (either wrapped
+            around or underneath)
+          type: boolean
         id:
           description: A unique character ID throughout the scenario
           example: Soldier_01
@@ -321,7 +334,6 @@ components:
       - name
       - unstructured
       - demographics
-      - vitals
       type: object
     CharacterRoleEnum:
       description: The primary role a character has in the mission, in terms of the
@@ -367,19 +379,20 @@ components:
         or send a probe response
       properties:
         actions:
-          description: True if the any of the specified lists of actions have been
-            taken; multiple action ID lists have "or" semantics; multiple action IDs
-            within a list have "and" semantics
+          description: True if any of the specified lists of actions have been taken;
+            multiple action ID lists have "or" semantics; multiple action IDs within
+            a list have "and" semantics
           items:
             items:
               type: string
             type: array
           type: array
         character_vitals:
-          description: True if the specified list of vitals values have been met for
-            the specified character_id
+          description: True if any of the specified collection of vital values have
+            been met for the specified character_id
           items:
-            description: The minimum vitals of the specified character
+            description: True if all vitals values have been met by the specified
+              character_id
             properties:
               character_id:
                 description: The ID of the character in question
@@ -417,8 +430,8 @@ components:
             type: string
           type: array
         supplies:
-          description: True if there are at least the specified quantity of the specified
-            supply types remaining
+          description: True if any of the specified supplies reach or go below the
+            specified quantity
           example:
           - quantity: 1
             reusable: false
@@ -595,6 +608,7 @@ components:
       - left side
       - right chest
       - left chest
+      - center chest
       - right wrist
       - left wrist
       - left face
@@ -1026,6 +1040,9 @@ components:
     Scenario:
       description: a triage scenario requiring decisions by a medic
       properties:
+        first_scene:
+          description: indicates the first/opening scene ID in the scenario
+          type: string
         id:
           description: a globally unique id for the scenario
           type: string
@@ -1058,13 +1075,13 @@ components:
         end_scene_allowed:
           description: Whether ADMs can explicitly end the scene
           type: boolean
-        final_scene:
-          description: Whether this is the final scene in the scenario
-          type: boolean
-        index:
-          description: The order the scene appears in the scenario
-          minimum: 0
-          type: integer
+        id:
+          description: The scene ID, unique throughout the scenario
+          type: string
+        next_scene:
+          description: The ID of the default next scene in the scenario; if empty
+            or missing, then by default this is the last scene.
+          type: string
         persist_characters:
           description: Whether characters should persist from the previous scene
           type: boolean
@@ -1072,6 +1089,11 @@ components:
           description: TA1-provided probe configuration, ignored by TA3
           items:
             $ref: '#/components/schemas/ProbeConfig'
+          type: array
+        removed_characters:
+          description: List of character ids to be removed from the scene
+          items:
+            type: string
           type: array
         restricted_actions:
           description: List of actions that will be excluded from get_available_actions
@@ -1089,7 +1111,7 @@ components:
         transitions:
           $ref: '#/components/schemas/Conditions'
       required:
-      - index
+      - id
       - end_scene_allowed
       - action_mapping
       type: object
@@ -1254,6 +1276,7 @@ components:
       - Epi Pen
       - Vented Chest Seal
       - Pain Medications
+      - Fentanyl Lollipop
       - Splint
       - Blood
       - IV Bag
@@ -1382,9 +1405,6 @@ components:
           $ref: '#/components/schemas/AvpuLevelEnum'
         breathing:
           $ref: '#/components/schemas/BreathingLevelEnum'
-        conscious:
-          description: whether or not the character appears to be conscious
-          type: boolean
         heart_rate:
           $ref: '#/components/schemas/HeartRateEnum'
         mental_status:
@@ -1516,6 +1536,47 @@ paths:
       tags:
       - itm-ta2-eval
       x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
+  /ta2/intendAction:
+    post:
+      description: Express intent to take the specified Action within a scenario
+      operationId: intend_action
+      parameters:
+      - description: a unique session_id, as returned by /ta2/startSession
+        explode: true
+        in: query
+        name: session_id
+        required: true
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Action'
+        description: Encapsulation of the intended action by a DM in the context of
+          the scenario
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/State'
+          description: Successful operation, scenario state returned
+        '400':
+          description: Invalid action or Session ID, or did not specify an intent
+            action
+        '500':
+          content:
+            text/plain:
+              schema:
+                type: string
+                x-content-type: text/plain
+          description: An exception occurred on the server; see returned error string.
+      summary: Express intent to take an action within a scenario
+      tags:
+      - itm-ta2-eval
+      x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
   /ta2/scenario:
     get:
       description: Get the next scenario in a session with the specified ADM name,
@@ -1571,7 +1632,7 @@ paths:
         scenarios together
       operationId: start_session
       parameters:
-      - description: A self-assigned ADM name.  Can add authentication later.
+      - description: A self-assigned ADM name.
         explode: true
         in: query
         name: adm_name
@@ -1579,7 +1640,15 @@ paths:
         schema:
           type: string
         style: form
-      - description: the type of session to start (`eval` or a TA1 name)
+      - description: a profile of the ADM in terms of its alignment strategy
+        explode: true
+        in: query
+        name: adm_profile
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: the type of session to start (`eval`, `test`, or a TA1 name)
         explode: true
         in: query
         name: session_type
@@ -1659,7 +1728,7 @@ paths:
                 $ref: '#/components/schemas/State'
           description: Successful operation, scenario state returned
         '400':
-          description: Invalid action or Session ID
+          description: Invalid action or Session ID, or specified an intent action
         '500':
           content:
             text/plain:
