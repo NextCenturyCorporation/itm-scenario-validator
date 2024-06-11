@@ -85,7 +85,7 @@ class YamlValidator:
                 self.allowed_supplies.remove(x)
 
             for character in self.loaded_yaml.get('state', {'characters': []})['characters']:
-                if not character.get('has_blanket', False):
+                if character.get('has_blanket', False):
                    self.invalid_keys += 1 
                    self.logger.log(LogLevel.WARN, f"Blankets can't appear on characters at startup unless in training mode but '{character.get('id')}' has 'has_blanket' set to True.")
 
@@ -886,6 +886,9 @@ class YamlValidator:
                         self.invalid_values += 1
 
     def pulse_ox_info(self, scene_id):
+        '''
+        Error message relating to pulse oximeter configuration in a scene.
+        '''
         self.invalid_values += 1
         self.logger.log(LogLevel.INFO, f"There might be an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
 
@@ -927,6 +930,7 @@ class YamlValidator:
             if scene is not first_scene:
                 if 'state' in scene:
                     scene_state = scene['state']
+
                     # if supplies are not defined in the state and there is no pulse oximeter originally available
                     if 'supplies' not in scene_state and not first_scene_po:
                         # check if invalid action type exists when the pulse oximeter is not available
@@ -935,6 +939,7 @@ class YamlValidator:
                             if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
                                 self.pulse_ox_info(scene['id'])
                                 break
+                            
                     # if supplies are defined in the scene
                     if 'supplies' in scene_state:
                         pulse_ox = False
