@@ -45,6 +45,7 @@ class YamlValidator:
     out_of_range = 0
     invalid_keys = 0
     empty_levels = 0
+    warning_count = 0
     train_mode = False
     allowed_supplies = []
 
@@ -438,6 +439,8 @@ class YamlValidator:
         self.verify_allowed_actions()
         self.check_first_scene()
         self.is_pulse_oximeter_configured()
+        self.check_scene_env_type()
+
 
 
     def simple_requirements(self):
@@ -805,6 +808,8 @@ class YamlValidator:
                 # get the scene index
                 ind = int(l.split('cenes[')[1].split(']')[0])
                 s = scenes[ind]
+                if 'characters' not in s:
+                    continue
                 # make sure the index exists in the allowed values dict
                 if ind not in allowed_vals and s['id'] != first_scene:
                     where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
@@ -853,7 +858,7 @@ class YamlValidator:
 
     def scenes_with_state(self):
         '''
-        Looks through the yaml file to make sure that every scene from 1 to n has 
+        Looks through the yaml file to make sure that every scene except the first has 
         a state field
         '''
         data = copy.deepcopy(self.loaded_yaml)
@@ -880,9 +885,8 @@ class YamlValidator:
         for i in range(0, len(scenes)):
             if 'restricted_actions' in scenes[i] and 'action_mapping' in scenes[i]:
                 for x in scenes[i]['action_mapping']:
-                    action_type = x['action_type']
-                    if action_type in scenes[i]['restricted_actions']:
-                        self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with index {i}, but appears in the action_mapping within that scene.")
+                    if x['action_type'] in scenes[i]['restricted_actions']:
+                        self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with id '{scenes[i]['id']}', but appears in the action_mapping within that scene.")
                         self.invalid_values += 1
 
     def pulse_ox_info(self, scene_id):
@@ -1057,6 +1061,21 @@ class YamlValidator:
             self.logger.log(LogLevel.WARN, "Key 'state' is not allowed in the first scene")
             self.invalid_keys += 1
 
+    def check_scene_env_type(self):
+        '''
+        Checks to make sure if a scene state defines sim_environment, the type is not 
+        different from the type defined in scenario.sim_environment
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        orig_type = data['state']['environment']['sim_environment']['type']
+        scenes = data['scenes']
+        for scene in scenes:
+            if 'state' in scene and 'environment' in scene['state'] and 'sim_environment' in scene['state']['environment']:
+                new_type = scene['state']['environment']['sim_environment'].get('type', None)
+                if new_type is not None and new_type != orig_type:
+                    self.warning_count += 1
+                    self.logger.log(LogLevel.INFO, f"Key 'type' should not be redefined in scene states, but changes from '{orig_type}' to '{new_type}' in scene '{scene['id']}'. This redefinition will be ignored.")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator')
@@ -1087,7 +1106,9 @@ if __name__ == '__main__':
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.out_of_range == 0 else "\033[91m") + "Invalid Values (out of range): " + str(validator.out_of_range))
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.empty_levels == 0 else "\033[91m") + "Properties Missing Data (empty level): " + str(validator.empty_levels))
     total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels + validator.out_of_range
+    print()
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if total_errors == 0 else "\033[91m") + "Total Errors: " + str(total_errors))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.warning_count == 0 else "\033[91m") + "Warnings: " + str(validator.warning_count))
     if total_errors == 0:
         validator.logger.log(LogLevel.CRITICAL_INFO, "\033[92m" + file + " is valid!")
     else:
