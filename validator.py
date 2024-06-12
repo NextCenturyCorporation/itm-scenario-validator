@@ -889,12 +889,17 @@ class YamlValidator:
                         self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with id '{scenes[i]['id']}', but appears in the action_mapping within that scene.")
                         self.invalid_values += 1
 
-    def pulse_ox_info(self, scene_id):
+    def pulse_ox_info(self, scene_id, issue):
         '''
         Error message relating to pulse oximeter configuration in a scene.
         '''
-        self.invalid_values += 1
-        self.logger.log(LogLevel.INFO, f"There might be an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
+        if issue:
+            self.invalid_values += 1
+            self.logger.log(LogLevel.WARN, f"There is an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
+        else:
+            self.warning_count += 1
+            self.logger.log(LogLevel.INFO, f"There might be an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
+        
 
     def is_pulse_oximeter_configured(self): 
         '''
@@ -926,7 +931,7 @@ class YamlValidator:
         if not first_scene_po:
             for action in first_map:
                 if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
-                    self.pulse_ox_info(first_scene['id'])
+                    self.pulse_ox_info(first_scene['id'], True)
                     break
 
         # testing all other scenes if they are valid in terms of their actions and the pulse oximeter   
@@ -941,15 +946,13 @@ class YamlValidator:
                         map = scene['action_mapping']
                         for action in map:
                             if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
-                                self.pulse_ox_info(scene['id'])
+                                self.pulse_ox_info(scene['id'], False)
                                 break
                             
                     # if supplies are defined in the scene
                     if 'supplies' in scene_state:
                         pulse_ox = False
-                        # decide whether to use the originally pulse oximeter defined in the inital state or the newly added one in supplies
-                        supplies = data['state']['supplies'] if first_scene_po else scene_state['supplies']
-                        for item in supplies:
+                        for item in scene_state['supplies']:
                             if item['type'] == 'Pulse Oximeter' and item['quantity'] > 0:
                                 pulse_ox = True
                         # check if invalid action type exists when the pulse oximeter is not available
@@ -957,7 +960,7 @@ class YamlValidator:
                         for action in map:
                             if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
                                 if not pulse_ox:
-                                    self.pulse_ox_info(scene['id'])
+                                    self.pulse_ox_info(scene['id'], True)
                                     break
                                     
 
