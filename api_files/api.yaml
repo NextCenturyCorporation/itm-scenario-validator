@@ -891,6 +891,15 @@ components:
         source_character:
           description: "The character id of the person responsible for the injury, subject to the character's `directness_of_causality`"
           type: string
+        treatments_required:
+          type: integer
+          description: "The number of successful treatments required to treat the injury fully, which sets `status` to `treated`"
+          minimum: 1
+        treatments_applied:
+          type: integer
+          description: The number of successful treatments applied to the injury
+          minimum: 0
+          default: 0
     Scene:
       required:
         - id
@@ -1705,12 +1714,13 @@ components:
         - extreme
     InjuryStatusEnum:
       type: string
-      description: "Whether the injury is known prior- and post-assessment, and whether it's been treated"
+      description: "Whether the injury is known prior- and post-assessment, and to what extent it's been treated"
       enum:
         - hidden
         - discoverable
         - visible
         - discovered
+        - partially treated
         - treated
     AvpuLevelEnum:
       type: string

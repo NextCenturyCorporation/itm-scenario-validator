@@ -88,7 +88,6 @@ In order for a yaml file to be considered "valid", the following conditions must
 * Exceptions to the two rules above include the following:
     * `scenario.scenes` is required
     * All vitals properties are required
-        * `conscious`
         * `avpu`
         * `mental_status`
         * `breathing`
@@ -123,10 +122,8 @@ In order for a yaml file to be considered "valid", the following conditions must
 
 #### Conditional Prohibitions
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
-
-#### Dependency Allowed Values
-* If `state.characters[n].vitals.conscious` is "False", `state.characters[n].vitals.avpu` should be "UNRESPONSIVE" or "PAIN" and `state.characters[n].vitals.mental_status` should be "UNRESPONSIVE" 
-
+* If `scenes[n].action_mapping[m].action_type' is "CHECK_BLOOD_OXYGEN" or "CHECK_ALL_VITALS" and there is no pulse oximeter correctly configured in the supplies for the scene, a warning will be given. 
+ 
 #### Value Matching
 * `state.characters[n].injuries[m].source_character` must be one of the `state.characters.character_id`'s
 * `scenes[n].tagging.reference` must be one of the `scenes[n].id`'s 
@@ -170,9 +167,12 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 #### Eval Mode
 When not running in training mode (-t), additional checks are implemented:
 * No supplies or treatments are allowed that are not in the simulator. Put the names of these treatments in the trainingOnlySupplies array in dependencies.json
+* No blanket can appear on the character at the start. 
 
 #### Injury/Location Matches
-Injuries are only allowed to have specific locations. Please follow the table to create valid matches.
+* Only a maximum of 8 injuries can be shown on the simulation, not counting ear bleed, asthmatic, broken bones, and
+internal injuries.
+* Injuries are only allowed to have specific locations. Please follow the table to create valid matches. 
 | Injury name | Allowed Locations |
 | --- | --- |
 | `Ear Bleed` | `left face`, `right face` |
@@ -182,9 +182,9 @@ Injuries are only allowed to have specific locations. Please follow the table to
 | `Shrapnel` | `left face`, `right face`, `left calf`, `right calf` |
 | `Chest Collapse` | `left chest`, `right chest` |
 | `Amputation` | `left wrist`, `right wrist`, `left leg`, `right leg` |
-| `Burn` | `right forearm`, `left forearm`, `right arm`, `left arm`, `right leg`, `left leg`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
-| `Abrasion` | `right forearm`, `left forearm`, `right arm`, `left arm`, `right leg`, `left leg`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
-| `Broken Bone` | `right forearm`, `left forearm`, `right arm`, `left arm`, `right leg`, `left leg`, `right thigh`, `left thigh`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right wrist`, `left wrist`, `left neck`, `right neck`, `unspecified` |
+| `Burn` | `right forearm`, `left forearm`, `right leg`, `left leg`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
+| `Abrasion` | `right forearm`, `left forearm`, `right hand`, `left hand`, `right leg`, `left leg`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
+| `Broken Bone` | `right forearm`, `left forearm`, `right hand`, `left hand`, `right leg`, `left leg`, `right thigh`, `left thigh`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right wrist`, `left wrist`, `left neck`, `right neck`, `unspecified` |
 | `Internal` | `internal` | 
 
 #### Military Branches, Ranks, and Rank Titles

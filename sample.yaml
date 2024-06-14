@@ -81,7 +81,7 @@ state:
       unstructured: >
         A 34 year-old male Marine hit by an IED. 
         Has been treated with a bandage on his left hand and has a blanket over his shoulders.
-      has_blanket: true # Whether or not a blanket has been placed on or under a character
+      has_blanket: false # Whether or not a blanket has been placed on or under a character
       intent: intend minor help # The moral intent of the character; controlled vocab includes intend major harm, intend minor harm, no intent, intend minor help, intend major help
       rapport: familial # A measure of closeness or affinity towards the player/medic. Controlled vocab: loathing, dislike, neutral, close, familial
       demographics:
@@ -108,11 +108,15 @@ state:
       injuries:
         - name: Internal # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
           location: internal # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
-          status: hidden # controlled vocab: hidden, discoverable, discovered, treated, visible
+          status: hidden # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
           source_character: Civilian_01 # The character id of the person responsible for the injury
+        - name: Puncture # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
+          location: right side # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
+          status: discoverable # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
+          treatments_required: 3 # How many successful treatments until fully treated?
         - name: Laceration # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
           location: left hand # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
-          status: treated # controlled vocab: hidden, discoverable, discovered, treated, visible
+          status: treated # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
     - id: Civilian_01
       name: Unknown civilian
       unstructured: >
@@ -246,7 +250,7 @@ scenes:
         unstructured: Treat Mike's injury
         character_id: Mike
         # Here, the probe response is only sent if the specified treatment is made to the specified location
-        parameters: { "treatment": "Tourniquet", "location": "right forearm" }
+        parameters: { "treatment": "Hemostatic gauze", "location": "right side" }
         probe_id: adept-september-demo-probe-1
         choice: s1-p1-choice3
       - action_id: civ-sitrep
@@ -334,7 +338,7 @@ scenes:
             - name: Burn # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
               location: unspecified # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
               severity: substantial # controlled vocab: minor, moderate, substantial, major, extreme
-              status: discoverable # controlled vocab: hidden, discoverable, discovered, treated, visible
+              status: discoverable # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
         - id: Captain_01
           name: Katie
           unstructured: >
@@ -399,6 +403,7 @@ scenes:
   - id: cleanup
     end_scene_allowed: true
     persist_characters: true
+    removed_characters: ['Captain_01']
     state:
       mission:
         unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required
@@ -409,3 +414,5 @@ scenes:
         character_id: Civilian_01
         probe_id: adept-september-demo-probe-5
         choice: s1-p5-choice2
+    transitions:
+      elapsed_time_lt: 5 # Require the ADM to end the scene.

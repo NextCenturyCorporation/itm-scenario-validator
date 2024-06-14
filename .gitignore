@@ -1,5 +1,6 @@
 # virtual environment
 validator
+venv
 
 # junk folder
 __pycache__
