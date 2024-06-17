@@ -162,16 +162,15 @@ Any supply name placed in this array will be excluded from the allowed supplies 
     * Every character with `mission_importance` should be an entry in `character_importance`, and vice-versa 
     * This does not include "normal", which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance "normal", or a character may specify `mission_importance` with "normal" and `character_importance` may not list that character 
 * If the scene is the first scene, `scenes[].state` should _not_ be provided
-
+* No blanket can appear on the character at the start. 
 
 #### Eval Mode
 When not running in training mode (-t), additional checks are implemented:
 * No supplies or treatments are allowed that are not in the simulator. Put the names of these treatments in the trainingOnlySupplies array in dependencies.json
-* No blanket can appear on the character at the start. 
+* No more than 8 injuries of types (puncture, burn, or laceration) may be given to a character at a time
+
 
 #### Injury/Location Matches
-* Only a maximum of 8 injuries can be shown on the simulation, not counting ear bleed, asthmatic, broken bones, and
-internal injuries.
 * Injuries are only allowed to have specific locations. Please follow the table to create valid matches. 
 | Injury name | Allowed Locations |
 | --- | --- |
