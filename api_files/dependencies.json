@@ -172,7 +172,8 @@
             "Ear Bleed": {
                 "state.characters[].injuries[].location": [
                     "left face",
-                    "right face"
+                    "right face",
+                    "unspecified"
                 ]
             },
             "Asthmatic": {
@@ -213,7 +214,8 @@
                     "right thigh",
                     "left chest",
                     "right chest",
-                    "center chest"
+                    "center chest",
+                    "unspecified"
                 ]
             },
             "Shrapnel": {
@@ -221,13 +223,15 @@
                     "left face",
                     "right face",
                     "left calf",
-                    "right calf"
+                    "right calf",
+                    "unspecified"
                 ]
             },
             "Chest Collapse": {
                 "state.characters[].injuries[].location": [
                     "left chest",
-                    "right chest"
+                    "right chest",
+                    "unspecified"
                 ]
             },
             "Amputation": {
@@ -235,7 +239,8 @@
                     "left wrist",
                     "right wrist",
                     "left calf",
-                    "right calf"
+                    "right calf",
+                    "unspecified"
                 ]
             },
             "Burn": {
@@ -280,7 +285,8 @@
             },
             "Internal": {
                 "state.characters[].injuries[].location": [
-                    "internal"
+                    "internal",
+                    "unspecified"
                 ]
             }
         },
