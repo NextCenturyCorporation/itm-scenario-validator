@@ -177,14 +177,14 @@ internal injuries.
 | --- | --- |
 | `Ear Bleed` | `left face`, `right face` |
 | `Asthmatic` | `unspecified`, `internal` |
-| `Laceration` | `left forearm`, `right forearm`, `left stomach`, `right stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist` |
+| `Laceration` | `left face`, `left forearm`, `right forearm`, `left stomach`, `right stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist`, `unspecified` |
 | `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest` |
 | `Shrapnel` | `left face`, `right face`, `left calf`, `right calf` |
 | `Chest Collapse` | `left chest`, `right chest` |
 | `Amputation` | `left wrist`, `right wrist`, `left leg`, `right leg` |
-| `Burn` | `right forearm`, `left forearm`, `right leg`, `left leg`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
-| `Abrasion` | `right forearm`, `left forearm`, `right hand`, `left hand`, `right leg`, `left leg`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right stomach`, `left stomach`, `right bicep`, `left bicep`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right chest`, `left chest`, `right wrist`, `left wrist`, `left face`, `right face`, `left neck`, `right neck`, `unspecified` |
-| `Broken Bone` | `right forearm`, `left forearm`, `right hand`, `left hand`, `right leg`, `left leg`, `right thigh`, `left thigh`, `right shoulder`, `left shoulder`, `right side`, `left side`, `right wrist`, `left wrist`, `left neck`, `right neck`, `unspecified` |
+| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `unspecified` |
+| `Abrasion` | `left face`, `left forearm`, `right forearm`, `left stomach`, `right stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist`, `unspecified` |
+| `Broken Bone` | `right leg`, `left leg`, `right shoulder`, `left shoulder`, `unspecified` |
 | `Internal` | `internal` | 
 
 #### Military Branches, Ranks, and Rank Titles

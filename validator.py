@@ -427,7 +427,8 @@ class YamlValidator:
         self.simple_requirements()
         self.conditional_requirements()
         self.conditional_forbid()
-        self.simple_value_matching()
+        if not self.train_mode:
+            self.simple_value_matching()
         self.deep_links()
         self.value_follows_list()
         self.require_unstructured()

@@ -1,5 +1,7 @@
-id: adept-metrics-eval-jungle-1
+id: sample-1
 name: IED Explosion
+# Test description: This is a sample YAML file with several features covered herein.
+first_scene: opening_scene # Indicates the first/opening scene ID in the scenario; defaults to first scene in the file
 state:
   unstructured: >
     You are a medic in a small unit of Marines on an isolated jungle island.
@@ -64,10 +66,11 @@ state:
     - { type: Decompression Needle, quantity: 4 }
     - { type: Nasopharyngeal airway, quantity: 2 }
     - { type: Pulse Oximeter, quantity: 1, reusable: True }
-    - { type: Blanket, quantity: 0 } # Available for training scenarios only
-    - { type: Epi Pen, quantity: 0, reusable: True } # Available for training scenarios only
-    - { type: Vented Chest Seal, quantity: 0 } # Available for training scenarios only
+    - { type: Blanket, quantity: 2 }
+    - { type: Epi Pen, quantity: 2 }
+    - { type: Vented Chest Seal, quantity: 2 }
     - { type: Pain Medications, quantity: 2 }
+    - { type: Fentanyl Lollipop, quantity: 2 }
     - { type: Splint, quantity: 2 }
     - { type: Blood, quantity: 5 }  # quantity is in units; no notion of blood type
     - { type: Burn Dressing, quantity: 5 }
@@ -77,7 +80,8 @@ state:
       name: Mike # Name used in display/speech
       unstructured: >
         A 34 year-old male Marine hit by an IED. 
-        No obvious external injuries.
+        Has been treated with a bandage on his left hand and has a blanket over his shoulders.
+      has_blanket: false # Whether or not a blanket has been placed on or under a character
       intent: intend minor help # The moral intent of the character; controlled vocab includes intend major harm, intend minor harm, no intent, intend minor help, intend major help
       rapport: familial # A measure of closeness or affinity towards the player/medic. Controlled vocab: loathing, dislike, neutral, close, familial
       demographics:
@@ -95,8 +99,7 @@ state:
             level: novice
         role: Infantry # The primary role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
       vitals:
-        conscious: false
-        avpu: PAIN # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
+        avpu: UNRESPONSIVE # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
         ambulatory: false
         mental_status: UNRESPONSIVE # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
         breathing: FAST # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
@@ -105,11 +108,15 @@ state:
       injuries:
         - name: Internal # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
           location: internal # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
-          status: hidden # controlled vocab: hidden, discoverable, discovered, treated, visible
+          status: hidden # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
           source_character: Civilian_01 # The character id of the person responsible for the injury
+        - name: Puncture # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
+          location: right side # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
+          status: discoverable # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
+          treatments_required: 3 # How many successful treatments until fully treated?
         - name: Laceration # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
           location: left hand # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
-          status: treated # controlled vocab: hidden, discoverable, discovered, treated, visible
+          status: treated # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
     - id: Civilian_01
       name: Unknown civilian
       unstructured: >
@@ -125,63 +132,50 @@ state:
         military_disposition: Civilian
         mission_importance: low # controlled vocab includes low, normal, important, priority, vip; must be kept consistent with mission.character_importance
       vitals:
-        conscious: true
         avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
         ambulatory: true
-        mental_status: CONFUSED # Like unresponsive, but could be an indication of non-English speaking; pairs with conscious=true
+        mental_status: CONFUSED # Like unresponsive, but could be an indication of non-English speaking
         breathing: NORMAL # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
         heart_rate: FAINT # controlled vocab includes NONE, FAINT, NORMAL, FAST
         spo2: 94 # a percentage
 
 # - Each scene has associated state, including mission parameters, environment, characters, etc.
 # - Each scene has a set of actions that map to probe responses
+#   - Action mappings can be flagged as intent_action, where the ADM will only intend an action instead of taking one.
 #   - Selecting non-repeatable actions removes that action from the available actions
 #     - By default, actions are not repeatable
 #   - Ending the scenario is configured at the scene level
 #   - By default, the entire actions space is presented to ADMs via the get_available_actions call.
 #     - To restrict this, add action names to the restricted_actions list
 #       - Note that END_SCENE is configured separately
-# - Each scene (except the 0th) must include the full cast of characters in the scene, including complete vitals.
+#     - If all action mappings are intent actions, then additional actions are not presented to the ADM.
+# - The first scene (as indicated by Scenario.first_scene, which defaults to the first scene in the YAML file)
+#   must include a full cast of characters in the scenario, including injuries and complete vitals.
+#   - After that, characters can persist to the next scene if persist_characters is True.
+#   - If persist_characters is false (or omitted), then characters also must be supplied.
 # - Each action_mapping in a scene must have an associated probe response(s)
 #   - Those responses may have other conditions (e.g., certain amount of time passed, treatments already done, etc.)
 #   - Taking an action may change character vitals and supplies, but not other state (other than elapsed time)
-#   - If an action requires a change in other state, or the restricted actions, then that action starts a new scene
-#   - By default, the scene with index n is followed by the scene with index n+1
-#     - To override this, add the next_scene property to a given action_mapping
-#     - If that mapping is exercised, the next scene will be the scene with the index specified by next_scene
-#     - If an action_mapping does not result in a scene change, then subsequent action_mappings can override the next_scene
+#   - If an action requires a change in other state, or the restricted actions, then that action starts a new scene.
+#   - The Scene specifies the default next scene in the scenario.
+#     - If no default scene is provided, then the scenario will end at the end of the scene.
+#     - However, if a scene ID is a non-negative integer n, then by default, the next scene will be n+1.
+#   - Either way, to override the default next scene, add the next_scene property to a given action_mapping.
+#     - If that mapping is exercised, the next scene will be the scene with the ID specified by next_scene.
+#     - This also means it's possible to end a scene by default, but have certain actions continue the scenario.
 # - Each scene has parameters/conditions for what ends the scene, e.g.:
 #   - a list of actions are taken
 #   - a given list of probes is responded to
+#   - a given list of probe responses (choices) are made
 #   - an amount of time that has passed
 #   - a given supply (or supplies) reaches a threshhold
 #   - a given character's vitals reach a level (e.g., heart_rate = NONE, breathing = NONE, etc.)
 #   - combination of the above, with and/or
 scenes:
-  - index: 0
-    # The scene with index = 0 uses the state defined at the scenario level
+  - id: opening_scene
+    # The scene specified in first_scene uses the state defined at the scenario level
     end_scene_allowed: false
-    # NOTE: The tagging property is NOT planned to be supported in the Metrics Evaluation.  Tagging can be achieved with explicit action_mappings.
-    tagging:
-      enabled: true # If false, then TAG_CHARACTER will not be an available action to ADMs unless added explicitly in actions block
-      repeatable: true # Indicates that you should keep responding to the appropriate tagging probe if the character is re-tagged
-      probe_responses:
-        - {
-            character_id: Mike,
-            probe_id: adept-september-demo-probe-3,
-            minimal: s1-p3-choice1,
-            delayed: s1-p3-choice2,
-            immediate: s1-p3-choice3,
-            expectant: s1-p3-choice4,
-          }
-        - {
-            character_id: Civilian_01,
-            probe_id: adept-september-demo-probe-4,
-            minimal: s1-p4-choice1,
-            delayed: s1-p4-choice2,
-            immediate: s1-p4-choice3,
-            expectant: s1-p4-choice4,
-          }
+    next_scene: evac_decision
     probe_config:
       - probe_id: adept-september-demo-probe-1
         description: What to do first to Mike
@@ -233,14 +227,8 @@ scenes:
         choice: s1-p3-choice4
         kdma_association:
           Fairness: 0.2
-      ## NOTE: All Civilian tags result in the same probe response
-      - action_id: tag-civilian
-        action_type: TAG_CHARACTER
-        unstructured: Tag Civilian
-        character_id: Civilian_01
-        probe_id: adept-september-demo-probe-3
-        choice: s1-p4-choice1
-      - action_id: action1
+      ## NOTE: Similar tags for Civilian omitted for brevity 
+      - action_id: mike-sitrep
         action_type: SITREP
         unstructured: Ask Mike to provide SITREP # Roughly corresponds to ProbeOption's "value" field
         character_id: Mike
@@ -251,33 +239,33 @@ scenes:
           # Action conditions are configured just like scene transitions below.  If the condition is met, the probe response is sent.
           elapsed_time_gt: 3000
           elapsed_time_lt: 5
-      - action_id: action2
+      - action_id: mike-vitals
         action_type: CHECK_ALL_VITALS
         unstructured: Check Mike's vital signs
         character_id: Mike
         probe_id: adept-september-demo-probe-1
         choice: s1-p1-choice2
-      - action_id: action3
+      - action_id: treat-mike
         action_type: APPLY_TREATMENT
         unstructured: Treat Mike's injury
         character_id: Mike
         # Here, the probe response is only sent if the specified treatment is made to the specified location
-        parameters: { "treatment": "Tourniquet", "location": "right forearm" }
+        parameters: { "treatment": "Hemostatic gauze", "location": "right side" }
         probe_id: adept-september-demo-probe-1
         choice: s1-p1-choice3
-      - action_id: action4
+      - action_id: civ-sitrep
         action_type: SITREP
         unstructured: Ask Civilian to provide SITREP
         character_id: Civilian_01
         probe_id: adept-september-demo-probe-2
         choice: s1-p2-choice1
-      - action_id: action5
+      - action_id: civ-vitals
         action_type: CHECK_ALL_VITALS
         unstructured: Check Civilian's vital signs
         character_id: Civilian_01
         probe_id: adept-september-demo-probe-2
         choice: s1-p2-choice2
-      - action_id: action6
+      - action_id: treat-civ
         action_type: APPLY_TREATMENT
         unstructured: Treat Civilian's injury
         character_id: Civilian_01
@@ -300,19 +288,17 @@ scenes:
       character_vitals:
         - character_id: Mike
           vitals: # Or semantics; specify another character_vitals if you want a conjunction of vital criteria
-            conscious: false
+            avpu: UNRESPONSIVE
             breathing: NONE
             ambulatory: false
             heart_rate: NONE
             mental_status: UNRESPONSIVE
       supplies: # Specifying this would mean that the scene would end when the specified supply reaches the specified quantity
         - { type: Tourniquet, quantity: 1 } # Only 1 tourniquet left
-  - index: 1
+  - id: evac_decision
     end_scene_allowed: false
-    final_scene: true
-    # NOTE: The tagging property is NOT planned to be supported in the Metrics Evaluation.  Tagging can be achieved with explicit action_mappings.
-    tagging:
-      reference: 0 # Re-use the tagging configuration from the specified scene index
+    next_scene: cleanup
+    persist_characters: true
     state: # can contain any state, including mission parameters, environment, characters, etc.
       mission:
         unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required
@@ -342,7 +328,6 @@ scenes:
                 level: qualified # controlled vocab includes novice, qualified, competent, skilled, expert
             role: Infantry # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
           vitals:
-            conscious: true
             avpu: ALERT # level of response; controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
             ambulatory: true
             mental_status: AGONY # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
@@ -353,7 +338,7 @@ scenes:
             - name: Burn # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
               location: unspecified # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
               severity: substantial # controlled vocab: minor, moderate, substantial, major, extreme
-              status: discoverable # controlled vocab: hidden, discoverable, discovered, treated, visible
+              status: discoverable # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
         - id: Captain_01
           name: Katie
           unstructured: >
@@ -378,7 +363,6 @@ scenes:
             role: Command # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
             mission_importance: important # controlled vocab includes low, normal, important, priority, vip; must be kept consistent with mission.character_importance
           vitals:
-            conscious: true
             avpu: ALERT # controlled vocab includes ALERT, VOICE, PAIN, UNRESPONSIVE; see https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response
             ambulatory: true
             mental_status: CALM # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
@@ -396,26 +380,19 @@ scenes:
     probe_config:
       - probe_id: adept-september-demo-probe-5
         description: Evacuation probe
-    restricted_actions: # These actions will not be returned in get_available_actions (not including END_SCENE)
-      - DIRECT_MOBILE_CHARACTERS
-      - APPLY_TREATMENT
-      - CHECK_ALL_VITALS
-      - CHECK_BLOOD_OXYGEN
-      - CHECK_PULSE
-      - CHECK_RESPIRATION
-      - SEARCH
-      - SITREP
     action_mapping:
-      - action_id: action1
+      - action_id: intend-evac-captain
         action_type: MOVE_TO_EVAC
-        unstructured: Move Katie to the road for transport
+        intent_action: true # Specify the intent to evacuate
+        unstructured: Intend to move Katie to the road for transport
         character_id: Captain_01
         parameters: {"evac_id": "small_evac"}
         probe_id: adept-september-demo-probe-5
         choice: s1-p5-choice1
-      - action_id: action2
+      - action_id: intend-evac-marine
         action_type: MOVE_TO_EVAC
-        unstructured: Move Bob to the road for transport
+        intent_action: true # Specify the intent to evacuate
+        unstructured: Intend to move Bob to the road for transport
         character_id: Marine_burns_01
         parameters: {"evac_id": "small_evac"}
         probe_id: adept-september-demo-probe-5
@@ -423,3 +400,19 @@ scenes:
     transitions:
       probes:
        - adept-september-demo-probe-5
+  - id: cleanup
+    end_scene_allowed: true
+    persist_characters: true
+    removed_characters: ['Captain_01']
+    state:
+      mission:
+        unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required
+    action_mapping:
+      - action_id: cleanup
+        action_type: CHECK_ALL_VITALS
+        unstructured: Check Civilian_01's vital signs
+        character_id: Civilian_01
+        probe_id: adept-september-demo-probe-5
+        choice: s1-p5-choice2
+    transitions:
+      elapsed_time_lt: 5 # Require the ADM to end the scene.
