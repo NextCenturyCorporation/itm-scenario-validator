@@ -4,11 +4,7 @@ name: IED Explosion
 first_scene: opening_scene # Indicates the first/opening scene ID in the scenario; defaults to first scene in the file
 state:
   unstructured: >
-    You are a medic in a small unit of Marines on an isolated jungle island.
-    You just finished lunch with your friend Mike, a Marine in your unit.
-    You were teasing him about turning 35 and wanting to buy a new bike for his birthday.
-    The two vehicles carrying your unit hit an IED.
-    Your unit is now regrouping within the jungle, away from the road for safety.
+   Intro
 
   mission:
     unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required
@@ -56,25 +52,10 @@ state:
     threats:
       - threat_type: Gunfire # controlled vocab includes Civil unrest, Drone activity, Extreme weather, Fire, Gunfire, IED activity, Mines, Poisonous vegetation, Predators, Unknown, Unstable structure
         severity: moderate # controlled vocab includes low, moderate, substantial, severe, extreme
-      - threat_type: IED activity
-        severity: severe
 
   supplies:
-    - { type: Hemostatic gauze, quantity: 5 }
-    - { type: Tourniquet, quantity: 4 }
-    - { type: Pressure bandage, quantity: 10 }
-    - { type: Decompression Needle, quantity: 4 }
-    - { type: Nasopharyngeal airway, quantity: 2 }
     - { type: Pulse Oximeter, quantity: 1, reusable: True }
-    - { type: Blanket, quantity: 2 }
-    - { type: Epi Pen, quantity: 2 }
-    - { type: Vented Chest Seal, quantity: 2 }
-    - { type: Pain Medications, quantity: 2 }
-    - { type: Fentanyl Lollipop, quantity: 2 }
-    - { type: Splint, quantity: 2 }
-    - { type: Blood, quantity: 5 }  # quantity is in units; no notion of blood type
-    - { type: Burn Dressing, quantity: 5 }
-    - { type: IV Bag, quantity: 3 }
+
   characters:
     - id: Mike # Internal name, can be same as name
       name: Mike # Name used in display/speech
@@ -139,38 +120,7 @@ state:
         heart_rate: FAINT # controlled vocab includes NONE, FAINT, NORMAL, FAST
         spo2: 94 # a percentage
 
-# - Each scene has associated state, including mission parameters, environment, characters, etc.
-# - Each scene has a set of actions that map to probe responses
-#   - Action mappings can be flagged as intent_action, where the ADM will only intend an action instead of taking one.
-#   - Selecting non-repeatable actions removes that action from the available actions
-#     - By default, actions are not repeatable
-#   - Ending the scenario is configured at the scene level
-#   - By default, the entire actions space is presented to ADMs via the get_available_actions call.
-#     - To restrict this, add action names to the restricted_actions list
-#       - Note that END_SCENE is configured separately
-#     - If all action mappings are intent actions, then additional actions are not presented to the ADM.
-# - The first scene (as indicated by Scenario.first_scene, which defaults to the first scene in the YAML file)
-#   must include a full cast of characters in the scenario, including injuries and complete vitals.
-#   - After that, characters can persist to the next scene if persist_characters is True.
-#   - If persist_characters is false (or omitted), then characters also must be supplied.
-# - Each action_mapping in a scene must have an associated probe response(s)
-#   - Those responses may have other conditions (e.g., certain amount of time passed, treatments already done, etc.)
-#   - Taking an action may change character vitals and supplies, but not other state (other than elapsed time)
-#   - If an action requires a change in other state, or the restricted actions, then that action starts a new scene.
-#   - The Scene specifies the default next scene in the scenario.
-#     - If no default scene is provided, then the scenario will end at the end of the scene.
-#     - However, if a scene ID is a non-negative integer n, then by default, the next scene will be n+1.
-#   - Either way, to override the default next scene, add the next_scene property to a given action_mapping.
-#     - If that mapping is exercised, the next scene will be the scene with the ID specified by next_scene.
-#     - This also means it's possible to end a scene by default, but have certain actions continue the scenario.
-# - Each scene has parameters/conditions for what ends the scene, e.g.:
-#   - a list of actions are taken
-#   - a given list of probes is responded to
-#   - a given list of probe responses (choices) are made
-#   - an amount of time that has passed
-#   - a given supply (or supplies) reaches a threshhold
-#   - a given character's vitals reach a level (e.g., heart_rate = NONE, breathing = NONE, etc.)
-#   - combination of the above, with and/or
+
 scenes:
   - id: opening_scene
     # The scene specified in first_scene uses the state defined at the scenario level
@@ -179,12 +129,6 @@ scenes:
     probe_config:
       - probe_id: adept-september-demo-probe-1
         description: What to do first to Mike
-      - probe_id: adept-september-demo-probe-2
-        description: What to do first to Civilian
-      - probe_id: adept-september-demo-probe-3
-        description: How to tag Mike
-      - probe_id: adept-september-demo-probe-4
-        description: How to tag Civilian
     restricted_actions: # These actions will not be returned in get_available_actions (not including END_SCENE)
       - CHECK_BLOOD_OXYGEN
       - DIRECT_MOBILE_CHARACTERS
@@ -298,7 +242,7 @@ scenes:
   - id: evac_decision
     end_scene_allowed: false
     next_scene: cleanup
-    persist_characters: false
+    persist_characters: true
     state: # can contain any state, including mission parameters, environment, characters, etc.
       mission:
         unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required
@@ -356,10 +300,7 @@ scenes:
             skills: # Describes abilities a character can have; if not listed, assume no skill in the area
               - skill_type: Combat # controlled vocab includes Medical, Combat, Specialist, Communications, Command
                 level: skilled # controlled vocab includes novice, qualified, competent, skilled, expert
-              - skill_type: Command
-                level: competent
-              - skill_type: Communications
-                level: qualified
+             
             role: Command # The role a character has in the mission; controlled vocab includes Infantry, SEAL, Command, Intelligence, Medical, Specialist, Communications, etc.
             mission_importance: important # controlled vocab includes low, normal, important, priority, vip; must be kept consistent with mission.character_importance
           vitals:

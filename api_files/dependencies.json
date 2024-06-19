@@ -165,6 +165,16 @@
                     "state.characters[].demographics.rank_title"
                 ]
             }
+        ],
+        "scenes[].persist_characters" : [
+            {
+                "conditions": {
+                    "value": false
+                },
+                "forbid": [
+                    "scene[].removed_characters"
+                ]
+            }
         ]
     },
     "simpleAllowedValues": {

@@ -126,7 +126,7 @@ class YamlValidator:
         '''
         is_valid = True
         found_keys = []
-
+        
         # do not require characters if persist_characters is true
         if level_name == 'scenes':
             persist_characters = to_validate.get('persist_characters')
@@ -221,8 +221,67 @@ class YamlValidator:
                 injury_count = sum(1 for injury in to_validate['injuries'] if injury['name'] not in ['Ear Bleed', 'Asthmatic', 'Internal'] and 'Broken' not in injury['name'])
                 if injury_count > 8 and not self.train_mode:
                     self.logger.log(LogLevel.WARN, f"Character '{to_validate.get('name')}' has {injury_count} 'masked' injuries (punctures, lacerations, burns), which exceeds the maximum of 8 allowed in the simulation.")
-                 
+
         return is_valid
+        
+    def validate_persist_characters(self):
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data.get('scenes', [])
+        curr_chars = data.get('state', {}).get('characters', [])
+
+        
+        first_scene = data['first_scene'] if 'first_scene' in data else None
+        if first_scene is None:
+            first_scene = scenes[0]
+        else:
+            for x in scenes:
+                if x['id'] == first_scene:
+                    first_scene = x
+                    break
+        
+        for scene in scenes:
+            print(" ")
+            print(f"Processing scene ID: {scene['id']}")
+            if scene is not first_scene:
+                persist = scene.get('persist_characters', False)
+                removed_chars = scene.get('removed_characters', [])
+                action_mappings = scene.get('action_mapping', [])
+
+                if persist == True:
+                    print('persist is true')
+                    curr_chars = self.update_characters(scene, curr_chars)
+                elif persist == False:
+                    print('persist is false')
+                    curr_chars = scene.get('state', {}).get('characters', [])
+
+                for char in curr_chars:
+                    print(f"Character ID: {char.get('id')}")
+                    if char.get('id') in removed_chars:
+                        self.warning_count += 1
+                        self.logger.log(LogLevel.INFO, f"Character with ID {char.get('id')} is in 'removed_characters' but is still present in the scene's state.")
+
+                for action in action_mappings:
+                    if action.get('character_id') in removed_chars:
+                        self.warning_count += 1
+                        self.logger.log(LogLevel.INFO, f"Character with ID {action.get('character_id')} is in 'removed_characters' but is still present in the scene's action mapping.")
+
+    def update_characters(self, scene, curr_chars):
+        '''
+        Update the list of current characters based on the scene's state and persist_characters flag.
+        '''
+        scene_chars = scene.get('state', {}).get('characters', [])
+        removed = scene.get('removed_characters', [])
+        
+        curr_chars = [c for c in curr_chars if c['id'] not in removed]
+        
+        # Update the curr_chars with the characters from the scene's state
+        for char in scene_chars:
+            char_id = char.get('id')
+            if char_id:
+                # Remove any existing character with the same ID
+                curr_chars = [c for c in curr_chars if c['id'] != char_id]
+                curr_chars.append(char)
+        return curr_chars
 
 
     def validate_state_change(self, obj_to_validate, persist_characters=False):
@@ -439,6 +498,7 @@ class YamlValidator:
         self.verify_allowed_actions()
         self.check_first_scene()
         self.is_pulse_oximeter_configured()
+        self.validate_persist_characters()
         self.check_scene_env_type()
 
 
@@ -553,6 +613,7 @@ class YamlValidator:
             # look through data for required
             found_key = True
             for k in required:
+                print(k)
                 if '[]' in k:
                     self.logger.log(LogLevel.ERROR, "No index provided for required key '" + k + "'. Cannot proceed.")
                     return
