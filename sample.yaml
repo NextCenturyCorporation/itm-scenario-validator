@@ -298,7 +298,7 @@ scenes:
   - id: evac_decision
     end_scene_allowed: false
     next_scene: cleanup
-    persist_characters: false
+    persist_characters: true
     state: # can contain any state, including mission parameters, environment, characters, etc.
       mission:
         unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required
@@ -402,7 +402,7 @@ scenes:
        - adept-september-demo-probe-5
   - id: cleanup
     end_scene_allowed: true
-    persist_characters: false
+    persist_characters: true
     removed_characters: ['Captain_01']
     state:
       mission:

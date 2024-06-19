@@ -343,7 +343,7 @@ scenes:
        - adept-september-demo-probe-5
   - id: cleanup
     end_scene_allowed: true
-    persist_characters: false
+    persist_characters: true
     removed_characters: ['Captain_01']
     state:
       mission:

@@ -172,7 +172,7 @@
                     "value": false
                 },
                 "forbid": [
-                    "scene[].removed_characters"
+                    "scenes[].removed_characters"
                 ]
             }
         ]
