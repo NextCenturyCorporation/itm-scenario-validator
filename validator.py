@@ -223,72 +223,21 @@ class YamlValidator:
                     self.logger.log(LogLevel.WARN, f"Character '{to_validate.get('name')}' has {injury_count} 'masked' injuries (punctures, lacerations, burns), which exceeds the maximum of 8 allowed in the simulation.")
 
         return is_valid
-        
-    def validate_persist_characters(self):
+    
+    def determine_first_scene(self, data):
         '''
-        Ensure that scene characters are valid along with the persist_characters flag.
+        Determine the first scene, either from 'first_scene' or the first in the scenes list.
         '''
-        data = copy.deepcopy(self.loaded_yaml)
-        scenes = data['scenes']
-        curr_chars = data['state']['characters']
-
-        # Determine the first scene, either from 'first_scene' or the first in the scenes list
+        scenes = data.get('scenes', [])
         first_scene = data['first_scene'] if 'first_scene' in data else None
+        
         if first_scene is None:
-            first_scene = scenes[0]
+            return scenes[0]
         else:
             for x in scenes:
                 if x['id'] == first_scene:
-                    first_scene = x
-                    break
-        
-        # Iterate through each scene to validate characters
-        for scene in scenes:
-            if scene is not first_scene:
-                persist = scene['persist_characters']
-                removed_chars = scene.get('removed_characters', [])
-                action_mappings = scene.get('action_mapping', [])
+                    return x
 
-                if persist == True:
-                    # If characters should be persisted, update the current characters
-                    curr_chars = self.update_characters(scene, curr_chars)
-                elif persist == False:
-                    # If not, replace the current characters with the scene's characters
-                    curr_chars = scene.get('state', {}).get('characters', [])
-
-                # Check if any characters in the current characters list are in the removed characters list
-                for char in curr_chars:
-                    char_id = char['id']
-                    if char_id in removed_chars:
-                        self.warning_count += 1
-                        self.logger.log(LogLevel.INFO, f"Character with ID {char_id} is in 'removed_characters' but is still present in the scene's state.")
-
-                # Check if any characters in the action mappings are in the removed characters list
-                for action in action_mappings:
-                    if action.get('character_id') in removed_chars:
-                        self.warning_count += 1
-                        self.logger.log(LogLevel.INFO, f"Character with ID {action.get('character_id')} is in 'removed_characters' but is still present in the scene's action mapping.")
-
-    def update_characters(self, scene, curr_chars):
-        '''
-        Update the list of current characters based on the scene's state and persist_characters flag.
-        '''
-        scene_chars = scene.get('state', {}).get('characters', [])
-        removed = scene.get('removed_characters', [])
-        
-        # Remove characters that are in the removed characters list
-        curr_chars = [c for c in curr_chars if c['id'] not in removed]
-        
-        # Update the curr_chars with the characters from the scene's state
-        for char in scene_chars:
-            char_id = char.get('id')
-            if char_id:
-                # Remove any existing character with the same ID
-                curr_chars = [c for c in curr_chars if c['id'] != char_id]
-                # Add the new or updated character
-                curr_chars.append(char)
-                
-        return curr_chars
 
 
     def validate_state_change(self, obj_to_validate, persist_characters=False):
@@ -500,12 +449,12 @@ class YamlValidator:
         self.scenes_with_state()
         self.validate_action_params()
         self.validate_mission_importance()
+        self.character_matching_no_persist()
         self.character_matching()
         self.verify_uniqueness()
         self.verify_allowed_actions()
         self.check_first_scene()
         self.is_pulse_oximeter_configured()
-        self.validate_persist_characters()
         self.check_scene_env_type()
 
 
@@ -834,8 +783,126 @@ class YamlValidator:
                     self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
                     self.invalid_values += 1
 
+    def validate_persist_characters(self):
+        '''
+        Ensure that scene characters are valid along with the persist_characters flag.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        curr_chars = data['state']['characters']
+
+
+        # Determine the first scene, either from 'first_scene' or the first in the scenes list
+        first_scene = self.determine_first_scene(data)
+       
+        # Iterate through each scene to validate characters
+        for scene in scenes:
+            if scene is not first_scene:
+                persist = scene.get('persist_characters', False)
+                removed_chars = scene.get('removed_characters', [])
+                action_mappings = scene.get('action_mapping', [])
+
+
+                if persist:
+                    # If characters should be persisted, update the current characters
+                    curr_chars = self.update_characters(scene, curr_chars)
+                elif persist:
+                    # If not, replace the current characters with the scene's characters
+                    curr_chars = scene.get('state', {}).get('characters', [])
+
+
+                # Check if any characters in the current characters list are in the removed characters list
+                for char in curr_chars:
+                    char_id = char['id']
+                    if char_id in removed_chars:
+                        self.warning_count += 1
+                        self.logger.log(LogLevel.INFO, f"Character with ID {char_id} is in 'removed_characters' but might still be present in the scene's state.")
+
+
+                # Check if any characters in the action mappings are in the removed characters list
+                for action in action_mappings:
+                    if action.get('character_id') in removed_chars:
+                        self.warning_count += 1
+                        self.logger.log(LogLevel.INFO, f"Character with ID {action.get('character_id')} is in 'removed_characters' but might still be present in the scene's action mapping.")
+
+
+    def update_characters(self, scene, curr_chars):
+        '''
+        Update the list of current characters based on the scene's state and persist_characters flag.
+        '''
+        scene_chars = scene.get('state', {}).get('characters', [])
+        removed = scene.get('removed_characters', [])
+       
+        # Remove characters that are in the removed characters list
+        curr_chars = [c for c in curr_chars if c['id'] not in removed]
+       
+        # Update the curr_chars with the characters from the scene's state
+        for char in scene_chars:
+            char_id = char.get('id')
+            if char_id:
+                # Remove any existing character with the same ID
+                curr_chars = [c for c in curr_chars if c['id'] != char_id]
+                # Add the new or updated character
+                curr_chars.append(char)
+
+        return curr_chars
+
 
     def character_matching(self):
+        '''
+        Checks the yaml file for character matches:
+        1. If persist_characters is used, validate character dependencies accordingly.
+        2. Otherwise, use the original matching logic.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data['scenes']
+        persist = any('persist_characters' in scene for scene in scenes)
+        if not persist:
+            self.character_matching_no_persist(data)
+        else:
+            all_character_ids = set()
+            if 'state' in data and 'characters' in data['state']:
+                all_character_ids.update(char['id'] for char in data['state']['characters'])
+            
+            for scene in scenes:
+                if 'state' in scene and 'characters' in scene['state']:
+                   all_character_ids.update(char['id'] for char in scene['state']['characters']) 
+
+            for scene in scenes:
+                scene_id = scene['id']
+                scene_characters = {char['id'] for char in scene.get('state', {}).get('characters', [])}
+                removed_characters = set(scene.get('removed_characters', []))
+                action_mappings = scene.get('action_mapping', [])
+                character_vitals = scene.get('transitions', []).get('character_vitals', [])
+
+                for char_id in scene_characters:
+                    if char_id not in all_character_ids:
+                        self.invalid_values += 1
+                        self.logger.log(LogLevel.ERROR, f"Character ID '{char_id}' in scene '{scene_id}' is not defined in the scenario or any scene state.")
+                    if char_id in removed_characters:
+                        self.warning_count += 1
+                        self.logger.log(LogLevel.WARN, f"Character ID '{char_id}' in scene '{scene_id}' is marked as removed but might still be present in the scene's state.")
+
+                for action in action_mappings:
+                    action_char_id = action.get('character_id')
+                    if action_char_id and action_char_id not in all_character_ids:
+                        self.invalid_values += 1
+                        self.logger.log(LogLevel.ERROR, f"Character ID '{action_char_id}' in action mapping of scene '{scene_id}' is not defined in the scenario or any scene state.")
+                    if action_char_id and action_char_id in removed_characters:
+                        self.warning_count += 1
+                        self.logger.log(LogLevel.WARN, f"Character ID '{action_char_id}' in action mapping of scene '{scene_id}' is marked as removed but might still be present in the action mapping.")
+
+                for vital in character_vitals:
+                    vital_char_id = vital.get('character_id')
+                    if vital_char_id and vital_char_id not in all_character_ids:
+                        self.invalid_values += 1
+                        self.logger.log(LogLevel.ERROR, f"Character ID '{vital_char_id}' in character vitals of scene '{scene_id}' is not defined in the scenario or any scene state.")
+                    if vital_char_id and vital_char_id in removed_characters:
+                        self.warning_count += 1
+                        self.logger.log(LogLevel.WARN, f"Character ID '{vital_char_id}' in character vitals of scene '{scene_id}' is marked as removed but might still be present in the character vitals.")
+
+
+    def character_matching_no_persist(self):
         '''
         Checks the yaml file for character matches: "characters at scene level 0 must match state characters. 
         characters at other scene levels must match the characters within that scene"
@@ -845,8 +912,8 @@ class YamlValidator:
         allowed_loc_other = "scenes[].state.characters[].id".split('.')
         data = copy.deepcopy(self.loaded_yaml)
         locations_0 = self.property_meets_conditions(allowed_loc_0, data)
-        locations_other = self.property_meets_conditions(allowed_loc_other, data)
-        scenes = data['scenes']
+        locations_other = self.property_meets_conditions(allowed_loc_other, data) 
+        scenes = data['scenes'] 
         first_scene = data['first_scene'] if 'first_scene' in data else None
         if first_scene is None:
             first_scene = scenes[0]['id']
@@ -977,15 +1044,8 @@ class YamlValidator:
         supplies = data['state']['supplies']
         scenes = data['scenes']
 
-        # checking whether 'first_scene' exists, otherwise calling the first indexed scene as the first scene
-        first_scene = data['first_scene'] if 'first_scene' in data else None
-        if first_scene is None:
-            first_scene = scenes[0]
-        else:
-            for x in scenes:
-                if x['id'] == first_scene:
-                    first_scene = x
-                    break
+        # determine the first scene
+        first_scene = self.determine_first_scene(data)
 
         # checking whether the pulse oximeter exists in the inital state 
         first_scene_po = False   
@@ -1118,16 +1178,11 @@ class YamlValidator:
         1. must not contain state
         '''
         data = copy.deepcopy(self.loaded_yaml)
-        scenes = data['scenes']
-        first_scene = data['first_scene'] if 'first_scene' in data else None
-        if first_scene is None:
-            first_scene = scenes[0]
-        else:
-            for x in scenes:
-                if x['id'] == first_scene:
-                    first_scene = x
-                    break
-        if 'state' in first_scene:
+
+        # Use determine_first_scene to get the first scene
+        first_scene = self.determine_first_scene(data)
+
+        if 'state' in first_scene: 
             self.logger.log(LogLevel.WARN, "Key 'state' is not allowed in the first scene")
             self.invalid_keys += 1
 
