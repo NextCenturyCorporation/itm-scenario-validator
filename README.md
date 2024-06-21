@@ -182,7 +182,6 @@ When not running in training mode (-t), additional checks are implemented:
 | `Chest Collapse` | `left chest`, `right chest` |
 | `Amputation` | `left wrist`, `right wrist`, `left leg`, `right leg` |
 | `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `unspecified` |
-| `Abrasion` | `left face`, `left forearm`, `right forearm`, `left stomach`, `right stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist`, `unspecified` |
 | `Broken Bone` | `right leg`, `left leg`, `right shoulder`, `left shoulder`, `unspecified` |
 | `Internal` | `internal` | 
 

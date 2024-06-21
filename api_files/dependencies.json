@@ -258,22 +258,6 @@
                     "unspecified"
                 ]
             },
-            "Abrasion": {
-                "state.characters[].injuries[].location": [
-                    "left face",
-                    "left forearm",
-                    "right forearm",
-                    "left stomach",
-                    "right stomach",
-                    "left thigh",
-                    "right thigh",
-                    "left calf",
-                    "right calf",
-                    "left hand",
-                    "right hand",
-                    "unspecified"
-                ]
-            },
             "Broken Bone": {
                 "state.characters[].injuries[].location": [
                     "right shoulder",
