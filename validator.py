@@ -58,26 +58,26 @@ class YamlValidator:
             self.api_file = open(API_YAML)
             self.api_yaml = yaml.load(self.api_file, Loader=yaml.CLoader)
         except Exception as e:
-            self.logger.log(LogLevel.ERROR, "Error while loading in api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
+            self.logger.log(LogLevel.FATAL, "Error while loading in api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         try:
             self.state_change_file = open(STATE_YAML)
             self.state_changes_yaml = yaml.load(self.state_change_file, Loader=yaml.CLoader)
         except Exception as e:
-            self.logger.log(LogLevel.ERROR, "Error while loading in state api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
+            self.logger.log(LogLevel.FATAL, "Error while loading in state api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         try:
             self.loaded_yaml = yaml.load(self.file, Loader=yaml.CLoader)
             try:
                 dup_check_file = open(filename, 'r')
                 yaml.load(dup_check_file, Loader=UniqueKeyLoader)
             except Exception as e:
-                self.logger.log(LogLevel.ERROR, "Error while loading in yaml file -- " + str(e))
+                self.logger.log(LogLevel.FATAL, "Error while loading in yaml file -- " + str(e))
         except Exception as e:
-            self.logger.log(LogLevel.ERROR, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
+            self.logger.log(LogLevel.FATAL, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
         try:
             self.dep_file = open(DEP_JSON)
             self.dep_json = json.load(self.dep_file)
         except Exception as e:
-            self.logger.log(LogLevel.ERROR, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
+            self.logger.log(LogLevel.FATAL, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         self.train_mode = train_mode
         api = copy.deepcopy(self.api_yaml)
         self.allowed_supplies = copy.deepcopy(api['components']['schemas']['SupplyTypeEnum']['enum'])
@@ -88,7 +88,7 @@ class YamlValidator:
             for character in self.loaded_yaml.get('state', {'characters': []})['characters']:
                 if character.get('has_blanket', False):
                    self.invalid_keys += 1 
-                   self.logger.log(LogLevel.WARN, f"Blankets can't appear on characters at startup unless in training mode but '{character.get('id')}' has 'has_blanket' set to True.")
+                   self.logger.log(LogLevel.ERROR, f"Blankets can't appear on characters at startup unless in training mode but '{character.get('id')}' has 'has_blanket' set to True.")
 
 
     def __del__(self):
@@ -136,14 +136,14 @@ class YamlValidator:
 
         if level_name == 'supplies':
             if to_validate.get('type') not in self.allowed_supplies and to_validate.get('quantity') > 0:
-                self.logger.log(LogLevel.WARN, f"Since eval mode is true, supplies must only be one of {self.allowed_supplies}, but '{to_validate.get('type')}' was found.")
+                self.logger.log(LogLevel.ERROR, f"Since eval mode is true, supplies must only be one of {self.allowed_supplies}, but '{to_validate.get('type')}' was found.")
                 self.invalid_values += 1
 
         # see if an object is empty (and if it's allowed to be)
         if to_validate == None and len(required) == 0:
             return True
         elif to_validate == None and len(required) > 0:
-            self.logger.log(LogLevel.WARN, "Level '" + level_name + "' is empty but must contain keys " + str(required))
+            self.logger.log(LogLevel.ERROR, "Level '" + level_name + "' is empty but must contain keys " + str(required))
             self.empty_levels += 1
             return False
         
@@ -151,7 +151,7 @@ class YamlValidator:
         for key in to_validate:
             # make sure it is a valid key
             if key not in type_obj:
-                self.logger.log(LogLevel.WARN, "'" + key + "' is not a valid key at the '" + level_name + "' level of the yaml file. Allowed keys are " + str(list(type_obj.keys())))
+                self.logger.log(LogLevel.ERROR, "'" + key + "' is not a valid key at the '" + level_name + "' level of the yaml file. Allowed keys are " + str(list(type_obj.keys())))
                 self.invalid_keys += 1
                 is_valid = False
             else:
@@ -170,14 +170,14 @@ class YamlValidator:
                             if not self.validate_additional_properties(type_obj[key], to_validate[key], key, level_name, api_yaml):
                                 is_valid = False
                         else:
-                            self.logger.log(LogLevel.ERROR, "API error: Missing additionalProperties on '" + key + "' object at the '" + level_name + "' level. Please contact TA3 for assistance.")
+                            self.logger.log(LogLevel.FATAL, "API error: Missing additionalProperties on '" + key + "' object at the '" + level_name + "' level. Please contact TA3 for assistance.")
                             return False
                         
                     elif key_type == 'array':
                         if not self.validate_array(to_validate[key], key, level_name, key_type, type_obj, api_yaml):
                             is_valid = False
                     else:
-                        self.logger.log(LogLevel.ERROR, "API error: Unhandled validation for type '" +  key_type + "' at the " + level_name + "' level. Please contact TA3 for assistance.")
+                        self.logger.log(LogLevel.FATAL, "API error: Unhandled validation for type '" +  key_type + "' at the " + level_name + "' level. Please contact TA3 for assistance.")
                         return False
                         
                 # check deep objects (more than simple key-value)
@@ -203,14 +203,14 @@ class YamlValidator:
                             self.log_wrong_type(key, level_name, location[len(location)-1], type(to_validate[key]))
                             is_valid = False 
                 else:
-                    self.logger.log(LogLevel.ERROR, "API Error: Key '" + key + "' at level '" + level_name + "' has no defined type or reference. Please contact TA3 for assistance.")
+                    self.logger.log(LogLevel.FATAL, "API Error: Key '" + key + "' at level '" + level_name + "' has no defined type or reference. Please contact TA3 for assistance.")
                     return False
             found_keys.append(key)
         # check for missing keys
         for key in type_obj:
             if key not in found_keys:
                 if (key in required):
-                    self.logger.log(LogLevel.WARN, "Required key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
+                    self.logger.log(LogLevel.ERROR, "Required key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
                     self.missing_keys += 1
                     is_valid = False
                 else:
@@ -220,10 +220,11 @@ class YamlValidator:
             if 'injuries' in to_validate:
                 injury_count = sum(1 for injury in to_validate['injuries'] if injury['name'] not in ['Ear Bleed', 'Asthmatic', 'Internal'] and 'Broken' not in injury['name'])
                 if injury_count > 8 and not self.train_mode:
-                    self.logger.log(LogLevel.WARN, f"Character '{to_validate.get('name')}' has {injury_count} 'masked' injuries (punctures, lacerations, burns), which exceeds the maximum of 8 allowed in the simulation.")
+                    self.logger.log(LogLevel.ERROR, f"Character '{to_validate.get('name')}' has {injury_count} 'masked' injuries (punctures, lacerations, burns), which exceeds the maximum of 8 allowed in the simulation.")
 
         return is_valid
     
+
     def determine_first_scene(self, data):
         '''
         Determine the first scene, either from 'first_scene' or the first in the scenes list.
@@ -237,7 +238,6 @@ class YamlValidator:
             for x in scenes:
                 if x['id'] == first_scene:
                     return x
-
 
 
     def validate_state_change(self, obj_to_validate, persist_characters=False):
@@ -262,7 +262,7 @@ class YamlValidator:
         if isinstance(item, str):
                 allowed = type_obj['enum']
                 if item not in allowed:
-                    self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' must be one of the following values: " + str(allowed) + " but is '" + item + "' instead.")
+                    self.logger.log(LogLevel.ERROR, "Key '" + key + "' at level '" + level + "' must be one of the following values: " + str(allowed) + " but is '" + item + "' instead.")
                     self.invalid_values += 1
                     is_valid = False
         else:
@@ -290,7 +290,7 @@ class YamlValidator:
             if not self.validate_enum(location, key, level, item):
                 is_valid = False
         else:
-            self.logger.log(LogLevel.ERROR, "API missing enum, property, or additional properties for '" + ref_name + "'. Cannot parse. Please contact TA3 for assistance.")
+            self.logger.log(LogLevel.FATAL, "API missing enum, property, or additional properties for '" + ref_name + "'. Cannot parse. Please contact TA3 for assistance.")
         return is_valid
     
 
@@ -337,7 +337,7 @@ class YamlValidator:
                     self.log_wrong_type(key, level, 'object', type(item))
                     is_valid = False      
         else:
-            self.logger.log(LogLevel.ERROR, "API Error: Additional Properties must either have a type or ref, but at level '" + level + "' for property '" + key + "' it does not. Please contact TA3 for assistance.")
+            self.logger.log(LogLevel.FATAL, "API Error: Additional Properties must either have a type or ref, but at level '" + level + "' for property '" + key + "' it does not. Please contact TA3 for assistance.")
             return False
         return is_valid
 
@@ -370,7 +370,7 @@ class YamlValidator:
                         if not self.validate_primitive(i, expected, key, level, item_type):
                             is_valid = False
             else:
-                self.logger.log(LogLevel.ERROR, "API Error: Missing type definition or reference at level '" + level + "' for property '" + key + "'. Please contact TA3 for assistance.")
+                self.logger.log(LogLevel.FATAL, "API Error: Missing type definition or reference at level '" + level + "' for property '" + key + "'. Please contact TA3 for assistance.")
                 return False
         return is_valid
     
@@ -393,12 +393,12 @@ class YamlValidator:
             if 'minimum' in type_obj:
                 if item < type_obj['minimum']:
                     is_valid = False
-                    self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' has a minimum of " + str(type_obj['minimum']) + " but is " + str(item) + ". (" + str(item) + " < " + str(type_obj['minimum']) + ")")
+                    self.logger.log(LogLevel.ERROR, "Key '" + key + "' at level '" + level + "' has a minimum of " + str(type_obj['minimum']) + " but is " + str(item) + ". (" + str(item) + " < " + str(type_obj['minimum']) + ")")
                     self.out_of_range += 1
             if 'maximum' in type_obj:
                 if item > type_obj['maximum']:
                     is_valid = False
-                    self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' has a maximum of " + str(type_obj['maximum']) + " but is " + str(item) + ". (" + str(item) + " > " + str(type_obj['maximum']) + ")")
+                    self.logger.log(LogLevel.ERROR, "Key '" + key + "' at level '" + level + "' has a maximum of " + str(type_obj['maximum']) + " but is " + str(item) + ". (" + str(item) + " > " + str(type_obj['maximum']) + ")")
                     self.out_of_range += 1
         return is_valid
 
@@ -414,7 +414,7 @@ class YamlValidator:
         '''
         Logs when an incorrect type is found for a key
         '''
-        self.logger.log(LogLevel.WARN, "Key '" + key + "' at level '" + level + "' should be type '" + expected + "' but is " + str(actual) + " instead.")
+        self.logger.log(LogLevel.ERROR, "Key '" + key + "' at level '" + level + "' should be type '" + expected + "' but is " + str(actual) + " instead.")
         self.wrong_types += 1
     
 
@@ -424,14 +424,14 @@ class YamlValidator:
         and that the file is found. Returns the open binary file object.
         '''
         if not filename:
-            self.logger.log(LogLevel.ERROR, "No filename received. To run, please use 'python3 validator.py -f [filename]'")
+            self.logger.log(LogLevel.FATAL, "No filename received. To run, please use 'python3 validator.py -f [filename]'")
         if not filename.strip().endswith('.yaml'):
-            self.logger.log(LogLevel.ERROR, "File must be a yaml file.")
+            self.logger.log(LogLevel.FATAL, "File must be a yaml file.")
         try:
             f = open(filename, 'r')
             return f
         except:
-            self.logger.log(LogLevel.ERROR, "Could not open file " + filename + ". Please make sure the path is valid and the file exists.")
+            self.logger.log(LogLevel.FATAL, "Could not open file " + filename + ". Please make sure the path is valid and the file exists.")
 
 
     def validate_dependencies(self):
@@ -449,14 +449,12 @@ class YamlValidator:
         self.scenes_with_state()
         self.validate_action_params()
         self.validate_mission_importance()
-        self.character_matching_no_persist()
         self.character_matching()
         self.verify_uniqueness()
         self.verify_allowed_actions()
         self.check_first_scene()
         self.is_pulse_oximeter_configured()
         self.check_scene_env_type()
-
 
 
     def simple_requirements(self):
@@ -570,25 +568,25 @@ class YamlValidator:
             found_key = True
             for k in required:
                 if '[]' in k:
-                    self.logger.log(LogLevel.ERROR, "No index provided for required key '" + k + "'. Cannot proceed.")
+                    self.logger.log(LogLevel.FATAL, "No index provided for required key '" + k + "'. Cannot proceed.")
                     return
                 if k in data:
                     data = data[k]
                 else:
                     if should_find:
                         # we expected to find this key, error
-                        self.logger.log(LogLevel.WARN, "Key '" + k + "' is required because '" + '.'.join(found) + "' " + explanation + ", but it is missing.")
+                        self.logger.log(LogLevel.ERROR, "Key '" + k + "' is required because '" + '.'.join(found) + "' " + explanation + ", but it is missing.")
                         self.missing_keys += 1
                     else:
                         # otherwise, we did not want to find the key, so we're good here
                         found_key = False
                         break
             if should_find is not None and not should_find and found_key:
-                self.logger.log(LogLevel.WARN, "Key '" + k + "' is not allowed because '" + '.'.join(found) + "' " + explanation + ".")
+                self.logger.log(LogLevel.ERROR, "Key '" + k + "' is not allowed because '" + '.'.join(found) + "' " + explanation + ".")
                 self.invalid_keys += 1
             elif found_key and len(expected_val) > 0:
                 if data not in expected_val:
-                    self.logger.log(LogLevel.WARN, "Key '" + k + "' must have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is '" + str(data) + "'")
+                    self.logger.log(LogLevel.ERROR, "Key '" + k + "' must have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is '" + str(data) + "'")
                     self.invalid_values += 1
                     
 
@@ -672,7 +670,7 @@ class YamlValidator:
                 found = self.find_unstructured(state)
                 if not found:
                     # unstructured not found - error
-                    self.logger.log(LogLevel.WARN, "At least one 'unstructured' key must be provided within each scenes[].state but is missing at scene[" + scene['id'] + "]")
+                    self.logger.log(LogLevel.ERROR, "At least one 'unstructured' key must be provided within each scenes[].state but is missing at scene[" + scene['id'] + "]")
                     self.missing_keys += 1
             i += 1
 
@@ -747,11 +745,15 @@ class YamlValidator:
         for k in key:
             if '[' in k:
                 loc = k.split('[')[0]
-                ind = int(k.split('[')[1].split(']')[0])
-                if loc in data:
-                    data = data[loc]
-                    if len(data) > ind:
-                        data = data[ind]
+                inside_brackets = k.split('[')[1].split(']')[0]
+                if inside_brackets is not None and inside_brackets != '':
+                    ind = int(k.split('[')[1].split(']')[0])
+                    if loc in data:
+                        data = data[loc]
+                        if len(data) > ind:
+                            data = data[ind]
+                else:
+                    return None
             elif k in data:
                 data = data[k]
             else:
@@ -780,8 +782,9 @@ class YamlValidator:
             for loc in locations:
                 v = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
                 if v not in allowed_values:
-                    self.logger.log(LogLevel.WARN, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
+                    self.logger.log(LogLevel.ERROR, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
                     self.invalid_values += 1
+
 
     def validate_persist_characters(self):
         '''
@@ -816,14 +819,14 @@ class YamlValidator:
                     char_id = char['id']
                     if char_id in removed_chars:
                         self.warning_count += 1
-                        self.logger.log(LogLevel.INFO, f"Character with ID {char_id} is in 'removed_characters' but might still be present in the scene's state.")
+                        self.logger.log(LogLevel.WARN, f"Character with ID {char_id} is in 'removed_characters' but might still be present in the scene's state.")
 
 
                 # Check if any characters in the action mappings are in the removed characters list
                 for action in action_mappings:
                     if action.get('character_id') in removed_chars:
                         self.warning_count += 1
-                        self.logger.log(LogLevel.INFO, f"Character with ID {action.get('character_id')} is in 'removed_characters' but might still be present in the scene's action mapping.")
+                        self.logger.log(LogLevel.WARN, f"Character with ID {action.get('character_id')} is in 'removed_characters' but might still be present in the scene's action mapping.")
 
 
     def update_characters(self, scene, curr_chars):
@@ -850,82 +853,35 @@ class YamlValidator:
 
     def character_matching(self):
         '''
-        Checks the yaml file for character matches:
-        1. If persist_characters is used, validate character dependencies accordingly.
-        2. Otherwise, use the original matching logic.
-        '''
-        data = copy.deepcopy(self.loaded_yaml)
-        scenes = data['scenes']
-        persist = any('persist_characters' in scene for scene in scenes)
-        if not persist:
-            self.character_matching_no_persist(data)
-        else:
-            all_character_ids = set()
-            if 'state' in data and 'characters' in data['state']:
-                all_character_ids.update(char['id'] for char in data['state']['characters'])
-            
-            for scene in scenes:
-                if 'state' in scene and 'characters' in scene['state']:
-                   all_character_ids.update(char['id'] for char in scene['state']['characters']) 
-
-            for scene in scenes:
-                scene_id = scene['id']
-                scene_characters = {char['id'] for char in scene.get('state', {}).get('characters', [])}
-                removed_characters = set(scene.get('removed_characters', []))
-                action_mappings = scene.get('action_mapping', [])
-                character_vitals = scene.get('transitions', []).get('character_vitals', [])
-
-                for char_id in scene_characters:
-                    if char_id not in all_character_ids:
-                        self.invalid_values += 1
-                        self.logger.log(LogLevel.ERROR, f"Character ID '{char_id}' in scene '{scene_id}' is not defined in the scenario or any scene state.")
-                    if char_id in removed_characters:
-                        self.warning_count += 1
-                        self.logger.log(LogLevel.WARN, f"Character ID '{char_id}' in scene '{scene_id}' is marked as removed but might still be present in the scene's state.")
-
-                for action in action_mappings:
-                    action_char_id = action.get('character_id')
-                    if action_char_id and action_char_id not in all_character_ids:
-                        self.invalid_values += 1
-                        self.logger.log(LogLevel.ERROR, f"Character ID '{action_char_id}' in action mapping of scene '{scene_id}' is not defined in the scenario or any scene state.")
-                    if action_char_id and action_char_id in removed_characters:
-                        self.warning_count += 1
-                        self.logger.log(LogLevel.WARN, f"Character ID '{action_char_id}' in action mapping of scene '{scene_id}' is marked as removed but might still be present in the action mapping.")
-
-                for vital in character_vitals:
-                    vital_char_id = vital.get('character_id')
-                    if vital_char_id and vital_char_id not in all_character_ids:
-                        self.invalid_values += 1
-                        self.logger.log(LogLevel.ERROR, f"Character ID '{vital_char_id}' in character vitals of scene '{scene_id}' is not defined in the scenario or any scene state.")
-                    if vital_char_id and vital_char_id in removed_characters:
-                        self.warning_count += 1
-                        self.logger.log(LogLevel.WARN, f"Character ID '{vital_char_id}' in character vitals of scene '{scene_id}' is marked as removed but might still be present in the character vitals.")
-
-
-    def character_matching_no_persist(self):
-        '''
         Checks the yaml file for character matches: "characters at scene level 0 must match state characters. 
         characters at other scene levels must match the characters within that scene"
         '''
         # get all locations that have character ids 
-        allowed_loc_0 = "state.characters[].id".split('.')
-        allowed_loc_other = "scenes[].state.characters[].id".split('.')
+        allowed_loc_0 = "state.characters[].id".split('.') # general locataion of character ids that are allowed in scene 0
+        allowed_loc_other = "scenes[].state.characters[].id".split('.') # general location of characters listed in all other scenes
+        removed_chars_loc = "scenes[].removed_characters[]".split('.') # general location of removed characters throughout the yaml
         data = copy.deepcopy(self.loaded_yaml)
-        locations_0 = self.property_meets_conditions(allowed_loc_0, data)
-        locations_other = self.property_meets_conditions(allowed_loc_other, data) 
+        locations_0 = self.property_meets_conditions(allowed_loc_0, data) # specific locations of character ids that are allowed in scene 0
+        locations_other = self.property_meets_conditions(allowed_loc_other, data) # specific locations of character ids that are listed in other scenes
+        locations_removed = self.property_meets_conditions(removed_chars_loc, data) # specific locations of removed characters
         scenes = data['scenes'] 
-        first_scene = data['first_scene'] if 'first_scene' in data else None
-        if first_scene is None:
-            first_scene = scenes[0]['id']
+        first_scene = self.determine_first_scene(data)['id']
         allowed_vals = {}
         allowed_vals[first_scene] = []
+        all_chars = [] # store all characters found anywhere in the character definitions
+        removed_chars = [] # store all removed characters that are found anywhere in the character definitions
+        
         # get all allowed values, organizing by the scene index where those values will be allowed
         for l in locations_0:
+            # getting allowed characters for the first scene
             loc = l.split('.')
             val = self.get_value_at_key(loc, data)
             if val is not None:
                 allowed_vals[first_scene].append(val)   
+                all_chars.append(val)
+
         for l in locations_other:
+            # getting characters listed in all the other scenes
             ind = int(l.split('cenes[')[1].split(']')[0])
             if ind not in allowed_vals:
                 allowed_vals[ind] = []
@@ -933,7 +889,17 @@ class YamlValidator:
             val = self.get_value_at_key(loc, data)
             if val is not None:
                 allowed_vals[ind].append(val)   
+                all_chars.append(val)
+
+        for l in locations_removed:
+            # get all characters removed at some point in the yaml
+            val = self.get_value_at_key(l.split('.'), data)
+            if val is not None:
+                removed_chars.append(val)
+
+        # prevent duplicate error messages for the same location
         missing_locs = []
+
         for loc in self.dep_json['characterMatching']:
             loc = loc.split('.')
             # find all locations where the property exists
@@ -942,25 +908,37 @@ class YamlValidator:
                 # get the scene index
                 ind = int(l.split('cenes[')[1].split(']')[0])
                 s = scenes[ind]
-                if 'characters' not in s:
-                    continue
-                # make sure the index exists in the allowed values dict
-                if ind not in allowed_vals and s['id'] != first_scene:
-                    where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
-                    if where_vals_found not in missing_locs and not self.get_value_at_key(where_vals_found.split('.')[:1] + ['persist_characters'], data):
-                        missing_locs.append(where_vals_found)
-                        self.logger.log(LogLevel.WARN, "Path '" + str(where_vals_found) + "' does not exist.")
-                        self.missing_keys += 1
-                    continue
-                # check that the value matches what we expect
-                loc = l.split('.')
-                val = self.get_value_at_key(loc, data)
-                this_allowed_vals = (allowed_vals[ind] if ind in allowed_vals else allowed_vals[first_scene])
-                if val is not None and val not in this_allowed_vals:
-                    where_vals_found = '.'.join(allowed_loc_0) if s['id'] != first_scene else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
-                    self.logger.log(LogLevel.WARN, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' must have one of the following values " + str(this_allowed_vals) + " to match '" + str(where_vals_found) + "', but instead value is '" + str(val) + "'")
-                    self.invalid_values += 1
-
+                # check non-persistent-character scenes
+                if 'characters' in s or s['id'] == first_scene:
+                    # make sure the index exists in the allowed values dict
+                    if ind not in allowed_vals and s['id'] != first_scene:
+                        # path does not exist where we are checking for characters. Error (optionally, we don't want to send a duplicate!) and short circuit this run
+                        where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
+                        if where_vals_found not in missing_locs and not self.get_value_at_key(where_vals_found.split('.')[:1], data):
+                            missing_locs.append(where_vals_found)
+                            self.logger.log(LogLevel.ERROR, "Path '" + str(where_vals_found) + "' does not exist.")
+                            self.missing_keys += 1
+                        continue
+                    # all paths are available to continue; check that the value at the given location matches what we expect
+                    loc = l.split('.')
+                    val = self.get_value_at_key(loc, data)
+                    # get the specific character ids allowed in this scene
+                    this_allowed_vals = (allowed_vals[ind] if ind in allowed_vals else allowed_vals[first_scene])
+                    if val is not None and val not in this_allowed_vals:
+                        where_vals_found = '.'.join(allowed_loc_0) if s['id'] != first_scene else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
+                        self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' must have one of the following values " + str(this_allowed_vals) + " to match '" + str(where_vals_found) + "', but instead value is '" + str(val) + "'")
+                        self.invalid_values += 1
+                # check persist character scenes
+                elif s.get('persist_characters', False):
+                    loc = l.split('.')
+                    val = self.get_value_at_key(loc, data)
+                    if val is not None and val not in all_chars:
+                        self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
+                        self.invalid_values += 1
+                    if not any('removed_characters' in el for el in loc) and val is not None and val in removed_chars:
+                        self.logger.log(LogLevel.WARN, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed at some point during the scenario. Make sure that this character will not be removed before this scene.")
+                        self.warning_count += 1
+                    
 
     def verify_uniqueness(self):
         '''
@@ -984,7 +962,7 @@ class YamlValidator:
                         if scope in loc or scope == "":
                             val = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
                             if val in vals_found:
-                                self.logger.log(LogLevel.WARN, f"Values from key '{k}' must be unique within scope '{scope if scope != '' else '[whole file]'}', but value '{val}' was found more than once.")
+                                self.logger.log(LogLevel.ERROR, f"Values from key '{k}' must be unique within scope '{scope if scope != '' else '[whole file]'}', but value '{val}' was found more than once.")
                                 self.invalid_values += 1    
                             else:
                                 vals_found.append(val)
@@ -1005,7 +983,7 @@ class YamlValidator:
             if scenes[i]['id'] == first_scene:
                 continue
             if 'state' not in scenes[i]:
-                self.logger.log(LogLevel.WARN, "Key 'state' must be provided within all but the first entry in 'scenes' but is missing at scenes[" + str(i) + "]")
+                self.logger.log(LogLevel.ERROR, "Key 'state' must be provided within all but the first entry in 'scenes' but is missing at scenes[" + str(i) + "]")
                 self.missing_keys += 1
 
 
@@ -1020,8 +998,9 @@ class YamlValidator:
             if 'restricted_actions' in scenes[i] and 'action_mapping' in scenes[i]:
                 for x in scenes[i]['action_mapping']:
                     if x['action_type'] in scenes[i]['restricted_actions']:
-                        self.logger.log(LogLevel.WARN, f"{x['action_type']} is a restricted action at scene with id '{scenes[i]['id']}', but appears in the action_mapping within that scene.")
+                        self.logger.log(LogLevel.ERROR, f"{x['action_type']} is a restricted action at scene with id '{scenes[i]['id']}', but appears in the action_mapping within that scene.")
                         self.invalid_values += 1
+
 
     def pulse_ox_info(self, scene_id, issue):
         '''
@@ -1029,10 +1008,10 @@ class YamlValidator:
         '''
         if issue:
             self.invalid_values += 1
-            self.logger.log(LogLevel.WARN, f"There is an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
+            self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
         else:
             self.warning_count += 1
-            self.logger.log(LogLevel.INFO, f"There might be an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
+            self.logger.log(LogLevel.WARN, f"There might be an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
         
 
     def is_pulse_oximeter_configured(self): 
@@ -1112,20 +1091,20 @@ class YamlValidator:
                         params = action['parameters']
                         if 'treatment' in params:
                             if params['treatment'] not in allowed_supplies:
-                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters.treatment' must be one of the following values: " + str(allowed_supplies) + " but is '" + params['treatment'] + "' instead.")
+                                self.logger.log(LogLevel.ERROR, "Key 'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters.treatment' must be one of the following values: " + str(allowed_supplies) + " but is '" + params['treatment'] + "' instead.")
                                 self.invalid_values += 1                        
                         if 'location' in params:
                             if params['location'] not in allowed_locations:
-                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters.location' must be one of the following values: " + str(allowed_locations) + " but is '" + params['location'] + "' instead.")
+                                self.logger.log(LogLevel.ERROR, "Key 'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters.location' must be one of the following values: " + str(allowed_locations) + " but is '" + params['location'] + "' instead.")
                                 self.invalid_values += 1 
                         if 'category' in params:
                             if params['category'] not in allowed_categories:
-                                self.logger.log(LogLevel.WARN, "Key 'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters.category' must be one of the following values: " + str(allowed_categories) + " but is '" + params['category'] + "' instead.")
+                                self.logger.log(LogLevel.ERROR, "Key 'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters.category' must be one of the following values: " + str(allowed_categories) + " but is '" + params['category'] + "' instead.")
                                 self.invalid_values += 1 
                         # validate params only includes expected values
                         for key in params:
                             if key not in ['treatment', 'location', 'category', 'evac_id']:
-                                self.logger.log(LogLevel.WARN, "'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(['treatment', 'location', 'category', 'evac_id']) + " but has key '" + key + "'.")
+                                self.logger.log(LogLevel.ERROR, "'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(['treatment', 'location', 'category', 'evac_id']) + " but has key '" + key + "'.")
                                 self.invalid_keys += 1 
                     j += 1
             i += 1
@@ -1158,17 +1137,17 @@ class YamlValidator:
                 for k in critical_dict:
                     if k in pairs:
                         if pairs[k] != critical_dict[k]:
-                            self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
+                            self.logger.log(LogLevel.ERROR, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
                             self.invalid_values += 1     
                     else:
-                        self.logger.log(LogLevel.WARN, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
+                        self.logger.log(LogLevel.ERROR, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
                         self.invalid_keys += 1     
                     if critical_dict[k] not in allowed_importance:
-                        self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance['" + k + "']' must be one of " + str(allowed_importance) + "', but instead it is '" + critical_dict[k] + "'")
+                        self.logger.log(LogLevel.ERROR, "Value of 'state.mission.character_importance['" + k + "']' must be one of " + str(allowed_importance) + "', but instead it is '" + critical_dict[k] + "'")
                         self.invalid_values += 1              
         for k in pairs:
             if k not in critical_dict and pairs[k] != 'normal':
-                self.logger.log(LogLevel.WARN, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
+                self.logger.log(LogLevel.ERROR, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
                 self.missing_keys += 1         
 
 
@@ -1183,8 +1162,9 @@ class YamlValidator:
         first_scene = self.determine_first_scene(data)
 
         if 'state' in first_scene: 
-            self.logger.log(LogLevel.WARN, "Key 'state' is not allowed in the first scene")
+            self.logger.log(LogLevel.ERROR, "Key 'state' is not allowed in the first scene")
             self.invalid_keys += 1
+
 
     def check_scene_env_type(self):
         '''
@@ -1199,7 +1179,7 @@ class YamlValidator:
                 new_type = scene['state']['environment']['sim_environment'].get('type', None)
                 if new_type is not None and new_type != orig_type:
                     self.warning_count += 1
-                    self.logger.log(LogLevel.INFO, f"Key 'type' should not be redefined in scene states, but changes from '{orig_type}' to '{new_type}' in scene '{scene['id']}'. This redefinition will be ignored.")
+                    self.logger.log(LogLevel.WARN, f"Key 'type' should not be redefined in scene states, but changes from '{orig_type}' to '{new_type}' in scene '{scene['id']}'. This redefinition will be ignored.")
 
 
 if __name__ == '__main__':
@@ -1233,7 +1213,7 @@ if __name__ == '__main__':
     total_errors = validator.missing_keys + validator.wrong_types + validator.invalid_keys + validator.invalid_values + validator.empty_levels + validator.out_of_range
     print()
     validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if total_errors == 0 else "\033[91m") + "Total Errors: " + str(total_errors))
-    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.warning_count == 0 else "\033[91m") + "Warnings: " + str(validator.warning_count))
+    validator.logger.log(LogLevel.CRITICAL_INFO, ("\033[92m" if validator.warning_count == 0 else "\033[35m") + "Warnings: " + str(validator.warning_count))
     if total_errors == 0:
         validator.logger.log(LogLevel.CRITICAL_INFO, "\033[92m" + file + " is valid!")
     else:

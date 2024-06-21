@@ -1841,7 +1841,8 @@
         "scenes[].action_mapping[].character_id",
         "scenes[].tagging.probe_responses[].character_id",
         "scenes[].transitions.character_vitals[].character_id",
-        "scenes[].action_mapping[].conditions.character_vitals[].character_id"
+        "scenes[].action_mapping[].conditions.character_vitals[].character_id",
+        "scenes[].removed_characters[]"
     ],
     "unique": {
         "state.environment.decision_environment.aid_delay[].id": "state",
