@@ -104,6 +104,7 @@ In order for a yaml file to be considered "valid", the following conditions must
         * `Mission`, `Environment`, `DecisionEnvironment`, and `SimEnvironment` only require the `unstructured` property
         * `type` is a prohibted key in `SimEnvironment`
         * `AidDelay` only requires `id`
+        
 ### Dependencies
 #### Conditional Requirements
 * If `scenes[n].action_mapping[m].conditions` has a length of 2 or more, `scenes[n].action_mapping[m].condition_semantics` is required
@@ -123,7 +124,8 @@ In order for a yaml file to be considered "valid", the following conditions must
 #### Conditional Prohibitions
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
 * If `scenes[n].action_mapping[m].action_type' is "CHECK_BLOOD_OXYGEN" or "CHECK_ALL_VITALS" and there is no pulse oximeter correctly configured in the supplies for the scene, a warning will be given. 
- 
+* If `scenes[n].persist_characters` is false or does not exist, `scenes[n].removed_characters` must not exist
+
 #### Value Matching
 * `state.characters[n].injuries[m].source_character` must be one of the `state.characters.character_id`'s
 * `scenes[n].tagging.reference` must be one of the `scenes[n].id`'s 
@@ -131,6 +133,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `scenes[n].action_mapping[m].parameters.evac_id` must be one of the `scenes[n].state.environment.decision_environment.aid_delay[p].id`'s
 
 #### Character Matching
+If persist_characters is false:
 * `scenes[0].action_mapping[].character_id`: `state.characters[].id`,
 * `scenes[0].tagging.probe_responses[].character_id`: `state.characters[].id`,
 * `scenes[0].transitions.character_vitals[].character_id`: `state.characters[].id`,
@@ -140,6 +143,8 @@ In order for a yaml file to be considered "valid", the following conditions must
     * `scenes[n].tagging.probe_responses[].character_id`: `scenes[n].state.characters[].id`,
     * `scenes[n].transitions.character_vitals[].character_id`: `scenes[n].state.characters[].id`,
     * `scenes[n].action_mapping[].conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
+Otherwise, complete the same checks, but match it up against all characters defined throughout the scenario file. Note that this may give some false validity, as a character may end up being used before it is defined. Please be cautious when defining characters and using persist_characters. 
+In addition, if a character is removed anywhere in a scene, a warning will be issued. Please make sure that your branching scenes do not cause a situation where a character has been removed and then used.
 
 #### Uniqueness
 * `scenes[].state.environment.decision_environment.aid_delay[].id` must not have any repeated values within each `scene`

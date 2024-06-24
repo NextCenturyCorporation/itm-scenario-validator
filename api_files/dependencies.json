@@ -165,6 +165,24 @@
                     "state.characters[].demographics.rank_title"
                 ]
             }
+        ],
+        "scenes[].persist_characters" : [
+            {
+                "conditions": {
+                    "value": false
+                },
+                "forbid": [
+                    "scenes[].removed_characters"
+                ]
+            },
+            {
+                "conditions": {
+                    "exists": false
+                },
+                "forbid": [
+                    "scenes[].removed_characters"
+                ]
+            }
         ]
     },
     "simpleAllowedValues": {
@@ -1790,7 +1808,8 @@
         "scenes[].action_mapping[].character_id",
         "scenes[].tagging.probe_responses[].character_id",
         "scenes[].transitions.character_vitals[].character_id",
-        "scenes[].action_mapping[].conditions.character_vitals[].character_id"
+        "scenes[].action_mapping[].conditions.character_vitals[].character_id",
+        "scenes[].removed_characters[]"
     ],
     "unique": {
         "state.environment.decision_environment.aid_delay[].id": "state",
