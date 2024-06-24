@@ -168,6 +168,7 @@ Any supply name placed in this array will be excluded from the allowed supplies 
     * This does not include "normal", which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance "normal", or a character may specify `mission_importance` with "normal" and `character_importance` may not list that character 
 * If the scene is the first scene, `scenes[].state` should _not_ be provided
 * No blanket can appear on the character at the start. 
+* If a character's `unseen` property is `true`, none of the `vitals` are required
 
 #### Eval Mode
 When not running in training mode (-t), additional checks are implemented:

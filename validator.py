@@ -184,15 +184,14 @@ class YamlValidator:
         schema = self.api_yaml['components']['schemas']
         top_level = schema['Scenario']['properties']
         required = schema['Scenario']['required'] if 'required' in schema['Scenario'] else []
-        return self.validate_one_level('top', self.loaded_yaml, top_level, required, self.api_yaml)
+        self.validate_one_level('top', self.loaded_yaml, top_level, required, self.api_yaml)
 
 
-    def validate_one_level(self, level_name, to_validate, type_obj, required, api_yaml, persist_characters=False):
+    def validate_one_level(self, level_name, to_validate, type_obj, required, api_yaml, persist_characters=False, override_required=False):
         '''
         Takes in an object to validate (to_validate) and the yaml schema describing the 
         expected types (type_obj)
         '''
-        is_valid = True
         found_keys = []
         
         # do not require characters if persist_characters is true
@@ -221,7 +220,6 @@ class YamlValidator:
             if key not in type_obj:
                 self.logger.log(LogLevel.ERROR, "'" + key + "' is not a valid key at the '" + level_name + "' level of the yaml file. Allowed keys are " + str(list(type_obj.keys())))
                 self.invalid_keys += 1
-                is_valid = False
             else:
                 # begin type-checking
                 this_key_data = type_obj[key]
@@ -230,20 +228,17 @@ class YamlValidator:
                     key_type = type_obj[key]['type']
                     # Basic types listed in PRIMITIVE_TYPE_MAP
                     if key_type in PRIMITIVE_TYPE_MAP:
-                        if not self.validate_primitive(to_validate[key], key_type, key, level_name, type_obj[key]):
-                            is_valid = False
+                        self.validate_primitive(to_validate[key], key_type, key, level_name, type_obj[key], override_required=override_required)
                     # check for objects (key:value pairs)
                     elif key_type == 'object':
                         if 'additionalProperties' in type_obj[key]:
-                            if not self.validate_additional_properties(type_obj[key], to_validate[key], key, level_name, api_yaml):
-                                is_valid = False
+                            self.validate_additional_properties(type_obj[key], to_validate[key], key, level_name, api_yaml)
                         else:
                             self.logger.log(LogLevel.FATAL, "API error: Missing additionalProperties on '" + key + "' object at the '" + level_name + "' level. Please contact TA3 for assistance.")
                             return False
                         
                     elif key_type == 'array':
-                        if not self.validate_array(to_validate[key], key, level_name, key_type, type_obj, api_yaml):
-                            is_valid = False
+                        self.validate_array(to_validate[key], key, level_name, key_type, type_obj, api_yaml)
                     else:
                         self.logger.log(LogLevel.FATAL, "API error: Unhandled validation for type '" +  key_type + "' at the " + level_name + "' level. Please contact TA3 for assistance.")
                         return False
@@ -254,22 +249,22 @@ class YamlValidator:
                     location = type_obj[key]['$ref'].split('/')[1:]
                     if level_name == 'scenes' and location[len(location)-1] == 'State':
                         # state at the scenes level should follow state_changes.yaml
-                        if not self.validate_state_change(to_validate[key], persist_characters):
-                            is_valid = False
+                        self.validate_state_change(to_validate[key], persist_characters)
                     else:
                         ref_loc = api_yaml
                         # access the currect location to get the type map
                         for x in location:
                             ref_loc = ref_loc[x]
                         if 'enum' in ref_loc:
-                            if not self.validate_enum(ref_loc, key, level_name, to_validate[key]):
-                                is_valid = False
+                            self.validate_enum(ref_loc, key, level_name, to_validate[key], override_required=override_required)
                         elif isinstance(to_validate[key], dict):
-                            if not self.validate_object(to_validate[key], ref_loc, key, level_name, type_obj[key]['$ref'], api_yaml):
-                                is_valid = False
+                            # if character's unseen property is True, vitals are not required
+                            override_req_properties = False
+                            if key == 'vitals':
+                                override_req_properties = to_validate.get('unseen', False)
+                            self.validate_object(to_validate[key], ref_loc, key, level_name, type_obj[key]['$ref'], api_yaml, override_req_properties)
                         else:
                             self.log_wrong_type(key, level_name, location[len(location)-1], type(to_validate[key]))
-                            is_valid = False 
                 else:
                     self.logger.log(LogLevel.FATAL, "API Error: Key '" + key + "' at level '" + level_name + "' has no defined type or reference. Please contact TA3 for assistance.")
                     return False
@@ -277,10 +272,9 @@ class YamlValidator:
         # check for missing keys
         for key in type_obj:
             if key not in found_keys:
-                if (key in required):
+                if not override_required and (key in required):
                     self.logger.log(LogLevel.ERROR, "Required key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
                     self.missing_keys += 1
-                    is_valid = False
                 else:
                     self.logger.log(LogLevel.DEBUG, "Optional key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
         
@@ -289,8 +283,6 @@ class YamlValidator:
                 injury_count = sum(1 for injury in to_validate['injuries'] if injury['name'] not in ['Ear Bleed', 'Asthmatic', 'Internal'] and 'Broken' not in injury['name'])
                 if injury_count > 8 and not self.train_mode:
                     self.logger.log(LogLevel.ERROR, f"Character '{to_validate.get('name')}' has {injury_count} 'masked' injuries (punctures, lacerations, burns), which exceeds the maximum of 8 allowed in the simulation.")
-
-        return is_valid
     
 
     def determine_first_scene(self, data):
@@ -323,7 +315,7 @@ class YamlValidator:
         return self.validate_one_level('Scenes/State', obj_to_validate, top_level, required, self.state_changes_yaml, persist_characters)
 
 
-    def validate_enum(self, type_obj, key, level, item):
+    def validate_enum(self, type_obj, key, level, item, override_required=False):
         '''
         Accepts as parameters the object that describes expected types, 
         the key of the object, the level we're looking at, and the value 
@@ -338,39 +330,34 @@ class YamlValidator:
                     self.invalid_values += 1
                     is_valid = False
         else:
-            self.log_wrong_type(key, level, str(str), type(item))
-            is_valid = False 
+            if not (override_required and type(item) == type(None)):
+                self.log_wrong_type(key, level, str(str), type(item))
+                is_valid = False 
         return is_valid
 
 
-    def validate_object(self, item, location, key, level, ref_name, api_yaml):
+    def validate_object(self, item, location, key, level, ref_name, api_yaml, override_required=False):
         '''
         Checks if an item matches the reference location. The reference location
         may reference a full object, small object, or enum. Checks all 3 possibilities.
         '''
-        is_valid = True
         # check large object
         if 'properties' in location:
-            if not self.validate_one_level(key, item, location['properties'], location['required'] if 'required' in location else [], api_yaml):
-                is_valid = False
+            self.validate_one_level(key, item, location['properties'], location['required'] if 'required' in location else [], api_yaml, override_required=override_required)
         # check small object
         elif 'additionalProperties' in location:
-            if not self.validate_additional_properties(location, item, key, level, api_yaml):
-                is_valid = False
+            self.validate_additional_properties(location, item, key, level, api_yaml)
         # check enum
         elif 'enum' in location:
-            if not self.validate_enum(location, key, level, item):
-                is_valid = False
+            self.validate_enum(location, key, level, item)
         else:
             self.logger.log(LogLevel.FATAL, "API missing enum, property, or additional properties for '" + ref_name + "'. Cannot parse. Please contact TA3 for assistance.")
-        return is_valid
     
 
     def validate_additional_properties(self, type_obj, item, key, level, api_yaml):
         '''
         Accepts an object that describes the type we're looking for and an item to validate
         '''
-        is_valid = True
         if 'type' in type_obj['additionalProperties']:
             val_type = type_obj['additionalProperties']['type']
             # two types of objects exist: 1. list of key-value 
@@ -379,17 +366,14 @@ class YamlValidator:
                     for k in pair_set:
                         if not self.do_types_match(pair_set[k], PRIMITIVE_TYPE_MAP[val_type]):
                             self.log_wrong_type(k, level, val_type, type(pair_set[k]))
-                            is_valid = False
             # 2. object with key-value
             else:
                 if isinstance(item, dict):
                     for k in item:
                         if not self.do_types_match(item[k], PRIMITIVE_TYPE_MAP[val_type]):
                             self.log_wrong_type(k, level, val_type, type(item[k]))
-                            is_valid = False
                 else:
                     self.log_wrong_type(key, level, 'object', type(item))
-                    is_valid = False 
         elif '$ref' in type_obj['additionalProperties']:
             location = type_obj['additionalProperties']['$ref'].split('/')[1:]
             ref_loc = api_yaml
@@ -398,30 +382,24 @@ class YamlValidator:
             if isinstance(item, list):
                 for pair_set in item:
                     for k in pair_set:
-                        if not self.validate_object(pair_set[k], ref_loc, key, level, type_obj['additionalProperties']['$ref'], api_yaml):
-                            is_valid = False
+                        self.validate_object(pair_set[k], ref_loc, key, level, type_obj['additionalProperties']['$ref'], api_yaml)
             else:
                 if isinstance(item, dict):
                     for k in item:
-                        if not self.validate_object(item[k], ref_loc, key, level, type_obj['additionalProperties']['$ref'], api_yaml):
-                            is_valid = False
+                        self.validate_object(item[k], ref_loc, key, level, type_obj['additionalProperties']['$ref'], api_yaml)
                 else:
                     self.log_wrong_type(key, level, 'object', type(item))
-                    is_valid = False      
         else:
             self.logger.log(LogLevel.FATAL, "API Error: Additional Properties must either have a type or ref, but at level '" + level + "' for property '" + key + "' it does not. Please contact TA3 for assistance.")
-            return False
-        return is_valid
+            return 
 
 
     def validate_array(self, item, key, level, key_type, typed_keys, api_yaml):
         '''
         Looks at an array and ensures that each item in the array matches expectations
         '''
-        is_valid = True
         if not isinstance(item, list):
             self.log_wrong_type(key, level, key_type, type(item))
-            is_valid = False
         else:
             # get type of item in array and check that each item matches
             item_type = typed_keys[key]['items']
@@ -432,47 +410,42 @@ class YamlValidator:
                 for x in location:
                     ref_loc = ref_loc[x]
                 for i in item:
-                    if not self.validate_object(i, ref_loc, key, level, typed_keys[key]['items']['$ref'], api_yaml):
-                        is_valid = False
+                    self.validate_object(i, ref_loc, key, level, typed_keys[key]['items']['$ref'], api_yaml)
             # check basic types
             elif 'type' in item_type:
                 expected = item_type['type']
                 if expected in PRIMITIVE_TYPE_MAP:
                     for i in item:
-                        if not self.validate_primitive(i, expected, key, level, item_type):
-                            is_valid = False
+                        self.validate_primitive(i, expected, key, level, item_type)
             else:
                 self.logger.log(LogLevel.FATAL, "API Error: Missing type definition or reference at level '" + level + "' for property '" + key + "'. Please contact TA3 for assistance.")
-                return False
-        return is_valid
+                return
     
 
-    def validate_primitive(self, item, expected_type, key, level, type_obj):
+    def validate_primitive(self, item, expected_type, key, level, type_obj, override_required=False):
         '''
         Looks at an object against an expected primitive type to see if it matches
         '''
         is_valid = True 
         # first validate enums
         if PRIMITIVE_TYPE_MAP[expected_type] == str and 'enum' in type_obj:
-            if not self.validate_enum(type_obj, key, level, item):
+            if not self.validate_enum(type_obj, key, level, item, override_required=override_required):
                 is_valid = False
         # then validate the rest
         elif not self.do_types_match(item, PRIMITIVE_TYPE_MAP[expected_type]):
-            self.log_wrong_type(key, level, expected_type, type(item))
-            is_valid = False
+            if not(type(item) == type(None) and override_required):
+                self.log_wrong_type(key, level, expected_type, type(item))
+                is_valid = False
         if is_valid:
             # check for min/max only if type is valid
             if 'minimum' in type_obj:
                 if item < type_obj['minimum']:
-                    is_valid = False
                     self.logger.log(LogLevel.ERROR, "Key '" + key + "' at level '" + level + "' has a minimum of " + str(type_obj['minimum']) + " but is " + str(item) + ". (" + str(item) + " < " + str(type_obj['minimum']) + ")")
                     self.out_of_range += 1
             if 'maximum' in type_obj:
                 if item > type_obj['maximum']:
-                    is_valid = False
                     self.logger.log(LogLevel.ERROR, "Key '" + key + "' at level '" + level + "' has a maximum of " + str(type_obj['maximum']) + " but is " + str(item) + ". (" + str(item) + " > " + str(type_obj['maximum']) + ")")
                     self.out_of_range += 1
-        return is_valid
 
 
     def do_types_match(self, item, type):
@@ -1042,6 +1015,7 @@ class YamlValidator:
                         self.logger.log(LogLevel.ERROR, f"{x['action_type']} is a restricted action at scene with id '{scenes[i]['id']}', but appears in the action_mapping within that scene.")
                         self.invalid_values += 1
 
+
     def is_pulse_oximeter_configured(self): 
         '''
         Checks if Pulse Oximeter is configured in the supplies.
@@ -1071,6 +1045,7 @@ class YamlValidator:
                             self.invalid_values += 1
                             self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS' but is never available through any branching path. Please ensure that a pulse oximeter is always available for this scene.")
                         break
+
 
     def validate_action_params(self):
         '''
