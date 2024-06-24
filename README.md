@@ -144,7 +144,7 @@ If persist_characters is false:
     * `scenes[n].transitions.character_vitals[].character_id`: `scenes[n].state.characters[].id`,
     * `scenes[n].action_mapping[].conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
 Otherwise, complete the same checks, but match it up against all characters defined throughout the scenario file. Note that this may give some false validity, as a character may end up being used before it is defined. Please be cautious when defining characters and using persist_characters. 
-In addition, if a character is removed anywhere in a scene, a warning will be issued. Please make sure that your branching scenes do not cause a situation where a character has been removed and then used.
+In addition, if a character is removed anywhere throughout the scenario, a warning will be issued. Please make sure that your branching scenes do not cause a situation where a character has been removed and then used.
 
 #### Uniqueness
 * `scenes[].state.environment.decision_environment.aid_delay[].id` must not have any repeated values within each `scene`
@@ -169,6 +169,11 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 * If the scene is the first scene, `scenes[].state` should _not_ be provided
 * No blanket can appear on the character at the start. 
 * If a character's `unseen` property is `true`, none of the `vitals` are required
+
+#### Injury treatment rules
+* An injury may not be partially treated
+* An injury's treatments_applied property must either be 0 or equal to treatments_required
+* An injury's status must be 'treated' iff treatments_applied == treatments_required
 
 #### Eval Mode
 When not running in training mode (-t), additional checks are implemented:

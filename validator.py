@@ -500,6 +500,7 @@ class YamlValidator:
         self.check_first_scene()
         self.is_pulse_oximeter_configured()
         self.check_scene_env_type()
+        self.validate_pretreated_injuries()
 
 
     def simple_requirements(self):
@@ -1269,6 +1270,35 @@ class YamlValidator:
             possible_supplies = [get_supplies(data)]
         return possible_supplies
     
+
+    def validate_pretreated_injuries(self):
+        '''
+        Checks that for all injuries:
+        - treatments_applied == 0 or treatments_applied == treatments_required
+        - status is "treated" iff treatments_applied == treatments_required
+        '''
+        def check_single_character(c, scene_name):
+            for inj in c.get('injuries', []):
+                applied = inj.get('treatments_applied', 0)
+                if applied != 0 and applied != inj.get('treatments_required', 0):
+                    self.logger.log(LogLevel.ERROR, f"Value of 'treatments_applied' for character '{c['id']}' at scene '{scene_name}' must be equal to '0' or 'treatments_required', but instead is '{applied}'.")
+                    self.invalid_values += 1     
+                if applied == inj.get('treatments_required', 1) and inj.get('status', None) != 'treated':
+                    self.logger.log(LogLevel.ERROR, f"Value of injury 'status' for character '{c['id']}' at scene '{scene_name}' must be 'treated' since 'treatments_applied' == 'treatments_required'.")
+                    self.invalid_values += 1    
+                if inj.get('status', None) == 'treated' and applied != inj.get('treatments_required', 0):
+                    self.logger.log(LogLevel.ERROR, f"Value of injury 'status' for character '{c['id']}' at scene '{scene_name}' is 'treated', but 'treatments_applied' != 'treatments_required'.")
+                    self.invalid_values += 1         
+
+        data = copy.deepcopy(self.loaded_yaml)
+        for c in data['state'].get('characters', []):
+            check_single_character(c, 'scenario-level')
+        for scene in data['scenes']:
+            for c in scene.get('state', {}).get('characters', []):
+                check_single_character(c, scene['id'])
+
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator')
