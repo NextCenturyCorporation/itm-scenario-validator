@@ -92,7 +92,7 @@ class YamlValidator:
 
         self.branches = self.find_all_branch_segments(copy.deepcopy(self.loaded_yaml))
 
-        
+
     def __del__(self):
         '''
         Basic cleanup: closing the file loaded in on close.
@@ -1029,74 +1029,35 @@ class YamlValidator:
                         self.logger.log(LogLevel.ERROR, f"{x['action_type']} is a restricted action at scene with id '{scenes[i]['id']}', but appears in the action_mapping within that scene.")
                         self.invalid_values += 1
 
-
-    def pulse_ox_info(self, scene_id, issue):
-        '''
-        Error message relating to pulse oximeter configuration in a scene.
-        '''
-        if issue:
-            self.invalid_values += 1
-            self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
-        else:
-            self.warning_count += 1
-            self.logger.log(LogLevel.WARN, f"There might be an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
-        
-
     def is_pulse_oximeter_configured(self): 
         '''
         Checks if Pulse Oximeter is configured in the supplies.
         '''
         # inital variables for getting specific data 
         data = copy.deepcopy(self.loaded_yaml)
-        supplies = data['state']['supplies']
         scenes = data['scenes']
 
-        # determine the first scene
-        first_scene = self.determine_first_scene(data)
-
-        # checking whether the pulse oximeter exists in the inital state 
-        first_scene_po = False   
-        for item in supplies:
-            if item['type'] == 'Pulse Oximeter' and item['quantity'] > 0:
-                first_scene_po = True
-
-        # checking whether the first defined scene is valid based on the pulse oximeter in the inital state
-        first_map = first_scene['action_mapping']   
-        if not first_scene_po:
-            for action in first_map:
-                if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
-                    self.pulse_ox_info(first_scene['id'], True)
-                    break
-
-        # testing all other scenes if they are valid in terms of their actions and the pulse oximeter   
         for scene in scenes:
-            if scene is not first_scene:
-                if 'state' in scene:
-                    scene_state = scene['state']
-
-                    # if supplies are not defined in the state and there is no pulse oximeter originally available
-                    if 'supplies' not in scene_state and not first_scene_po:
-                        # check if invalid action type exists when the pulse oximeter is not available
-                        map = scene['action_mapping']
-                        for action in map:
-                            if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
-                                self.pulse_ox_info(scene['id'], False)
-                                break
-                            
-                    # if supplies are defined in the scene
-                    if 'supplies' in scene_state:
-                        pulse_ox = False
-                        for item in scene_state['supplies']:
-                            if item['type'] == 'Pulse Oximeter' and item['quantity'] > 0:
-                                pulse_ox = True
-                        # check if invalid action type exists when the pulse oximeter is not available
-                        map = scene['action_mapping']
-                        for action in map:
-                            if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
-                                if not pulse_ox:
-                                    self.pulse_ox_info(scene['id'], True)
-                                    break
-                                    
+            for action in scene.get('action_mapping', []):
+                if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
+                    possible_supplies = self.get_supplies_in_scene(data, scene['id'])
+                    not_found = False
+                    found = False
+                    for lst in possible_supplies:
+                        if any(s['type'] == 'Pulse Oximeter' and s['quantity'] > 0 for s in lst):
+                            found = True
+                        else:
+                            not_found = True
+                    if not_found:
+                        if found:
+                            # found in at least one path, but not found in at least one path - warning
+                            self.warning_count += 1
+                            self.logger.log(LogLevel.WARN, f"There might be an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS', but in at least one branching path, the pulse oximeter is missing. Please ensure that a pulse oximeter is always available for this scene.")
+                        else:
+                            # not found in any paths
+                            self.invalid_values += 1
+                            self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS' but is never available through any branching path. Please ensure that a pulse oximeter is always available for this scene.")
+                        break
 
     def validate_action_params(self):
         '''
@@ -1253,18 +1214,68 @@ class YamlValidator:
                                 if c not in tmp_removed:
                                     tmp_removed.append(c)
                         else:
-                            # if persist characters is false at any point in the path, start over!
-                            tmp_chars = get_basic_chars(data)
+                            # if persist characters is false at any point in the path, start fresh!
+                            tmp_chars = get_basic_chars(scene)
                 if len(tmp_chars) > 0:
                     chars['possible'].append(tmp_chars)
                 chars['removed'] += tmp_removed
         elif this_scene['id'] != first_scene_id:
-            chars['possible'] = get_basic_chars(scene)
+            chars['possible'] = [get_basic_chars(scene)]
         elif this_scene['id'] == first_scene_id:
-            chars['possible'] = get_basic_chars(data)
+            chars['possible'] = [get_basic_chars(data)]
         return chars
 
 
+    def get_supplies_in_scene(self, data, scene_id):
+        '''
+        Gets the supplies that could be allowed in a scene
+        '''
+        def get_supplies(scene):
+            return scene.get('state', {}).get('supplies', [])
+        
+        def override_supplies(cur, new):
+            '''
+            Only supplies defined in the supplies array are overwritten.
+            All supplies left undefined are left unchanged
+            '''
+            if len(cur) == 0:
+                return new
+            for x in new:
+                matching = [s for s in cur if s['type'] == x['type']]
+                if len(matching) > 0:
+                    cur[cur.index(matching[0])] = x
+                else:
+                    cur.append(x)
+            return cur
+
+        first_scene_id = self.determine_first_scene(data)['id']
+        this_scene = self.get_scene_by_id(data['scenes'], scene_id)
+        possible_supplies = []
+        if this_scene.get('supplies', None) is None:
+            segments = []
+            for branch in self.branches:
+                if scene_id in branch:
+                    segments.append(branch[:branch.index(scene_id)+1])
+            for segment in segments:
+                tmp_possible = []
+                for sid in segment:
+                    if sid == first_scene_id:
+                        # get scenario characters from first scene
+                        tmp_possible = override_supplies(tmp_possible, get_supplies(data))
+                    else:
+                        # new supplies always overwrites previous supplies
+                        scene = self.get_scene_by_id(data['scenes'], sid)
+                        tmp_supplies = override_supplies(tmp_possible, get_supplies(scene))
+                        if len(tmp_supplies) > 0:
+                            tmp_possible = override_supplies(tmp_possible, get_supplies(scene))
+                if len(tmp_possible) > 0:
+                    possible_supplies.append(tmp_possible)
+        elif this_scene['id'] != first_scene_id:
+            possible_supplies = [get_supplies(scene)]
+        elif this_scene['id'] == first_scene_id:
+            possible_supplies = [get_supplies(data)]
+        return possible_supplies
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator')
