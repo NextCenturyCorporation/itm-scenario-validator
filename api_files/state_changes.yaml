@@ -99,6 +99,11 @@ components:
           $ref: '#/components/schemas/RapportEnum'
         tag:
           $ref: '#/components/schemas/CharacterTagEnum'
+        unseen:
+          default: false
+          description: whether or not this character is visible in the scene or merely
+            heard or reported about from a nearby location
+          type: boolean
         unstructured:
           description: Natural language, plain text description of the character
           example: 22 YO male Marine hit by an IED. Puncture wound on the left side
@@ -431,6 +436,16 @@ components:
       - UPSET
       - UNRESPONSIVE
       type: string
+    MetaInfo:
+      description: Includes meta info to assist with debugging. Only provided during
+        training sessions.
+      properties:
+        probe_response:
+          $ref: '#/components/schemas/ProbeResponse'
+        scene_id:
+          description: The scene ID, unique throughout the scenario
+          type: string
+      type: object
     MilitaryBranchEnum:
       description: Branch of the US military.
       enum:
@@ -674,6 +689,27 @@ components:
       - very crowded
       - extreme
       type: string
+    ProbeResponse:
+      description: encapsulates the selection by a DM of an option in response to
+        a probe
+      properties:
+        choice:
+          description: id of choice made
+          type: string
+        justification:
+          description: A justification of the response to the probe
+          type: string
+        probe_id:
+          description: globally unique probe ID
+          type: string
+        scenario_id:
+          description: globally unique scenario ID
+          type: string
+      required:
+      - choice
+      - probe_id
+      - scenario_id
+      type: object
     RaceEnum:
       description: Race or ethnicity
       enum:
@@ -791,6 +827,8 @@ components:
           type: array
         environment:
           $ref: '#/components/schemas/Environment'
+        meta_info:
+          $ref: '#/components/schemas/MetaInfo'
         mission:
           $ref: '#/components/schemas/Mission'
         supplies:

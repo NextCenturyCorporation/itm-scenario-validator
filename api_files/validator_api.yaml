@@ -52,6 +52,8 @@ components:
           - treatment: Tourniquet
           - location: right forearm
           type: object
+        threat_state:
+          $ref: '#/components/schemas/ThreatState'
         unstructured:
           description: Natural language, plain text description of the action
           example: Check Mike's pulse.
@@ -112,6 +114,8 @@ components:
           description: Whether or not this action should remain after it's selected
             by an ADM
           type: boolean
+        threat_state:
+          $ref: '#/components/schemas/ThreatState'
         unstructured:
           description: Natural language, plain text description of the action
           example: Check Mike's pulse.
@@ -133,6 +137,7 @@ components:
       - CHECK_RESPIRATION
       - DIRECT_MOBILE_CHARACTERS
       - END_SCENE
+      - MOVE_TO
       - MOVE_TO_EVAC
       - SEARCH
       - SITREP
@@ -312,6 +317,11 @@ components:
           $ref: '#/components/schemas/RapportEnum'
         tag:
           $ref: '#/components/schemas/CharacterTagEnum'
+        unseen:
+          default: false
+          description: whether or not this character is visible in the scene or merely
+            heard or reported about from a nearby location
+          type: boolean
         unstructured:
           description: Natural language, plain text description of the character
           example: 22 YO male Marine hit by an IED. Puncture wound on the left side
@@ -732,6 +742,16 @@ components:
       - UPSET
       - UNRESPONSIVE
       type: string
+    MetaInfo:
+      description: Includes meta info to assist with debugging. Only provided during
+        training sessions.
+      properties:
+        probe_response:
+          $ref: '#/components/schemas/ProbeResponse'
+        scene_id:
+          description: The scene ID, unique throughout the scenario
+          type: string
+      type: object
     MilitaryBranchEnum:
       description: Branch of the US military.
       enum:
@@ -986,6 +1006,27 @@ components:
           description: A valid probe_id from the appropriate TA1
           type: string
       type: object
+    ProbeResponse:
+      description: encapsulates the selection by a DM of an option in response to
+        a probe
+      properties:
+        choice:
+          description: id of choice made
+          type: string
+        justification:
+          description: A justification of the response to the probe
+          type: string
+        probe_id:
+          description: globally unique probe ID
+          type: string
+        scenario_id:
+          description: globally unique scenario ID
+          type: string
+      required:
+      - choice
+      - probe_id
+      - scenario_id
+      type: object
     ProbeResponses:
       description: tag-specific probe responses (choices) for a tagged character
       properties:
@@ -1043,6 +1084,7 @@ components:
       - CHECK_PULSE
       - CHECK_RESPIRATION
       - DIRECT_MOBILE_CHARACTERS
+      - MOVE_TO
       - MOVE_TO_EVAC
       - SEARCH
       - SITREP
@@ -1233,6 +1275,8 @@ components:
           type: array
         environment:
           $ref: '#/components/schemas/Environment'
+        meta_info:
+          $ref: '#/components/schemas/MetaInfo'
         mission:
           $ref: '#/components/schemas/Mission'
         supplies:

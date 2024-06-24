@@ -602,7 +602,7 @@ class YamlValidator:
         return found_indices
 
 
-    def search_for_key(self, should_find, found, expected_required, explanation, expected_val=[]):
+    def search_for_key(self, should_find, found, expected_required, explanation, expected_val=[], log_level='error'):
         '''
         Searches for a key that is either required or ignored based on the additional dependencies. 
         @param should_find is a boolean of if we need this key or don't need this key
@@ -647,19 +647,31 @@ class YamlValidator:
                 else:
                     if should_find:
                         # we expected to find this key, error
-                        self.logger.log(LogLevel.ERROR, "Key '" + k + "' is required because '" + '.'.join(found) + "' " + explanation + ", but it is missing.")
-                        self.missing_keys += 1
+                        if log_level == 'error':
+                            self.logger.log(LogLevel.ERROR, "Key '" + k + "' is required because '" + '.'.join(found) + "' " + explanation + ", but it is missing.")
+                            self.missing_keys += 1
+                        else:
+                            self.logger.log(LogLevel.WARN, "Key '" + k + "' is recommended because '" + '.'.join(found) + "' " + explanation + ", but it is missing.")
+                            self.warning_count += 1    
                     else:
                         # otherwise, we did not want to find the key, so we're good here
                         found_key = False
                         break
             if should_find is not None and not should_find and found_key:
-                self.logger.log(LogLevel.ERROR, "Key '" + k + "' is not allowed because '" + '.'.join(found) + "' " + explanation + ".")
-                self.invalid_keys += 1
+                if log_level == 'error':
+                    self.logger.log(LogLevel.ERROR, "Key '" + k + "' is not allowed because '" + '.'.join(found) + "' " + explanation + ".")
+                    self.invalid_keys += 1
+                else:
+                    self.logger.log(LogLevel.WARN, "Key '" + k + "' is not expected because '" + '.'.join(found) + "' " + explanation + ".")
+                    self.warning_count += 1
             elif found_key and len(expected_val) > 0:
                 if data not in expected_val:
-                    self.logger.log(LogLevel.ERROR, "Key '" + k + "' must have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is '" + str(data) + "'")
-                    self.invalid_values += 1
+                    if log_level == 'error':
+                        self.logger.log(LogLevel.ERROR, "Key '" + k + "' must have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is '" + str(data) + "'")
+                        self.invalid_values += 1
+                    else:
+                        self.logger.log(LogLevel.WARN, "Key '" + k + "' was expected have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is '" + str(data) + "'")
+                        self.warning_count += 1
                     
 
     def conditional_requirements(self):
@@ -673,6 +685,7 @@ class YamlValidator:
             for entry in self.dep_json['conditionalRequired'][req]:
                 value = entry['conditions']['value'] if 'value' in entry['conditions'] else ''
                 length = entry['conditions']['length'] if 'length' in entry['conditions'] else -1
+                log_level = entry.get('logLevel', 'error')
                 all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, length=length)
                 for x in all_found:
                     found = x.split('.')
@@ -681,7 +694,7 @@ class YamlValidator:
                         continue 
                     else:
                         # start searching for the key(s) that is/are required now that the first key has been found
-                        self.search_for_key(True, found, entry['required'], "meets conditions " + str(entry['conditions']))
+                        self.search_for_key(True, found, entry['required'], "meets conditions " + str(entry['conditions']), log_level=log_level)
 
 
     def conditional_forbid(self):
