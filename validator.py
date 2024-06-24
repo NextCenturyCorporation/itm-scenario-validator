@@ -89,6 +89,7 @@ class YamlValidator:
                 if character.get('has_blanket', False):
                    self.invalid_keys += 1 
                    self.logger.log(LogLevel.ERROR, f"Blankets can't appear on characters at startup unless in training mode but '{character.get('id')}' has 'has_blanket' set to True.")
+        self.branches = self.find_all_branch_segments(copy.deepcopy(self.loaded_yaml))
 
 
     def __del__(self):
@@ -107,6 +108,72 @@ class YamlValidator:
         if (self.dup_check_file):
             self.dup_check_file.close()
 
+
+    def find_all_branch_segments(self, data):
+        '''
+        Creates and returns a list of all scene branches.
+        '''
+        paths = []
+        # need to start at each scene in case there are loops - we want to get every possible segment 
+        for s in data['scenes']:
+            paths += self.get_branches_from_scene(data, s['id'])
+
+        # remove duplicates (same order, same elements)
+            
+        def find_el_in_list(lst, el):
+            inds_where_found = []
+            for ind in range(len(lst)):
+                x = lst[ind]
+                if len(x) == len(el):
+                    found_match = True
+                    for i in range(len(x)):
+                        if x[i] != el[i]:
+                            found_match = False
+                            break
+                    if found_match:
+                        inds_where_found.append(ind)
+            return inds_where_found
+        
+        new_paths = []
+        for p in paths:
+            if len(p) > 0:
+                inds = find_el_in_list(paths, p)
+                try:
+                    new_paths.index(paths[inds[0]])
+                except:
+                    new_paths.append(paths[inds[0]])
+
+        return new_paths
+
+
+    def get_branches_from_scene(self, data, scene_id, path=[]):
+        '''
+        Given a starting scene_id, updates the path with branches
+        that can be taken from that scene
+        '''
+        paths = []
+        scenes = data['scenes']
+        scene = self.get_scene_by_id(scenes, scene_id)
+        scene_ind = scenes.index(scene)
+        default_next = scene.get('next_scene', scenes[scene_ind+1]['id'] if scene_ind+1 < len(scenes) else None) 
+        for a in scene['action_mapping']:
+            action_path = copy.deepcopy(path)
+            next_scene = a.get('next_scene', default_next)
+            if next_scene is None:
+                paths.append(path)
+                return paths
+            if next_scene not in action_path:
+                if len(action_path) == 0:
+                    action_path = [scene_id, next_scene]
+                else:
+                    action_path.append(next_scene)
+                # print(action_path)
+                paths += self.get_branches_from_scene(data, next_scene, action_path)
+            else:
+                paths.append(path)
+                return paths
+        return paths
+    
 
     def validate_field_names(self):
         '''
@@ -230,14 +297,18 @@ class YamlValidator:
         Determine the first scene, either from 'first_scene' or the first in the scenes list.
         '''
         scenes = data.get('scenes', [])
-        first_scene = data['first_scene'] if 'first_scene' in data else None
+        first_scene_id = data['first_scene'] if 'first_scene' in data else None
         
-        if first_scene is None:
+        if first_scene_id is None:
             return scenes[0]
         else:
-            for x in scenes:
-                if x['id'] == first_scene:
-                    return x
+            return self.get_scene_by_id(scenes, first_scene_id)
+        
+
+    def get_scene_by_id(self, scenes, scene_id):
+        for x in scenes:
+            if x['id'] == scene_id:
+                return x
 
 
     def validate_state_change(self, obj_to_validate, persist_characters=False):
@@ -865,19 +936,39 @@ class YamlValidator:
                         self.invalid_values += 1
                 # check persist character scenes
                 elif s.get('persist_characters', False):
+                    scene_chars = self.get_characters_in_scene(data, s['id'])
                     loc = l.split('.')
                     removed_this_scene = s.get('removed_characters', [])
                     val = self.get_value_at_key(loc, data)
-                    if val is not None and val not in all_chars:
-                        self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
-                        self.invalid_values += 1
-                    if val in removed_this_scene:
-                        self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed during this scene, so cannot be used.")
-                        self.invalid_values += 1
-                    elif not any('removed_characters' in el for el in loc) and val is not None and val in removed_chars:
-                        self.logger.log(LogLevel.WARN, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed at some point during the scenario. Make sure that this character is not removed before this scene.")
-                        self.warning_count += 1
-                    
+                    if val is not None:
+                        if val not in all_chars:
+                            self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
+                            self.invalid_values += 1
+                        elif val in removed_this_scene:
+                            self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed during this scene, so cannot be used.")
+                            self.invalid_values += 1
+                        elif val in scene_chars['removed']:
+                            still_possible = False
+                            for group in scene_chars['possible']:
+                                if val in group:
+                                    still_possible = True
+                                    break
+                            if still_possible:
+                                self.logger.log(LogLevel.WARN, f"Character ID '{val}' appears in '{str('.').join(loc)}', but in some branches is removed prior to this scene. Ensure this character exists in every branch leading up to this scene.")
+                                self.warning_count += 1    
+                            else:
+                                self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}' but is never available to this scene due to prior removal.")
+                                self.invalid_values += 1
+                        else:
+                            is_possible = False
+                            for group in scene_chars['possible']:
+                                if val in group:
+                                    is_possible = True
+                                    break
+                            if not is_possible:
+                                self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}' but is never available to this scene.")
+                                self.invalid_values += 1
+
 
     def verify_uniqueness(self):
         '''
@@ -1116,6 +1207,62 @@ class YamlValidator:
                 if new_type is not None and new_type != orig_type:
                     self.warning_count += 1
                     self.logger.log(LogLevel.WARN, f"Key 'type' should not be redefined in scene states, but changes from '{orig_type}' to '{new_type}' in scene '{scene['id']}'. This redefinition will be ignored.")
+
+
+    def get_characters_in_scene(self, data, scene_id):
+        '''
+        Gets all characters that could possibly be allowed in a scene
+        '''
+        def get_basic_chars(scene):
+            characters = []
+            for c in scene.get('state', {}).get('characters', []):
+                characters.append(c['id'])
+            return characters
+        
+        def get_removed_chars(scene):
+            characters = []
+            for c in scene.get('removed_characters', []):
+                characters.append(c)
+            return characters
+
+        first_scene_id = self.determine_first_scene(data)['id']
+        this_scene = self.get_scene_by_id(data['scenes'], scene_id)
+        chars = {'possible': [], 'removed': []}
+        if this_scene.get('persist_characters', False):
+            segments = []
+            for branch in self.branches:
+                if scene_id in branch:
+                    segments.append(branch[:branch.index(scene_id)+1])
+            for segment in segments:
+                tmp_chars = []
+                tmp_removed = []
+                for sid in segment:
+                    if sid == first_scene_id:
+                        # get scenario characters from first scene
+                        tmp_chars += get_basic_chars(data)
+                    else:
+                        scene = self.get_scene_by_id(data['scenes'], sid)
+                        if scene.get('persist_characters', False):
+                            # modify allowed characters up to this point
+                            tmp_chars += get_basic_chars(scene)
+                            tmp_chars = list(set(tmp_chars))
+                            for c in get_removed_chars(scene):
+                                if c in tmp_chars:
+                                    tmp_chars.remove(c)
+                                if c not in tmp_removed:
+                                    tmp_removed.append(c)
+                        else:
+                            # if persist characters is false at any point in the path, start over!
+                            tmp_chars = get_basic_chars(data)
+                if len(tmp_chars) > 0:
+                    chars['possible'].append(tmp_chars)
+                chars['removed'] += tmp_removed
+        elif this_scene['id'] != first_scene_id:
+            chars['possible'] = get_basic_chars(scene)
+        elif this_scene['id'] == first_scene_id:
+            chars['possible'] = get_basic_chars(data)
+        return chars
+
 
 
 if __name__ == '__main__':
