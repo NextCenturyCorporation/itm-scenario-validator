@@ -85,10 +85,10 @@ class YamlValidator:
             for x in self.dep_json['trainingOnlySupplies']:
                 self.allowed_supplies.remove(x)
 
-            for character in self.loaded_yaml.get('state', {'characters': []})['characters']:
-                if character.get('has_blanket', False):
-                   self.invalid_keys += 1 
-                   self.logger.log(LogLevel.WARN, f"Blankets can't appear on characters at startup unless in training mode but '{character.get('id')}' has 'has_blanket' set to True.")
+        for character in self.loaded_yaml.get('state', {'characters': []})['characters']:
+            if character.get('has_blanket', False):
+                self.invalid_keys += 1 
+                self.logger.log(LogLevel.WARN, f"Blankets can't appear on characters at startup but '{character.get('id')}' has 'has_blanket' set to True.")
 
 
     def __del__(self):

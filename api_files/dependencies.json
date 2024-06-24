@@ -172,7 +172,8 @@
             "Ear Bleed": {
                 "state.characters[].injuries[].location": [
                     "left face",
-                    "right face"
+                    "right face",
+                    "unspecified"
                 ]
             },
             "Asthmatic": {
@@ -183,6 +184,7 @@
             },
             "Laceration": {
                 "state.characters[].injuries[].location": [
+                    "left face",
                     "left forearm",
                     "right forearm",
                     "left stomach",
@@ -192,7 +194,8 @@
                     "left calf",
                     "right calf",
                     "left hand",
-                    "right hand"
+                    "right hand",
+                    "unspecified"
                 ]
             },
             "Puncture": {
@@ -211,7 +214,8 @@
                     "right thigh",
                     "left chest",
                     "right chest",
-                    "center chest"
+                    "center chest",
+                    "unspecified"
                 ]
             },
             "Shrapnel": {
@@ -219,13 +223,15 @@
                     "left face",
                     "right face",
                     "left calf",
-                    "right calf"
+                    "right calf",
+                    "unspecified"
                 ]
             },
             "Chest Collapse": {
                 "state.characters[].injuries[].location": [
                     "left chest",
-                    "right chest"
+                    "right chest",
+                    "unspecified"
                 ]
             },
             "Amputation": {
@@ -233,7 +239,8 @@
                     "left wrist",
                     "right wrist",
                     "left calf",
-                    "right calf"
+                    "right calf",
+                    "unspecified"
                 ]
             },
             "Burn": {
@@ -244,66 +251,17 @@
                     "left calf",
                     "right thigh",
                     "left thigh",
-                    "right stomach",
-                    "left stomach",
-                    "right bicep",
-                    "left bicep",
-                    "right shoulder",
-                    "left shoulder",
                     "right side",
                     "left side",
                     "right chest",
                     "left chest",
-                    "right wrist",
-                    "left wrist",
-                    "left face",
-                    "right face",
-                    "left neck",
-                    "right neck",
-                    "unspecified"
-                ]
-            },
-            "Abrasion": {
-                "state.characters[].injuries[].location": [
-                    "right forearm",
-                    "left forearm",
-                    "right calf",
-                    "left calf",
-                    "right thigh",
-                    "left thigh",
-                    "right stomach",
-                    "left stomach",
-                    "right bicep",
-                    "left bicep",
-                    "right shoulder",
-                    "left shoulder",
-                    "right side",
-                    "left side",
-                    "right chest",
-                    "left chest",
-                    "right wrist",
-                    "left wrist",
-                    "left face",
-                    "right face",
-                    "left neck",
-                    "right neck",
                     "unspecified"
                 ]
             },
             "Broken Bone": {
                 "state.characters[].injuries[].location": [
-                    "right forearm",
-                    "left forearm",
-                    "right thigh",
-                    "left thigh",
                     "right shoulder",
                     "left shoulder",
-                    "right side",
-                    "left side",
-                    "right wrist",
-                    "left wrist",
-                    "left neck",
-                    "right neck",
                     "left leg",
                     "right leg",
                     "unspecified"
@@ -311,7 +269,8 @@
             },
             "Internal": {
                 "state.characters[].injuries[].location": [
-                    "internal"
+                    "internal",
+                    "unspecified"
                 ]
             }
         },
