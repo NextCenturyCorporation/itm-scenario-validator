@@ -857,7 +857,7 @@ class YamlValidator:
         characters at other scene levels must match the characters within that scene"
         '''
         # get all locations that have character ids 
-        allowed_loc_0 = "state.characters[].id".split('.') # general locataion of character ids that are allowed in scene 0
+        allowed_loc_0 = "state.characters[].id".split('.') # general location of character ids that are allowed in scene 0
         allowed_loc_other = "scenes[].state.characters[].id".split('.') # general location of characters listed in all other scenes
         removed_chars_loc = "scenes[].removed_characters[]".split('.') # general location of removed characters throughout the yaml
         data = copy.deepcopy(self.loaded_yaml)
@@ -865,9 +865,9 @@ class YamlValidator:
         locations_other = self.property_meets_conditions(allowed_loc_other, data) # specific locations of character ids that are listed in other scenes
         locations_removed = self.property_meets_conditions(removed_chars_loc, data) # specific locations of removed characters
         scenes = data['scenes'] 
-        first_scene = self.determine_first_scene(data)['id']
+        first_scene_id = self.determine_first_scene(data)['id']
         allowed_vals = {}
-        allowed_vals[first_scene] = []
+        allowed_vals[first_scene_id] = []
         all_chars = [] # store all characters found anywhere in the character definitions
         removed_chars = [] # store all removed characters that are found anywhere in the character definitions
         
@@ -877,7 +877,7 @@ class YamlValidator:
             loc = l.split('.')
             val = self.get_value_at_key(loc, data)
             if val is not None:
-                allowed_vals[first_scene].append(val)   
+                allowed_vals[first_scene_id].append(val)   
                 all_chars.append(val)
 
         for l in locations_other:
@@ -909,9 +909,9 @@ class YamlValidator:
                 ind = int(l.split('cenes[')[1].split(']')[0])
                 s = scenes[ind]
                 # check non-persistent-character scenes
-                if 'characters' in s or s['id'] == first_scene:
+                if (not s.get('persist_characters', False)) and ('characters' in s or s['id'] == first_scene_id):
                     # make sure the index exists in the allowed values dict
-                    if ind not in allowed_vals and s['id'] != first_scene:
+                    if ind not in allowed_vals and s['id'] != first_scene_id:
                         # path does not exist where we are checking for characters. Error (optionally, we don't want to send a duplicate!) and short circuit this run
                         where_vals_found = '.'.join(allowed_loc_0) if ind==0 else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
                         if where_vals_found not in missing_locs and not self.get_value_at_key(where_vals_found.split('.')[:1], data):
@@ -923,9 +923,9 @@ class YamlValidator:
                     loc = l.split('.')
                     val = self.get_value_at_key(loc, data)
                     # get the specific character ids allowed in this scene
-                    this_allowed_vals = (allowed_vals[ind] if ind in allowed_vals else allowed_vals[first_scene])
+                    this_allowed_vals = (allowed_vals[ind] if ind in allowed_vals else allowed_vals[first_scene_id])
                     if val is not None and val not in this_allowed_vals:
-                        where_vals_found = '.'.join(allowed_loc_0) if s['id'] != first_scene else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
+                        where_vals_found = '.'.join(allowed_loc_0) if s['id'] != first_scene_id else '.'.join(allowed_loc_other).replace('scenes[]', f'scenes[{ind}]')
                         self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' must have one of the following values " + str(this_allowed_vals) + " to match '" + str(where_vals_found) + "', but instead value is '" + str(val) + "'")
                         self.invalid_values += 1
                 # check persist character scenes
@@ -936,7 +936,7 @@ class YamlValidator:
                         self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
                         self.invalid_values += 1
                     if not any('removed_characters' in el for el in loc) and val is not None and val in removed_chars:
-                        self.logger.log(LogLevel.WARN, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed at some point during the scenario. Make sure that this character will not be removed before this scene.")
+                        self.logger.log(LogLevel.WARN, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed at some point during the scenario. Make sure that this character is not removed before this scene.")
                         self.warning_count += 1
                     
 
@@ -975,15 +975,12 @@ class YamlValidator:
         '''
         data = copy.deepcopy(self.loaded_yaml)
         scenes = data['scenes']
-        first_scene = data['first_scene'] if 'first_scene' in data else None
-        r = range(1, len(scenes))
-        if first_scene is not None:
-            r = range(0, len(scenes))
-        for i in r:
-            if scenes[i]['id'] == first_scene:
+        first_scene_id = self.determine_first_scene(data)['id']
+        for s in scenes:
+            if s['id'] == first_scene_id:
                 continue
-            if 'state' not in scenes[i]:
-                self.logger.log(LogLevel.ERROR, "Key 'state' must be provided within all but the first entry in 'scenes' but is missing at scenes[" + str(i) + "]")
+            if 'state' not in s:
+                self.logger.log(LogLevel.ERROR, "Key 'state' must be provided within all but the first entry in 'scenes' but is missing at scenes[" + s['id'] + "]")
                 self.missing_keys += 1
 
 
