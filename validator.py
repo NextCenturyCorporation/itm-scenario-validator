@@ -871,7 +871,7 @@ class YamlValidator:
                     if val is not None and val not in all_chars:
                         self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
                         self.invalid_values += 1
-                    if val in removed_this_scene:
+                    if not any('removed_characters' in el for el in loc) and val in removed_this_scene:
                         self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed during this scene, so cannot be used.")
                         self.invalid_values += 1
                     elif not any('removed_characters' in el for el in loc) and val is not None and val in removed_chars:
