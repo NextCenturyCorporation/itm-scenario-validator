@@ -945,7 +945,7 @@ class YamlValidator:
                         if val not in all_chars:
                             self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
                             self.invalid_values += 1
-                        elif val in removed_this_scene:
+                        elif not any('removed_characters' in el for el in loc) and val in removed_this_scene:
                             self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed during this scene, so cannot be used.")
                             self.invalid_values += 1
                         elif val in scene_chars['removed']:
@@ -1209,10 +1209,11 @@ class YamlValidator:
                             tmp_chars += get_basic_chars(scene)
                             tmp_chars = list(set(tmp_chars))
                             for c in get_removed_chars(scene):
-                                if c in tmp_chars:
-                                    tmp_chars.remove(c)
-                                if c not in tmp_removed:
-                                    tmp_removed.append(c)
+                                if sid != segment[-1]:
+                                    if c in tmp_chars:
+                                        tmp_chars.remove(c)
+                                    if c not in tmp_removed:
+                                        tmp_removed.append(c)
                         else:
                             # if persist characters is false at any point in the path, start fresh!
                             tmp_chars = get_basic_chars(scene)
