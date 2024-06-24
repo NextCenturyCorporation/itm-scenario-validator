@@ -926,6 +926,10 @@ class YamlValidator:
                     scene_chars = self.get_characters_in_scene(data, s['id'])
                     loc = l.split('.')
                     removed_this_scene = s.get('removed_characters', [])
+                    this_scene_characters = s.get('state', {}).get('characters', [])
+                    this_scene_char_ids = []
+                    for x in this_scene_characters:
+                        this_scene_char_ids.append(x['id'])
                     val = self.get_value_at_key(loc, data)
                     if val is not None:
                         if val not in all_chars:
@@ -934,7 +938,7 @@ class YamlValidator:
                         elif not any('removed_characters' in el for el in loc) and val in removed_this_scene:
                             self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed during this scene, so cannot be used.")
                             self.invalid_values += 1
-                        elif val in scene_chars['removed']:
+                        elif val in scene_chars['removed'] and val not in this_scene_char_ids:
                             still_possible = False
                             for group in scene_chars['possible']:
                                 if val in group:
