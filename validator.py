@@ -945,6 +945,8 @@ class YamlValidator:
                     for x in this_scene_characters:
                         this_scene_char_ids.append(x['id'])
                     val = self.get_value_at_key(loc, data)
+                    if type(val) == type({}):
+                        val = list(val.keys())[0]
                     if val is not None:
                         if val not in all_chars:
                             self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
@@ -1108,39 +1110,42 @@ class YamlValidator:
         Verifies that all characters with their mission importance appear
         in the critical_ids list.
         '''
-        data = copy.deepcopy(self.loaded_yaml)['state']
-        allowed_importance = copy.deepcopy(self.api_yaml)['components']['schemas']['MissionImportanceEnum']['enum']
-        characters = data['characters']
+        data = copy.deepcopy(self.loaded_yaml)
+        # get all id/mission-importance pairs that appear throughout the entire scenario
+        characters = data['state']['characters']
+        character_importance = data.get('state', {}).get('mission', {}).get('character_importance', [])
         pairs = {}
-        # gather all id/mission-importance pairs
+        for scene in data['scenes']:
+            characters += scene.get('state', {}).get('characters', [])
+            character_importance += scene.get('state', {}).get('mission', {}).get('character_importance', [])
         for c in characters:
             cid = c['id']
             if 'mission_importance' in c['demographics']:
                 importance = c['demographics']['mission_importance']
                 pairs[cid] = importance 
             else:
-                pairs[cid] = 'normal'
+                pairs[cid] = 'normal'  
+
+        allowed_importance = copy.deepcopy(self.api_yaml)['components']['schemas']['MissionImportanceEnum']['enum']
+
         # verify that all pairs appear in character_importance
         critical_dict = {}
-        if 'mission' in data and 'character_importance' in data['mission']:
-            critical = data['mission']['character_importance']
-            if critical is not None:
-                for c in critical:
-                    critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
-                for k in critical_dict:
-                    if k in pairs:
-                        if pairs[k] != critical_dict[k]:
-                            self.logger.log(LogLevel.ERROR, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
-                            self.invalid_values += 1     
-                    else:
-                        self.logger.log(LogLevel.ERROR, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
-                        self.invalid_keys += 1     
-                    if critical_dict[k] not in allowed_importance:
-                        self.logger.log(LogLevel.ERROR, "Value of 'state.mission.character_importance['" + k + "']' must be one of " + str(allowed_importance) + "', but instead it is '" + critical_dict[k] + "'")
-                        self.invalid_values += 1              
+        for c in character_importance:
+            critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
+        for k in critical_dict:
+            if k in pairs:
+                if pairs[k] != critical_dict[k]:
+                    self.logger.log(LogLevel.ERROR, "Value of 'mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
+                    self.invalid_values += 1     
+            else:
+                # will be handled by character_matching. Do not double count error!
+                pass  
+            if critical_dict[k] not in allowed_importance:
+                self.logger.log(LogLevel.ERROR, "Value of 'mission.character_importance['" + k + "']' must be one of " + str(allowed_importance) + "', but instead it is '" + critical_dict[k] + "'")
+                self.invalid_values += 1              
         for k in pairs:
             if k not in critical_dict and pairs[k] != 'normal':
-                self.logger.log(LogLevel.ERROR, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
+                self.logger.log(LogLevel.ERROR, "Value of 'mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
                 self.missing_keys += 1         
 
 
