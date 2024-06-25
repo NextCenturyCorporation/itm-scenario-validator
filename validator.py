@@ -88,7 +88,7 @@ class YamlValidator:
         for character in self.loaded_yaml.get('state', {'characters': []})['characters']:
             if character.get('has_blanket', False):
                 self.invalid_keys += 1 
-                self.logger.log(LogLevel.WARN, f"Blankets can't appear on characters at startup but '{character.get('id')}' has 'has_blanket' set to True.")
+                self.logger.log(LogLevel.ERROR, f"Blankets can't appear on characters at startup but '{character.get('id')}' has 'has_blanket' set to True.")
 
         self.branches = self.find_all_branch_segments(copy.deepcopy(self.loaded_yaml))
 
@@ -110,14 +110,10 @@ class YamlValidator:
             self.dup_check_file.close()
 
 
-    def find_all_branch_segments(self, data):
+    def remove_duplicate_sublists(self, lst_of_lsts):
         '''
-        Creates and returns a list of all scene branches.
+        Given a list of lists, reduces it to only one of each sublist (same length, same order, same elements)
         '''
-        paths = self.get_branches_from_scene(data, self.determine_first_scene(data)['id'])
-
-        # remove duplicates (same order, same elements)
-            
         def find_el_in_list(lst, el):
             inds_where_found = []
             for ind in range(len(lst)):
@@ -132,16 +128,27 @@ class YamlValidator:
                         inds_where_found.append(ind)
             return inds_where_found
         
-        new_paths = []
-        for p in paths:
+        new_lst_of_lsts = []
+        for p in lst_of_lsts:
             if len(p) > 0:
-                inds = find_el_in_list(paths, p)
+                inds = find_el_in_list(lst_of_lsts, p)
                 try:
-                    new_paths.index(paths[inds[0]])
+                    new_lst_of_lsts.index(lst_of_lsts[inds[0]])
                 except:
-                    new_paths.append(paths[inds[0]])
+                    new_lst_of_lsts.append(lst_of_lsts[inds[0]])
 
-        return new_paths
+        return new_lst_of_lsts
+    
+
+    def find_all_branch_segments(self, data):
+        '''
+        Creates and returns a list of all scene branches.
+        '''
+        paths = self.get_branches_from_scene(data, self.determine_first_scene(data)['id'])
+
+        # remove duplicates (same order, same elements)
+        return self.remove_duplicate_sublists(paths)
+
 
 
     def get_branches_from_scene(self, data, scene_id, path=[]):
@@ -160,11 +167,16 @@ class YamlValidator:
             if next_scene is None:
                 paths.append(path)
                 return paths
-            if action_path.count(next_scene) < 2:
+            if action_path.count(next_scene) < 2 and (len(action_path) == 0 or action_path[-1] != next_scene):
                 if len(action_path) == 0:
-                    action_path = [scene_id, next_scene]
+                    # no two of the same scene in a row (doesn't affect anything logically)
+                    if next_scene != scene_id:
+                        action_path = [scene_id, next_scene]
+                    else:
+                        action_path = [scene_id]
                 else:
-                    action_path.append(next_scene)
+                    if action_path[-1] != next_scene:
+                        action_path.append(next_scene)
                 paths += self.get_branches_from_scene(data, next_scene, action_path)
             else:
                 paths.append(path)
@@ -936,19 +948,25 @@ class YamlValidator:
                     scene_chars = self.get_characters_in_scene(data, s['id'])
                     loc = l.split('.')
                     removed_this_scene = s.get('removed_characters', [])
-                    this_scene_characters = s.get('state', {}).get('characters', [])
-                    this_scene_char_ids = []
-                    for x in this_scene_characters:
-                        this_scene_char_ids.append(x['id'])
+                    if s['id'] != first_scene_id:
+                        this_scene_characters = s.get('state', {}).get('characters', [])
+                        this_scene_char_ids = []
+                        for x in this_scene_characters:
+                            this_scene_char_ids.append(x['id'])
+                    else:
+                        this_scene_characters = data.get('state', {}).get('characters', [])
+                        this_scene_char_ids = []
+                        for x in this_scene_characters:
+                            this_scene_char_ids.append(x['id'])
                     val = self.get_value_at_key(loc, data)
                     if type(val) == type({}):
                         val = list(val.keys())[0]
                     if val is not None:
                         if val not in all_chars:
-                            self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
+                            self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + f"' (scene '{s['id']}') has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
                             self.invalid_values += 1
                         elif not any('removed_characters' in el for el in loc) and val in removed_this_scene:
-                            self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed during this scene, so cannot be used.")
+                            self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}' (scene '{s['id']}'), but is removed during this scene, so cannot be used.")
                             self.invalid_values += 1
                         elif val in scene_chars['removed'] and val not in this_scene_char_ids:
                             still_possible = False
@@ -957,10 +975,10 @@ class YamlValidator:
                                     still_possible = True
                                     break
                             if still_possible:
-                                self.logger.log(LogLevel.WARN, f"Character ID '{val}' appears in '{str('.').join(loc)}', but in some branches is removed prior to this scene. Ensure this character exists in every branch leading up to this scene.")
+                                self.logger.log(LogLevel.WARN, f"Character ID '{val}' appears in '{str('.').join(loc)}' (scene '{s['id']}'), but in some branches is removed prior to this scene. Ensure this character exists in every branch leading up to this scene.")
                                 self.warning_count += 1    
                             else:
-                                self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}' but is never available to this scene due to prior removal.")
+                                self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}' (scene '{s['id']}') but is never available to this scene.")
                                 self.invalid_values += 1
                         else:
                             is_possible = False
@@ -969,7 +987,7 @@ class YamlValidator:
                                     is_possible = True
                                     break
                             if not is_possible:
-                                self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}' but is never available to this scene.")
+                                self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}' (scene '{s['id']}') but is never available to this scene.")
                                 self.invalid_values += 1
 
 
@@ -1031,6 +1049,7 @@ class YamlValidator:
                         self.logger.log(LogLevel.ERROR, f"{x['action_type']} is a restricted action at scene with id '{scenes[i]['id']}', but appears in the action_mapping within that scene.")
                         self.invalid_values += 1
 
+
     def is_pulse_oximeter_configured(self): 
         '''
         Checks if Pulse Oximeter is configured in the supplies.
@@ -1041,12 +1060,12 @@ class YamlValidator:
 
         for scene in scenes:
             for action in scene.get('action_mapping', []):
-                if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
+                if action['action_type'] in ['CHECK_BLOOD_OXYGEN', 'CHECK_ALL_VITALS']:
                     possible_supplies = self.get_supplies_in_scene(data, scene['id'])
                     not_found = False
                     found = False
                     for lst in possible_supplies:
-                        if any(s['type'] == 'Pulse Oximeter' and s['quantity'] > 0 for s in lst):
+                        if any((s['type'] == 'Pulse Oximeter' and s['quantity'] > 0) for s in lst):
                             found = True
                         else:
                             not_found = True
@@ -1149,7 +1168,8 @@ class YamlValidator:
     def check_first_scene(self):
         '''
         Makes sure the first scene is compliant with all the rules we give it:
-        1. must not contain state
+        1. Must not contain state
+        2. Must have persist_characters=true
         '''
         data = copy.deepcopy(self.loaded_yaml)
 
@@ -1157,8 +1177,12 @@ class YamlValidator:
         first_scene = self.determine_first_scene(data)
 
         if 'state' in first_scene: 
-            self.logger.log(LogLevel.ERROR, "Key 'state' is not allowed in the first scene")
+            self.logger.log(LogLevel.ERROR, "Key 'state' is not allowed in the first scene.")
             self.invalid_keys += 1
+
+        if not first_scene.get('persist_characters', False):
+            self.logger.log(LogLevel.ERROR, "Value of 'persist_characters' must be true in the first scene.")
+            self.invalid_values += 1
 
 
     def check_scene_env_type(self):
@@ -1200,12 +1224,31 @@ class YamlValidator:
             segments = []
             for branch in self.branches:
                 if scene_id in branch:
-                    segments.append(branch[:branch.index(scene_id)+1])
+                    # get every occurrence (not just the first) of scene_id in the branch
+                    for i in range(len(branch)):
+                        if branch[i] == scene_id:
+                            segments.append(branch[:i+1]) 
+            segments = sorted(self.remove_duplicate_sublists(segments), key=len)
+
+            # get segments that appear at the beginning of every path for this branch
+            critical_segments = []
+            for i in range(len(segments)):
+                s1 = segments[i]
+                if len(s1) > len(segments[0]):
+                    break
+                is_in_all = True
+                for s2 in segments:
+                    if len(self.remove_duplicate_sublists([s1, s2[:len(s1)]])) != 1:
+                        is_in_all = False
+                        break
+                if is_in_all:
+                    critical_segments.append(s1)
+
             for segment in segments:
                 tmp_chars = []
                 tmp_removed = []
                 for sid in segment:
-                    if sid == first_scene_id:
+                    if sid == first_scene_id and len(tmp_chars) == 0:
                         # get scenario characters from first scene
                         tmp_chars += get_basic_chars(data)
                     else:
@@ -1224,7 +1267,10 @@ class YamlValidator:
                             # if persist characters is false at any point in the path, start fresh!
                             tmp_chars = get_basic_chars(scene)
                 if len(tmp_chars) > 0:
-                    chars['possible'].append(tmp_chars)
+                    if segment in critical_segments:
+                        chars['possible'].append(tmp_chars)
+                    elif len(critical_segments) == 0:
+                        chars['possible'].append(tmp_chars)
                 chars['removed'] += tmp_removed
         elif this_scene['id'] != first_scene_id:
             chars['possible'] = [get_basic_chars(scene)]
@@ -1245,6 +1291,7 @@ class YamlValidator:
             Only supplies defined in the supplies array are overwritten.
             All supplies left undefined are left unchanged
             '''
+            cur = copy.deepcopy(cur)
             if len(cur) == 0:
                 return new
             for x in new:
@@ -1262,12 +1309,31 @@ class YamlValidator:
             segments = []
             for branch in self.branches:
                 if scene_id in branch:
-                    segments.append(branch[:branch.index(scene_id)+1])
+                    # get every occurrence (not just the first) of scene_id in the branch
+                    for i in range(len(branch)):
+                        if branch[i] == scene_id:
+                            segments.append(branch[:i+1]) 
+            segments = sorted(self.remove_duplicate_sublists(segments), key=len)
+
+            # get segments that appear at the beginning of every path for this branch
+            critical_segments = []
+            for i in range(len(segments)):
+                s1 = segments[i]
+                if len(s1) > len(segments[0]):
+                    break
+                is_in_all = True
+                for s2 in segments:
+                    if len(self.remove_duplicate_sublists([s1, s2[:len(s1)]])) != 1:
+                        is_in_all = False
+                        break
+                if is_in_all:
+                    critical_segments.append(s1)
+
             for segment in segments:
                 tmp_possible = []
                 for sid in segment:
                     if sid == first_scene_id:
-                        # get scenario characters from first scene
+                        # get scenario supplies for first scene
                         tmp_possible = override_supplies(tmp_possible, get_supplies(data))
                     else:
                         # new supplies always overwrites previous supplies
@@ -1276,7 +1342,10 @@ class YamlValidator:
                         if len(tmp_supplies) > 0:
                             tmp_possible = override_supplies(tmp_possible, get_supplies(scene))
                 if len(tmp_possible) > 0:
-                    possible_supplies.append(tmp_possible)
+                    if segment in critical_segments:
+                        possible_supplies.append(tmp_possible)
+                    elif len(critical_segments) == 0:
+                        possible_supplies.append(tmp_possible)
         elif this_scene['id'] != first_scene_id:
             possible_supplies = [get_supplies(scene)]
         elif this_scene['id'] == first_scene_id:
