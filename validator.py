@@ -114,10 +114,7 @@ class YamlValidator:
         '''
         Creates and returns a list of all scene branches.
         '''
-        paths = []
-        # need to start at each scene in case there are loops - we want to get every possible segment 
-        for s in data['scenes']:
-            paths += self.get_branches_from_scene(data, s['id'])
+        paths = self.get_branches_from_scene(data, self.determine_first_scene(data)['id'])
 
         # remove duplicates (same order, same elements)
             
@@ -163,12 +160,11 @@ class YamlValidator:
             if next_scene is None:
                 paths.append(path)
                 return paths
-            if next_scene not in action_path:
+            if action_path.count(next_scene) < 2:
                 if len(action_path) == 0:
                     action_path = [scene_id, next_scene]
                 else:
                     action_path.append(next_scene)
-                # print(action_path)
                 paths += self.get_branches_from_scene(data, next_scene, action_path)
             else:
                 paths.append(path)
@@ -1064,6 +1060,7 @@ class YamlValidator:
                             self.invalid_values += 1
                             self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS' but is never available through any branching path. Please ensure that a pulse oximeter is always available for this scene.")
                         break
+
 
     def validate_action_params(self):
         '''
