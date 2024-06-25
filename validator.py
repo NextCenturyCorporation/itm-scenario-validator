@@ -509,6 +509,7 @@ class YamlValidator:
         self.is_pulse_oximeter_configured()
         self.check_scene_env_type()
         self.validate_pretreated_injuries()
+        self.validate_unseen_character_actions()
 
 
     def simple_requirements(self):
@@ -1195,7 +1196,7 @@ class YamlValidator:
         def get_basic_chars(scene):
             characters = []
             for c in scene.get('state', {}).get('characters', []):
-                characters.append(c['id'])
+                characters.append({'id': c['id'], 'unseen': c.get('unseen', False)})
             return characters
         
         def get_removed_chars(scene):
@@ -1206,7 +1207,7 @@ class YamlValidator:
 
         first_scene_id = self.determine_first_scene(data)['id']
         this_scene = self.get_scene_by_id(data['scenes'], scene_id)
-        chars = {'possible': [], 'removed': []}
+        chars = {'possible': [], 'removed': [], 'seen': [], 'unseen': []}
         if this_scene.get('persist_characters', False):
             segments = []
             for branch in self.branches:
@@ -1234,15 +1235,39 @@ class YamlValidator:
             for segment in segments:
                 tmp_chars = []
                 tmp_removed = []
+                tmp_seen = []
+                tmp_unseen = []
                 for sid in segment:
                     if sid == first_scene_id and len(tmp_chars) == 0:
                         # get scenario characters from first scene
-                        tmp_chars += get_basic_chars(data)
+                        for x in get_basic_chars(data):
+                            tmp_chars.append(x['id'])
+                            if x['unseen']:
+                                if x['id'] in tmp_seen:
+                                    tmp_seen.remove(x['id'])
+                                if x['id'] not in tmp_unseen:
+                                    tmp_unseen.append(x['id'])
+                            else:
+                                if x['id'] in tmp_unseen:
+                                    tmp_unseen.remove(x['id'])
+                                if x['id'] not in tmp_seen:
+                                    tmp_seen.append(x['id'])
                     else:
                         scene = self.get_scene_by_id(data['scenes'], sid)
                         if scene.get('persist_characters', False):
                             # modify allowed characters up to this point
-                            tmp_chars += get_basic_chars(scene)
+                            for x in get_basic_chars(scene):
+                                tmp_chars.append(x['id'])
+                                if x['unseen']:
+                                    if x['id'] in tmp_seen:
+                                        tmp_seen.remove(x['id'])
+                                    if x['id'] not in tmp_unseen:
+                                        tmp_unseen.append(x['id'])
+                                else:
+                                    if x['id'] in tmp_unseen:
+                                        tmp_unseen.remove(x['id'])
+                                    if x['id'] not in tmp_seen:
+                                        tmp_seen.append(x['id'])
                             tmp_chars = list(set(tmp_chars))
                             for c in get_removed_chars(scene):
                                 if sid != segment[-1]:
@@ -1252,17 +1277,57 @@ class YamlValidator:
                                         tmp_removed.append(c)
                         else:
                             # if persist characters is false at any point in the path, start fresh!
-                            tmp_chars = get_basic_chars(scene)
+                            tmp_chars = []
+                            tmp_seen = []
+                            tmp_unseen = []
+                            for x in get_basic_chars(scene):
+                                tmp_chars.append(x['id'])
+                                if x['unseen']:
+                                    if x['id'] in tmp_seen:
+                                        tmp_seen.remove(x['id'])
+                                    if x['id'] not in tmp_unseen:
+                                        tmp_unseen.append(x['id'])
+                                else:
+                                    if x['id'] in tmp_unseen:
+                                        tmp_unseen.remove(x['id'])
+                                    if x['id'] not in tmp_seen:
+                                        tmp_seen.append(x['id'])
                 if len(tmp_chars) > 0:
                     if segment in critical_segments:
                         chars['possible'].append(tmp_chars)
                     elif len(critical_segments) == 0:
                         chars['possible'].append(tmp_chars)
                 chars['removed'] += tmp_removed
+                chars['unseen'] += tmp_unseen
+                chars['seen'] += tmp_seen
         elif this_scene['id'] != first_scene_id:
-            chars['possible'] = [get_basic_chars(scene)]
+            chars['possible'] = []
+            for x in get_basic_chars(scene):
+                chars['possible'].append(x['id'])
+                if x['unseen']:
+                    if x['id'] in chars['seen']:
+                        chars['seen'].remove(x['id'])
+                    if x['id'] not in chars['unseen']:
+                        chars['unseen'].append(x['id'])
+                else:
+                    if x['id'] in chars['unseen']:
+                        chars['unseen'].remove(x['id'])
+                    if x['id'] not in chars['seen']:
+                        chars['seen'].append(x['id'])
         elif this_scene['id'] == first_scene_id:
-            chars['possible'] = [get_basic_chars(data)]
+            chars['possible'] = []
+            for x in get_basic_chars(data):
+                chars['possible'].append(x['id'])
+                if x['unseen']:
+                    if x['id'] in chars['seen']:
+                        chars['seen'].remove(x['id'])
+                    if x['id'] not in chars['unseen']:
+                        chars['unseen'].append(x['id'])
+                else:
+                    if x['id'] in chars['unseen']:
+                        chars['unseen'].remove(x['id'])
+                    if x['id'] not in chars['seen']:
+                        chars['seen'].append(x['id'])
         return chars
 
 
@@ -1367,6 +1432,42 @@ class YamlValidator:
                 check_single_character(c, scene['id'])
 
 
+    def validate_unseen_character_actions(self):
+        '''
+        Checks all actions to ensure that:
+        - if a character is unseen, the action type is MOVE_TO or MOVE_TO_EVAC
+        - if a character is not unseen, the action type is _not_ MOVE_TO
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        for scene in data['scenes']:
+            for action in scene.get('action_mapping', []):
+                char = action.get('character_id', None)
+                action_type = action.get('action_type', None)
+                if char is None:
+                    continue
+                else:
+                    # get which characters are known to be seen or unseen in this scene
+                    char_details = self.get_characters_in_scene(data, scene['id'])
+                    unseen = list(set(char_details['unseen']))
+                    seen = list(set(char_details['seen']))   
+                    unknown = []
+                    for x in unseen:
+                        if x in seen:
+                            unknown.append(x)
+                            unseen.remove(x)
+                            seen.remove(x)
+                    if char in unseen:
+                        if action_type not in ['MOVE_TO', 'MOVE_TO_EVAC']:
+                            self.logger.log(LogLevel.WARN, f"Action types 'MOVE_TO' and 'MOVE_TO_EVAC' are the only actions allowed for unseen characters, but in scene '{scene['id']}', '{char}' may be unseen with unallowed action type '{action_type}'.")
+                            self.invalid_values += 1       
+                    elif char in seen:
+                        if action_type == 'MOVE_TO':
+                            self.logger.log(LogLevel.WARN, f"Action type 'MOVE_TO' is only allowed for unseen characters, but in scene '{scene['id']}', '{char}' may be not unseen and has action type '{action_type}'.")
+                            self.invalid_values += 1     
+                    elif char in unknown:
+                        self.logger.log(LogLevel.WARN, f"Action types allowed are specific for unseen vs seen characters. Due to different branching paths, in scene '{scene['id']}', character '{char}' may either be seen or unseen, leading to ambiguous validity tests.")
+                        self.warning_count += 1     
+                    
 
 
 if __name__ == '__main__':
