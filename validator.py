@@ -161,12 +161,12 @@ class YamlValidator:
         scene = self.get_scene_by_id(scene_id)
         scene_ind = scenes.index(scene)
         default_next = scene.get('next_scene', scenes[scene_ind+1]['id'] if scene_ind+1 < len(scenes) else None) 
+        scenes_to_investigate = []
         for a in scene['action_mapping']:
             action_path = copy.deepcopy(path)
             next_scene = a.get('next_scene', default_next)
-            if next_scene is None:
-                paths.append(path)
-                return paths
+            scenes_to_investigate.append(next_scene)
+        for next_scene in scenes_to_investigate:
             if action_path.count(next_scene) < 2 and (len(action_path) == 0 or action_path[-1] != next_scene):
                 if len(action_path) == 0:
                     # no two of the same scene in a row (doesn't affect anything logically)
@@ -177,7 +177,10 @@ class YamlValidator:
                 else:
                     if action_path[-1] != next_scene:
                         action_path.append(next_scene)
-                paths += self.get_branches_from_scene(data, next_scene, action_path)
+                if next_scene is None:
+                    paths.append(path)
+                else:
+                    paths += self.get_branches_from_scene(data, next_scene, action_path)
             else:
                 paths.append(path)
                 return paths
@@ -1495,11 +1498,11 @@ class YamlValidator:
                     if char in unseen:
                         if action_type not in ['MOVE_TO', 'MOVE_TO_EVAC']:
                             self.logger.log(LogLevel.WARN, f"Action types 'MOVE_TO' and 'MOVE_TO_EVAC' are the only actions allowed for unseen characters, but in scene '{scene['id']}', '{char}' may be unseen with unallowed action type '{action_type}'.")
-                            self.invalid_values += 1       
+                            self.warning_count += 1       
                     elif char in seen:
                         if action_type == 'MOVE_TO':
                             self.logger.log(LogLevel.WARN, f"Action type 'MOVE_TO' is only allowed for unseen characters, but in scene '{scene['id']}', '{char}' may be not unseen and has action type '{action_type}'.")
-                            self.invalid_values += 1     
+                            self.warning_count += 1     
                     elif char in unknown:
                         self.logger.log(LogLevel.WARN, f"Action types allowed are specific for unseen vs seen characters. Due to different branching paths, in scene '{scene['id']}', character '{char}' may either be seen or unseen, leading to ambiguous validity tests.")
                         self.warning_count += 1     
