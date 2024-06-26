@@ -88,7 +88,9 @@ class YamlValidator:
         for character in self.loaded_yaml.get('state', {'characters': []})['characters']:
             if character.get('has_blanket', False):
                 self.invalid_keys += 1 
-                self.logger.log(LogLevel.WARN, f"Blankets can't appear on characters at startup but '{character.get('id')}' has 'has_blanket' set to True.")
+                self.logger.log(LogLevel.ERROR, f"Blankets can't appear on characters at startup but '{character.get('id')}' has 'has_blanket' set to True.")
+
+        self.branches = self.find_all_branch_segments(copy.deepcopy(self.loaded_yaml))
 
 
     def __del__(self):
@@ -107,6 +109,80 @@ class YamlValidator:
         if (self.dup_check_file):
             self.dup_check_file.close()
 
+
+    def remove_duplicate_sublists(self, lst_of_lsts):
+        '''
+        Given a list of lists, reduces it to only one of each sublist (same length, same order, same elements)
+        '''
+        def find_el_in_list(lst, el):
+            inds_where_found = []
+            for ind in range(len(lst)):
+                x = lst[ind]
+                if len(x) == len(el):
+                    found_match = True
+                    for i in range(len(x)):
+                        if x[i] != el[i]:
+                            found_match = False
+                            break
+                    if found_match:
+                        inds_where_found.append(ind)
+            return inds_where_found
+        
+        new_lst_of_lsts = []
+        for p in lst_of_lsts:
+            if len(p) > 0:
+                inds = find_el_in_list(lst_of_lsts, p)
+                try:
+                    new_lst_of_lsts.index(lst_of_lsts[inds[0]])
+                except:
+                    new_lst_of_lsts.append(lst_of_lsts[inds[0]])
+
+        return new_lst_of_lsts
+    
+
+    def find_all_branch_segments(self, data):
+        '''
+        Creates and returns a list of all scene branches.
+        '''
+        paths = self.get_branches_from_scene(data, self.determine_first_scene(data)['id'])
+
+        # remove duplicates (same order, same elements)
+        return self.remove_duplicate_sublists(paths)
+
+
+
+    def get_branches_from_scene(self, data, scene_id, path=[]):
+        '''
+        Given a starting scene_id, updates the path with branches
+        that can be taken from that scene
+        '''
+        paths = []
+        scenes = data['scenes']
+        scene = self.get_scene_by_id(scenes, scene_id)
+        scene_ind = scenes.index(scene)
+        default_next = scene.get('next_scene', scenes[scene_ind+1]['id'] if scene_ind+1 < len(scenes) else None) 
+        for a in scene['action_mapping']:
+            action_path = copy.deepcopy(path)
+            next_scene = a.get('next_scene', default_next)
+            if next_scene is None:
+                paths.append(path)
+                return paths
+            if action_path.count(next_scene) < 2 and (len(action_path) == 0 or action_path[-1] != next_scene):
+                if len(action_path) == 0:
+                    # no two of the same scene in a row (doesn't affect anything logically)
+                    if next_scene != scene_id:
+                        action_path = [scene_id, next_scene]
+                    else:
+                        action_path = [scene_id]
+                else:
+                    if action_path[-1] != next_scene:
+                        action_path.append(next_scene)
+                paths += self.get_branches_from_scene(data, next_scene, action_path)
+            else:
+                paths.append(path)
+                return paths
+        return paths
+    
 
     def validate_field_names(self):
         '''
@@ -230,14 +306,18 @@ class YamlValidator:
         Determine the first scene, either from 'first_scene' or the first in the scenes list.
         '''
         scenes = data.get('scenes', [])
-        first_scene = data['first_scene'] if 'first_scene' in data else None
+        first_scene_id = data['first_scene'] if 'first_scene' in data else None
         
-        if first_scene is None:
+        if first_scene_id is None:
             return scenes[0]
         else:
-            for x in scenes:
-                if x['id'] == first_scene:
-                    return x
+            return self.get_scene_by_id(scenes, first_scene_id)
+        
+
+    def get_scene_by_id(self, scenes, scene_id):
+        for x in scenes:
+            if x['id'] == scene_id:
+                return x
 
 
     def validate_state_change(self, obj_to_validate, persist_characters=False):
@@ -865,23 +945,51 @@ class YamlValidator:
                         self.invalid_values += 1
                 # check persist character scenes
                 elif s.get('persist_characters', False):
+                    scene_chars = self.get_characters_in_scene(data, s['id'])
                     loc = l.split('.')
                     removed_this_scene = s.get('removed_characters', [])
-                    this_scene_characters = s.get('state', {}).get('characters', [])
-                    this_scene_char_ids = []
-                    for x in this_scene_characters:
-                        this_scene_char_ids.append(x['id'])
+                    if s['id'] != first_scene_id:
+                        this_scene_characters = s.get('state', {}).get('characters', [])
+                        this_scene_char_ids = []
+                        for x in this_scene_characters:
+                            this_scene_char_ids.append(x['id'])
+                    else:
+                        this_scene_characters = data.get('state', {}).get('characters', [])
+                        this_scene_char_ids = []
+                        for x in this_scene_characters:
+                            this_scene_char_ids.append(x['id'])
                     val = self.get_value_at_key(loc, data)
-                    if val is not None and val not in all_chars:
-                        self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + "' has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
-                        self.invalid_values += 1
-                    if not any('removed_characters' in el for el in loc) and val in removed_this_scene:
-                        self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed during this scene, so cannot be used.")
-                        self.invalid_values += 1
-                    elif not any('removed_characters' in el for el in loc) and val is not None and val in removed_chars and val not in this_scene_char_ids:
-                        self.logger.log(LogLevel.WARN, f"Character ID '{val}' appears in '{str('.').join(loc)}', but is removed at some point during the scenario. Make sure that this character is not removed before this scene.")
-                        self.warning_count += 1
-                    
+                    if type(val) == type({}):
+                        val = list(val.keys())[0]
+                    if val is not None:
+                        if val not in all_chars:
+                            self.logger.log(LogLevel.ERROR, "Key '" + loc[-1] + "' at '" + str('.'.join(loc)) + f"' (scene '{s['id']}') has value '" + str(val) + "', but that character id is never defined within the scenario yaml file.")
+                            self.invalid_values += 1
+                        elif not any('removed_characters' in el for el in loc) and val in removed_this_scene:
+                            self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}' (scene '{s['id']}'), but is removed during this scene, so cannot be used.")
+                            self.invalid_values += 1
+                        elif val in scene_chars['removed'] and val not in this_scene_char_ids:
+                            still_possible = False
+                            for group in scene_chars['possible']:
+                                if val in group:
+                                    still_possible = True
+                                    break
+                            if still_possible:
+                                self.logger.log(LogLevel.WARN, f"Character ID '{val}' appears in '{str('.').join(loc)}' (scene '{s['id']}'), but in some branches is removed prior to this scene. Ensure this character exists in every branch leading up to this scene.")
+                                self.warning_count += 1    
+                            else:
+                                self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}' (scene '{s['id']}') but is never available to this scene.")
+                                self.invalid_values += 1
+                        else:
+                            is_possible = False
+                            for group in scene_chars['possible']:
+                                if val in group:
+                                    is_possible = True
+                                    break
+                            if not is_possible:
+                                self.logger.log(LogLevel.ERROR, f"Character ID '{val}' appears in '{str('.').join(loc)}' (scene '{s['id']}') but is never available to this scene.")
+                                self.invalid_values += 1
+
 
     def verify_uniqueness(self):
         '''
@@ -942,73 +1050,37 @@ class YamlValidator:
                         self.invalid_values += 1
 
 
-    def pulse_ox_info(self, scene_id, issue):
-        '''
-        Error message relating to pulse oximeter configuration in a scene.
-        '''
-        if issue:
-            self.invalid_values += 1
-            self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
-        else:
-            self.warning_count += 1
-            self.logger.log(LogLevel.WARN, f"There might be an invalid action in scene {scene_id}. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS'. Please ensure that a pulse oximeter is always available for this scene.")
-        
-
     def is_pulse_oximeter_configured(self): 
         '''
         Checks if Pulse Oximeter is configured in the supplies.
         '''
         # inital variables for getting specific data 
         data = copy.deepcopy(self.loaded_yaml)
-        supplies = data['state']['supplies']
         scenes = data['scenes']
 
-        # determine the first scene
-        first_scene = self.determine_first_scene(data)
-
-        # checking whether the pulse oximeter exists in the inital state 
-        first_scene_po = False   
-        for item in supplies:
-            if item['type'] == 'Pulse Oximeter' and item['quantity'] > 0:
-                first_scene_po = True
-
-        # checking whether the first defined scene is valid based on the pulse oximeter in the inital state
-        first_map = first_scene['action_mapping']   
-        if not first_scene_po:
-            for action in first_map:
-                if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
-                    self.pulse_ox_info(first_scene['id'], True)
+        for scene in scenes:
+            for action in scene.get('action_mapping', []):
+                if action['action_type'] not in ['CHECK_BLOOD_OXYGEN', 'CHECK_ALL_VITALS']:
+                    continue
+                possible_supplies = self.get_supplies_in_scene(data, scene['id'])
+                not_found = False
+                found = False
+                for lst in possible_supplies:
+                    if any((s['type'] == 'Pulse Oximeter' and s['quantity'] > 0) for s in lst):
+                        found = True
+                    else:
+                        not_found = True
+                if not_found:
+                    if found:
+                        # found in at least one path, but not found in at least one path - warning
+                        self.warning_count += 1
+                        self.logger.log(LogLevel.WARN, f"There might be an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS', but in at least one branching path, the pulse oximeter is missing. Please ensure that a pulse oximeter is always available for this scene.")
+                    else:
+                        # not found in any paths
+                        self.invalid_values += 1
+                        self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS' but is never available through any branching path. Please ensure that a pulse oximeter is always available for this scene.")
                     break
 
-        # testing all other scenes if they are valid in terms of their actions and the pulse oximeter   
-        for scene in scenes:
-            if scene is not first_scene:
-                if 'state' in scene:
-                    scene_state = scene['state']
-
-                    # if supplies are not defined in the state and there is no pulse oximeter originally available
-                    if 'supplies' not in scene_state and not first_scene_po:
-                        # check if invalid action type exists when the pulse oximeter is not available
-                        map = scene['action_mapping']
-                        for action in map:
-                            if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
-                                self.pulse_ox_info(scene['id'], False)
-                                break
-                            
-                    # if supplies are defined in the scene
-                    if 'supplies' in scene_state:
-                        pulse_ox = False
-                        for item in scene_state['supplies']:
-                            if item['type'] == 'Pulse Oximeter' and item['quantity'] > 0:
-                                pulse_ox = True
-                        # check if invalid action type exists when the pulse oximeter is not available
-                        map = scene['action_mapping']
-                        for action in map:
-                            if action['action_type'] == 'CHECK_BLOOD_OXYGEN' or action['action_type'] == 'CHECK_ALL_VITALS':
-                                if not pulse_ox:
-                                    self.pulse_ox_info(scene['id'], True)
-                                    break
-                                    
 
     def validate_action_params(self):
         '''
@@ -1055,46 +1127,49 @@ class YamlValidator:
         Verifies that all characters with their mission importance appear
         in the critical_ids list.
         '''
-        data = copy.deepcopy(self.loaded_yaml)['state']
-        allowed_importance = copy.deepcopy(self.api_yaml)['components']['schemas']['MissionImportanceEnum']['enum']
-        characters = data['characters']
+        data = copy.deepcopy(self.loaded_yaml)
+        # get all id/mission-importance pairs that appear throughout the entire scenario
+        characters = data['state']['characters']
+        character_importance = data.get('state', {}).get('mission', {}).get('character_importance', [])
         pairs = {}
-        # gather all id/mission-importance pairs
+        for scene in data['scenes']:
+            characters += scene.get('state', {}).get('characters', [])
+            character_importance += scene.get('state', {}).get('mission', {}).get('character_importance', [])
         for c in characters:
             cid = c['id']
             if 'mission_importance' in c['demographics']:
                 importance = c['demographics']['mission_importance']
                 pairs[cid] = importance 
             else:
-                pairs[cid] = 'normal'
+                pairs[cid] = 'normal'  
+
+        allowed_importance = copy.deepcopy(self.api_yaml)['components']['schemas']['MissionImportanceEnum']['enum']
+
         # verify that all pairs appear in character_importance
         critical_dict = {}
-        if 'mission' in data and 'character_importance' in data['mission']:
-            critical = data['mission']['character_importance']
-            if critical is not None:
-                for c in critical:
-                    critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
-                for k in critical_dict:
-                    if k in pairs:
-                        if pairs[k] != critical_dict[k]:
-                            self.logger.log(LogLevel.ERROR, "Value of 'state.mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
-                            self.invalid_values += 1     
-                    else:
-                        self.logger.log(LogLevel.ERROR, "'state.mission.character_importance' has character_id '" + k + "' that is not defined in 'state.characters'")
-                        self.invalid_keys += 1     
-                    if critical_dict[k] not in allowed_importance:
-                        self.logger.log(LogLevel.ERROR, "Value of 'state.mission.character_importance['" + k + "']' must be one of " + str(allowed_importance) + "', but instead it is '" + critical_dict[k] + "'")
-                        self.invalid_values += 1              
+        for c in character_importance:
+            critical_dict[list(c.items())[0][0]] = list(c.items())[0][1]
+        for k in critical_dict:
+            if k in pairs:
+                if pairs[k] != critical_dict[k]:
+                    self.logger.log(LogLevel.ERROR, "Value of 'mission.character_importance['" + k + "']' is '" + str(critical_dict[k]) + "', but the character's mission_importance is '" + str(pairs[k]) + "'")
+                    self.invalid_values += 1     
+            else:
+                # will be handled by character_matching. Do not double count error!
+                pass  
+            if critical_dict[k] not in allowed_importance:
+                self.logger.log(LogLevel.ERROR, "Value of 'mission.character_importance['" + k + "']' must be one of " + str(allowed_importance) + "', but instead it is '" + critical_dict[k] + "'")
+                self.invalid_values += 1              
         for k in pairs:
             if k not in critical_dict and pairs[k] != 'normal':
-                self.logger.log(LogLevel.ERROR, "Value of 'state.mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
+                self.logger.log(LogLevel.ERROR, "Value of 'mission.character_importance' is missing pair ('" + k + "', '" + str(pairs[k]) + "')")
                 self.missing_keys += 1         
 
 
     def check_first_scene(self):
         '''
         Makes sure the first scene is compliant with all the rules we give it:
-        1. must not contain state
+        1. Must not contain state
         '''
         data = copy.deepcopy(self.loaded_yaml)
 
@@ -1102,7 +1177,7 @@ class YamlValidator:
         first_scene = self.determine_first_scene(data)
 
         if 'state' in first_scene: 
-            self.logger.log(LogLevel.ERROR, "Key 'state' is not allowed in the first scene")
+            self.logger.log(LogLevel.ERROR, "Key 'state' is not allowed in the first scene.")
             self.invalid_keys += 1
 
 
@@ -1121,6 +1196,158 @@ class YamlValidator:
                     self.warning_count += 1
                     self.logger.log(LogLevel.WARN, f"Key 'type' should not be redefined in scene states, but changes from '{orig_type}' to '{new_type}' in scene '{scene['id']}'. This redefinition will be ignored.")
 
+
+    def get_characters_in_scene(self, data, scene_id):
+        '''
+        Gets all characters that could possibly be allowed in a scene
+        '''
+        def get_basic_chars(scene):
+            characters = []
+            for c in scene.get('state', {}).get('characters', []):
+                characters.append(c['id'])
+            return characters
+        
+        def get_removed_chars(scene):
+            characters = []
+            for c in scene.get('removed_characters', []):
+                characters.append(c)
+            return characters
+
+        first_scene_id = self.determine_first_scene(data)['id']
+        this_scene = self.get_scene_by_id(data['scenes'], scene_id)
+        chars = {'possible': [], 'removed': []}
+        if this_scene.get('persist_characters', False):
+            segments = []
+            for branch in self.branches:
+                if scene_id in branch:
+                    # get every occurrence (not just the first) of scene_id in the branch
+                    for i in range(len(branch)):
+                        if branch[i] == scene_id:
+                            segments.append(branch[:i+1]) 
+            segments = sorted(self.remove_duplicate_sublists(segments), key=len)
+
+            # get segments that appear at the beginning of every path for this branch
+            critical_segments = []
+            for i in range(len(segments)):
+                s1 = segments[i]
+                if len(s1) > len(segments[0]):
+                    break
+                is_in_all = True
+                for s2 in segments:
+                    if len(self.remove_duplicate_sublists([s1, s2[:len(s1)]])) != 1:
+                        is_in_all = False
+                        break
+                if is_in_all:
+                    critical_segments.append(s1)
+
+            for segment in segments:
+                tmp_chars = []
+                tmp_removed = []
+                for sid in segment:
+                    if sid == first_scene_id and len(tmp_chars) == 0:
+                        # get scenario characters from first scene
+                        tmp_chars += get_basic_chars(data)
+                    else:
+                        scene = self.get_scene_by_id(data['scenes'], sid)
+                        if scene.get('persist_characters', False):
+                            # modify allowed characters up to this point
+                            tmp_chars += get_basic_chars(scene)
+                            tmp_chars = list(set(tmp_chars))
+                            for c in get_removed_chars(scene):
+                                if sid != segment[-1]:
+                                    if c in tmp_chars:
+                                        tmp_chars.remove(c)
+                                    if c not in tmp_removed:
+                                        tmp_removed.append(c)
+                        else:
+                            # if persist characters is false at any point in the path, start fresh!
+                            tmp_chars = get_basic_chars(scene)
+                if len(tmp_chars) > 0:
+                    if segment in critical_segments:
+                        chars['possible'].append(tmp_chars)
+                    elif len(critical_segments) == 0:
+                        chars['possible'].append(tmp_chars)
+                chars['removed'] += tmp_removed
+        elif this_scene['id'] != first_scene_id:
+            chars['possible'] = [get_basic_chars(scene)]
+        elif this_scene['id'] == first_scene_id:
+            chars['possible'] = [get_basic_chars(data)]
+        return chars
+
+
+    def get_supplies_in_scene(self, data, scene_id):
+        '''
+        Gets the supplies that could be allowed in a scene
+        '''
+        def get_supplies(scene):
+            return scene.get('state', {}).get('supplies', [])
+        
+        def override_supplies(cur, new):
+            '''
+            Only supplies defined in the supplies array are overwritten.
+            All supplies left undefined are left unchanged
+            '''
+            cur = copy.deepcopy(cur)
+            if len(cur) == 0:
+                return new
+            for x in new:
+                matching = [s for s in cur if s['type'] == x['type']]
+                if len(matching) > 0:
+                    cur[cur.index(matching[0])] = x
+                else:
+                    cur.append(x)
+            return cur
+
+        first_scene_id = self.determine_first_scene(data)['id']
+        this_scene = self.get_scene_by_id(data['scenes'], scene_id)
+        possible_supplies = []
+        if this_scene.get('supplies', None) is None:
+            segments = []
+            for branch in self.branches:
+                if scene_id in branch:
+                    # get every occurrence (not just the first) of scene_id in the branch
+                    for i in range(len(branch)):
+                        if branch[i] == scene_id:
+                            segments.append(branch[:i+1]) 
+            segments = sorted(self.remove_duplicate_sublists(segments), key=len)
+
+            # get segments that appear at the beginning of every path for this branch
+            critical_segments = []
+            for i in range(len(segments)):
+                s1 = segments[i]
+                if len(s1) > len(segments[0]):
+                    break
+                is_in_all = True
+                for s2 in segments:
+                    if len(self.remove_duplicate_sublists([s1, s2[:len(s1)]])) != 1:
+                        is_in_all = False
+                        break
+                if is_in_all:
+                    critical_segments.append(s1)
+
+            for segment in segments:
+                tmp_possible = []
+                for sid in segment:
+                    if sid == first_scene_id:
+                        # get scenario supplies for first scene
+                        tmp_possible = override_supplies(tmp_possible, get_supplies(data))
+                    else:
+                        # new supplies always overwrites previous supplies
+                        scene = self.get_scene_by_id(data['scenes'], sid)
+                        tmp_supplies = override_supplies(tmp_possible, get_supplies(scene))
+                        if len(tmp_supplies) > 0:
+                            tmp_possible = override_supplies(tmp_possible, get_supplies(scene))
+                if len(tmp_possible) > 0:
+                    if segment in critical_segments:
+                        possible_supplies.append(tmp_possible)
+                    elif len(critical_segments) == 0:
+                        possible_supplies.append(tmp_possible)
+        elif this_scene['id'] != first_scene_id:
+            possible_supplies = [get_supplies(scene)]
+        elif this_scene['id'] == first_scene_id:
+            possible_supplies = [get_supplies(data)]
+        return possible_supplies
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator')
