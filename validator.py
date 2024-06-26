@@ -1169,7 +1169,6 @@ class YamlValidator:
         '''
         Makes sure the first scene is compliant with all the rules we give it:
         1. Must not contain state
-        2. Must have persist_characters=true
         '''
         data = copy.deepcopy(self.loaded_yaml)
 
@@ -1179,10 +1178,6 @@ class YamlValidator:
         if 'state' in first_scene: 
             self.logger.log(LogLevel.ERROR, "Key 'state' is not allowed in the first scene.")
             self.invalid_keys += 1
-
-        if not first_scene.get('persist_characters', False):
-            self.logger.log(LogLevel.ERROR, "Value of 'persist_characters' must be true in the first scene.")
-            self.invalid_values += 1
 
 
     def check_scene_env_type(self):
