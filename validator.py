@@ -158,7 +158,7 @@ class YamlValidator:
         '''
         paths = []
         scenes = data['scenes']
-        scene = self.get_scene_by_id(scenes, scene_id)
+        scene = self.get_scene_by_id(scene_id)
         scene_ind = scenes.index(scene)
         default_next = scene.get('next_scene', scenes[scene_ind+1]['id'] if scene_ind+1 < len(scenes) else None) 
         for a in scene['action_mapping']:
@@ -303,10 +303,12 @@ class YamlValidator:
         if first_scene_id is None:
             return scenes[0]
         else:
-            return self.get_scene_by_id(scenes, first_scene_id)
+            return self.get_scene_by_id(first_scene_id)
         
 
-    def get_scene_by_id(self, scenes, scene_id):
+    def get_scene_by_id(self, scene_id):
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data.get('scenes', [])
         for x in scenes:
             if x['id'] == scene_id:
                 return x
@@ -510,6 +512,7 @@ class YamlValidator:
         self.check_scene_env_type()
         self.validate_pretreated_injuries()
         self.validate_unseen_character_actions()
+        self.validate_evac_ids()
 
 
     def simple_requirements(self):
@@ -1157,7 +1160,6 @@ class YamlValidator:
         '''
         Makes sure the first scene is compliant with all the rules we give it:
         1. Must not contain state
-        2. Must have persist_characters=true
         '''
         data = copy.deepcopy(self.loaded_yaml)
 
@@ -1167,10 +1169,6 @@ class YamlValidator:
         if 'state' in first_scene: 
             self.logger.log(LogLevel.ERROR, "Key 'state' is not allowed in the first scene.")
             self.invalid_keys += 1
-
-        if not first_scene.get('persist_characters', False):
-            self.logger.log(LogLevel.ERROR, "Value of 'persist_characters' must be true in the first scene.")
-            self.invalid_values += 1
 
 
     def check_scene_env_type(self):
@@ -1187,6 +1185,33 @@ class YamlValidator:
                 if new_type is not None and new_type != orig_type:
                     self.warning_count += 1
                     self.logger.log(LogLevel.WARN, f"Key 'type' should not be redefined in scene states, but changes from '{orig_type}' to '{new_type}' in scene '{scene['id']}'. This redefinition will be ignored.")
+
+
+    def get_branch_segments_for_scene(self, scene_id):
+        segments = []
+        for branch in self.branches:
+            if scene_id in branch:
+                # get every occurrence (not just the first) of scene_id in the branch
+                for i in range(len(branch)):
+                    if branch[i] == scene_id:
+                        segments.append(branch[:i+1]) 
+        segments = sorted(self.remove_duplicate_sublists(segments), key=len)
+
+        # get segments that appear at the beginning of every path for this branch
+        critical_segments = []
+        for i in range(len(segments)):
+            s1 = segments[i]
+            if len(s1) > len(segments[0]):
+                break
+            is_in_all = True
+            for s2 in segments:
+                if len(self.remove_duplicate_sublists([s1, s2[:len(s1)]])) != 1:
+                    is_in_all = False
+                    break
+            if is_in_all:
+                critical_segments.append(s1)
+
+        return {'segments': segments, 'critical': critical_segments}
 
 
     def get_characters_in_scene(self, data, scene_id):
@@ -1206,31 +1231,12 @@ class YamlValidator:
             return characters
 
         first_scene_id = self.determine_first_scene(data)['id']
-        this_scene = self.get_scene_by_id(data['scenes'], scene_id)
+        this_scene = self.get_scene_by_id(scene_id)
         chars = {'possible': [], 'removed': [], 'seen': [], 'unseen': []}
         if this_scene.get('persist_characters', False):
-            segments = []
-            for branch in self.branches:
-                if scene_id in branch:
-                    # get every occurrence (not just the first) of scene_id in the branch
-                    for i in range(len(branch)):
-                        if branch[i] == scene_id:
-                            segments.append(branch[:i+1]) 
-            segments = sorted(self.remove_duplicate_sublists(segments), key=len)
-
-            # get segments that appear at the beginning of every path for this branch
-            critical_segments = []
-            for i in range(len(segments)):
-                s1 = segments[i]
-                if len(s1) > len(segments[0]):
-                    break
-                is_in_all = True
-                for s2 in segments:
-                    if len(self.remove_duplicate_sublists([s1, s2[:len(s1)]])) != 1:
-                        is_in_all = False
-                        break
-                if is_in_all:
-                    critical_segments.append(s1)
+            all_segs = self.get_branch_segments_for_scene(scene_id)
+            segments = all_segs['segments']
+            critical_segments = all_segs['critical']
 
             for segment in segments:
                 tmp_chars = []
@@ -1253,7 +1259,7 @@ class YamlValidator:
                                 if x['id'] not in tmp_seen:
                                     tmp_seen.append(x['id'])
                     else:
-                        scene = self.get_scene_by_id(data['scenes'], sid)
+                        scene = self.get_scene_by_id(sid)
                         if scene.get('persist_characters', False):
                             # modify allowed characters up to this point
                             for x in get_basic_chars(scene):
@@ -1302,7 +1308,7 @@ class YamlValidator:
                 chars['seen'] += tmp_seen
         elif this_scene['id'] != first_scene_id:
             chars['possible'] = []
-            for x in get_basic_chars(scene):
+            for x in get_basic_chars(this_scene):
                 chars['possible'].append(x['id'])
                 if x['unseen']:
                     if x['id'] in chars['seen']:
@@ -1355,41 +1361,22 @@ class YamlValidator:
             return cur
 
         first_scene_id = self.determine_first_scene(data)['id']
-        this_scene = self.get_scene_by_id(data['scenes'], scene_id)
+        this_scene = self.get_scene_by_id(scene_id)
         possible_supplies = []
         if this_scene.get('supplies', None) is None:
-            segments = []
-            for branch in self.branches:
-                if scene_id in branch:
-                    # get every occurrence (not just the first) of scene_id in the branch
-                    for i in range(len(branch)):
-                        if branch[i] == scene_id:
-                            segments.append(branch[:i+1]) 
-            segments = sorted(self.remove_duplicate_sublists(segments), key=len)
-
-            # get segments that appear at the beginning of every path for this branch
-            critical_segments = []
-            for i in range(len(segments)):
-                s1 = segments[i]
-                if len(s1) > len(segments[0]):
-                    break
-                is_in_all = True
-                for s2 in segments:
-                    if len(self.remove_duplicate_sublists([s1, s2[:len(s1)]])) != 1:
-                        is_in_all = False
-                        break
-                if is_in_all:
-                    critical_segments.append(s1)
+            all_segs = self.get_branch_segments_for_scene(scene_id)
+            segments = all_segs['segments']
+            critical_segments = all_segs['critical']
 
             for segment in segments:
                 tmp_possible = []
                 for sid in segment:
-                    if sid == first_scene_id:
+                    if sid == first_scene_id and len(tmp_possible) == 0:
                         # get scenario supplies for first scene
                         tmp_possible = override_supplies(tmp_possible, get_supplies(data))
                     else:
                         # new supplies always overwrites previous supplies
-                        scene = self.get_scene_by_id(data['scenes'], sid)
+                        scene = self.get_scene_by_id(sid)
                         tmp_supplies = override_supplies(tmp_possible, get_supplies(scene))
                         if len(tmp_supplies) > 0:
                             tmp_possible = override_supplies(tmp_possible, get_supplies(scene))
@@ -1404,6 +1391,58 @@ class YamlValidator:
             possible_supplies = [get_supplies(data)]
         return possible_supplies
     
+    
+    def get_evac_ids_in_scene(self, data, scene_id):
+        '''
+        Gets the evac_ids that could be allowed in a scene
+        '''
+        def get_evac_ids(scene):
+            dec_env = scene.get('state', {}).get('environment', {}).get('decision_environment', None)
+            if dec_env is not None:
+                delays = dec_env.get('aid_delay', [])
+                delay_ids = []
+                for x in delays:
+                    delay_ids.append(x['id'])
+                return delay_ids
+            else:
+                return None
+
+        first_scene_id = self.determine_first_scene(data)['id']
+        this_scene = self.get_scene_by_id(scene_id)
+        possible_ids = []
+        if this_scene.get('state', {}).get('environment', {}).get('decision_environment', None) is None:
+            all_segs = self.get_branch_segments_for_scene(scene_id)
+            segments = all_segs['segments']
+            critical_segments = all_segs['critical']
+
+            for segment in segments:
+                tmp_possible = []
+                for sid in segment:
+                    if sid == first_scene_id and len(tmp_possible) == 0:
+                        # get evac ids for the first scene from scenario state
+                        tmp_tmp = get_evac_ids(data)
+                        tmp_possible = tmp_tmp if tmp_tmp is not None else []
+                    else:
+                        # new environment always overwrites old evac_ids
+                        tmp_tmp = get_evac_ids(self.get_scene_by_id(sid))
+                        if tmp_tmp is not None:
+                            # environment exists, even if aid_delay is empty. Overwrite possible evac ids for this segment!
+                            # ignore otherwise
+                            tmp_possible = tmp_tmp
+                if len(tmp_possible) > 0:
+                    if segment in critical_segments:
+                        possible_ids.append(tmp_possible)
+                    elif len(critical_segments) == 0:
+                        possible_ids.append(tmp_possible)
+        elif this_scene['id'] != first_scene_id:
+            tmp_tmp = get_evac_ids(this_scene)
+            possible_ids = [tmp_tmp] if tmp_tmp is not None else []
+        elif this_scene['id'] == first_scene_id:
+            tmp_tmp = get_evac_ids(data)
+            possible_ids = [tmp_tmp] if tmp_tmp is not None else []
+
+        return possible_ids
+
 
     def validate_pretreated_injuries(self):
         '''
@@ -1468,6 +1507,39 @@ class YamlValidator:
                         self.logger.log(LogLevel.WARN, f"Action types allowed are specific for unseen vs seen characters. Due to different branching paths, in scene '{scene['id']}', character '{char}' may either be seen or unseen, leading to ambiguous validity tests.")
                         self.warning_count += 1     
                     
+
+    def validate_evac_ids(self):
+        '''
+        Makes sure that any evac_ids listed in action_mapping parameters
+        are allowed in the scene.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        for scene in data['scenes']:
+            used_evac_ids = set([])
+            for action in scene.get('action_mapping', []):
+                if action.get('parameters', {}).get('evac_id', None) is not None:
+                    used_evac_ids.update([action['parameters']['evac_id']])
+            used_evac_ids = list(used_evac_ids)
+            if len(used_evac_ids) > 0:
+                allowed = self.get_evac_ids_in_scene(data, scene['id'])
+                for val in used_evac_ids:
+                    allowed_count = 0
+                    unallowed_count = 0
+                    for x in allowed:
+                        if val in x:
+                            allowed_count += 1
+                        else:
+                            unallowed_count += 1
+                    if unallowed_count > 0:
+                        if allowed_count == 0:
+                            self.logger.log(LogLevel.ERROR, f"Value '{val}' for key 'evac_id' in scene '{scene['id']}'s action_mapping is never available to this scene.")
+                            self.invalid_values += 1
+                        else:
+                            self.logger.log(LogLevel.WARN, f"Value '{val}' for key 'evac_id' in scene '{scene['id']}'s action_mapping may not always be available to this scene due to some branching behvaiors. Please check to ensure that all branches will provide the correct evac_ids to the scene.")
+                            self.warning_count += 1 
+                    if len(allowed) == 0:
+                        self.logger.log(LogLevel.ERROR, f"No 'evac_id's are available to scene '{scene['id']}', but its action_mapping uses evac_id (value='{val}').")
+                        self.invalid_values += 1
 
 
 if __name__ == '__main__':
