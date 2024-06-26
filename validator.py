@@ -1397,11 +1397,10 @@ class YamlValidator:
         Gets the evac_ids that could be allowed in a scene
         '''
         def get_evac_ids(scene):
-            dec_env = scene.get('state', {}).get('environment', {}).get('decision_environment', None)
+            dec_env = scene.get('state', {}).get('environment', {}).get('decision_environment', {}).get('aid_delay', None)
             if dec_env is not None:
-                delays = dec_env.get('aid_delay', [])
                 delay_ids = []
-                for x in delays:
+                for x in dec_env:
                     delay_ids.append(x['id'])
                 return delay_ids
             else:
@@ -1410,7 +1409,7 @@ class YamlValidator:
         first_scene_id = self.determine_first_scene(data)['id']
         this_scene = self.get_scene_by_id(scene_id)
         possible_ids = []
-        if this_scene.get('state', {}).get('environment', {}).get('decision_environment', None) is None:
+        if this_scene.get('state', {}).get('environment', {}).get('decision_environment', {}).get('aid_delay', None) is None:
             all_segs = self.get_branch_segments_for_scene(scene_id)
             segments = all_segs['segments']
             critical_segments = all_segs['critical']
@@ -1423,11 +1422,9 @@ class YamlValidator:
                         tmp_tmp = get_evac_ids(data)
                         tmp_possible = tmp_tmp if tmp_tmp is not None else []
                     else:
-                        # new environment always overwrites old evac_ids
+                        # new aid_delays always overwrites old evac_ids
                         tmp_tmp = get_evac_ids(self.get_scene_by_id(sid))
                         if tmp_tmp is not None:
-                            # environment exists, even if aid_delay is empty. Overwrite possible evac ids for this segment!
-                            # ignore otherwise
                             tmp_possible = tmp_tmp
                 if len(tmp_possible) > 0:
                     if segment in critical_segments:
