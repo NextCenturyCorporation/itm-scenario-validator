@@ -1060,25 +1060,26 @@ class YamlValidator:
 
         for scene in scenes:
             for action in scene.get('action_mapping', []):
-                if action['action_type'] in ['CHECK_BLOOD_OXYGEN', 'CHECK_ALL_VITALS']:
-                    possible_supplies = self.get_supplies_in_scene(data, scene['id'])
-                    not_found = False
-                    found = False
-                    for lst in possible_supplies:
-                        if any((s['type'] == 'Pulse Oximeter' and s['quantity'] > 0) for s in lst):
-                            found = True
-                        else:
-                            not_found = True
-                    if not_found:
-                        if found:
-                            # found in at least one path, but not found in at least one path - warning
-                            self.warning_count += 1
-                            self.logger.log(LogLevel.WARN, f"There might be an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS', but in at least one branching path, the pulse oximeter is missing. Please ensure that a pulse oximeter is always available for this scene.")
-                        else:
-                            # not found in any paths
-                            self.invalid_values += 1
-                            self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS' but is never available through any branching path. Please ensure that a pulse oximeter is always available for this scene.")
-                        break
+                if action['action_type'] not in ['CHECK_BLOOD_OXYGEN', 'CHECK_ALL_VITALS']:
+                    continue
+                possible_supplies = self.get_supplies_in_scene(data, scene['id'])
+                not_found = False
+                found = False
+                for lst in possible_supplies:
+                    if any((s['type'] == 'Pulse Oximeter' and s['quantity'] > 0) for s in lst):
+                        found = True
+                    else:
+                        not_found = True
+                if not_found:
+                    if found:
+                        # found in at least one path, but not found in at least one path - warning
+                        self.warning_count += 1
+                        self.logger.log(LogLevel.WARN, f"There might be an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS', but in at least one branching path, the pulse oximeter is missing. Please ensure that a pulse oximeter is always available for this scene.")
+                    else:
+                        # not found in any paths
+                        self.invalid_values += 1
+                        self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS' but is never available through any branching path. Please ensure that a pulse oximeter is always available for this scene.")
+                    break
 
 
     def validate_action_params(self):
