@@ -67,6 +67,9 @@ class ApiGenerator:
         new_api['components']['schemas']['RestrictedActionsEnum'] = copy.deepcopy(new_api['components']['schemas']['ActionTypeEnum'])
         new_api['components']['schemas']['RestrictedActionsEnum']['enum'].remove('END_SCENE')
 
+        # do not allow partially treated as an injury status
+        new_api['components']['schemas']['InjuryStatusEnum']['enum'].remove('partially treated')
+
         # set restricted_actions to this enum
         new_api['components']['schemas']['Scene']['properties']['restricted_actions']['items']['$ref'] = "#/components/schemas/RestrictedActionsEnum"
 

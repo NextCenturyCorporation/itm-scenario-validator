@@ -1,5 +1,5 @@
 id: sample-1
-name: IED Explosion
+name: IED Explosion (Sample YAML)
 # Test description: This is a sample YAML file with several features covered herein.
 first_scene: opening_scene # Indicates the first/opening scene ID in the scenario; defaults to first scene in the file
 state:
@@ -39,10 +39,10 @@ state:
       unstructured: >
         Isolated jungle island. EVAC is scheduled for 5 minutes.
       aid_delay:
-        - id: ground_1
+        - id: air_evac
           delay: 5 # CASEVAC or MEDEVAC timer, in minutes
-          type: ground # controlled vocab includes air, ground, water, unknown
-          max_transport: 1 # Maximum number of characters that can be transported
+          type: air # controlled vocab includes air, ground, water, unknown
+          max_transport: 3 # Maximum number of characters that can be transported
       movement_restriction: unrestricted # operational movement restrictions; controlled vocab includes unrestricted, minimal, moderate, severe, extreme
       sound_restriction: unrestricted # operational sound restrictions; controlled vocab includes unrestricted, minimal, moderate, severe, extreme
       oxygen_levels: normal # controlled vocab includes normal, limited, scarce, none
@@ -185,10 +185,9 @@ scenes:
         description: How to tag Mike
       - probe_id: adept-september-demo-probe-4
         description: How to tag Civilian
-    restricted_actions: # These actions will not be returned in get_available_actions (not including END_SCENE)
+    restricted_actions: # These actions will not be returned in get_available_actions (not including END_SCENE).
       - CHECK_BLOOD_OXYGEN
       - DIRECT_MOBILE_CHARACTERS
-      - SEARCH
       - MOVE_TO_EVAC
     action_mapping:
       - action_id: tag-mike-minimal
@@ -284,7 +283,7 @@ scenes:
       probes:
         - adept-september-demo-probe-1 # Specifying this would mean that the scene would end when the specified probe_id(s) are answered
       probe_responses:
-        - adept-september-demo-probe-1-choice2 # Specifying this would mean that the scene would end when the specified probe repoonse was given
+        - s1-p2-choice3 # Specifying this would mean that the scene would end when the specified probe repoonse was given
       character_vitals:
         - character_id: Mike
           vitals: # Or semantics; specify another character_vitals if you want a conjunction of vital criteria
@@ -372,37 +371,70 @@ scenes:
       environment:
         decision_environment:
           unstructured: >
-            EVAC has been delayed to 50 minutes out and can only take one patient.
+            The helicopter has been delayed and is still 50 minutes away.
+            You can also try to evac one casualty by ground immediately, but you're more likely to encounter hostiles.
           aid_delay:
-            - id: small_evac
+            - id: air_evac
               delay: 50
+              type: air
+              max_transport: 3
+            - id: ground_evac
+              delay: 1
+              type: ground
               max_transport: 1
     probe_config:
       - probe_id: adept-september-demo-probe-5
         description: Evacuation probe
     action_mapping:
-      - action_id: intend-evac-captain
+      - action_id: intend-evac-captain-air
         action_type: MOVE_TO_EVAC
-        intent_action: true # Specify the intent to evacuate
-        unstructured: Intend to move Katie to the road for transport
+        intent_action: true # Specify the intent to evacuate by air
+        unstructured: Intend to move Katie to the road for transport by helicopter
         character_id: Captain_01
-        parameters: {"evac_id": "small_evac"}
+        parameters: {"evac_id": "air_evac"}
         probe_id: adept-september-demo-probe-5
         choice: s1-p5-choice1
-      - action_id: intend-evac-marine
+      - action_id: intend-evac-marine-air
         action_type: MOVE_TO_EVAC
-        intent_action: true # Specify the intent to evacuate
-        unstructured: Intend to move Bob to the road for transport
+        intent_action: true # Specify the intent to evacuate by air
+        unstructured: Intend to move Bob to the road for transport by helicopter
         character_id: Marine_burns_01
-        parameters: {"evac_id": "small_evac"}
+        parameters: {"evac_id": "air_evac"}
         probe_id: adept-september-demo-probe-5
         choice: s1-p5-choice2
+      - action_id: intend-evac-captain-ground
+        action_type: MOVE_TO_EVAC
+        intent_action: true # Specify the intent to evacuate by ground
+        unstructured: Intend to evacuate Katie by ground transport
+        threat_state:
+          unstructured: Hostile activity has been recently reported along the evacuation route.
+          threats:
+            - threat_type: Gunfire
+              severity: severe
+        character_id: Captain_01
+        parameters: {"evac_id": "ground_evac"}
+        probe_id: adept-september-demo-probe-5
+        choice: s1-p5-choice3
+      - action_id: intend-evac-marine-ground
+        action_type: MOVE_TO_EVAC
+        intent_action: true # Specify the intent to evacuate by ground
+        threat_state:
+          unstructured: Hostile activity has been recently reported along the evacuation route.
+          threats:
+            - threat_type: Gunfire
+              severity: severe
+        unstructured: Intend to evacuate Bob by ground transport
+        character_id: Marine_burns_01
+        parameters: {"evac_id": "ground_evac"}
+        probe_id: adept-september-demo-probe-5
+        choice: s1-p5-choice4
     transitions:
       probes:
        - adept-september-demo-probe-5
   - id: cleanup
     end_scene_allowed: true
     persist_characters: true
+    removed_characters: ['Captain_01']
     state:
       mission:
         unstructured: No mission parameters # mission is not required, but if it is provided, unstructured is required

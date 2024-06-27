@@ -158,15 +158,15 @@ class YamlValidator:
         '''
         paths = []
         scenes = data['scenes']
-        scene = self.get_scene_by_id(scenes, scene_id)
+        scene = self.get_scene_by_id(scene_id)
         scene_ind = scenes.index(scene)
         default_next = scene.get('next_scene', scenes[scene_ind+1]['id'] if scene_ind+1 < len(scenes) else None) 
+        scenes_to_investigate = []
         for a in scene['action_mapping']:
             action_path = copy.deepcopy(path)
             next_scene = a.get('next_scene', default_next)
-            if next_scene is None:
-                paths.append(path)
-                return paths
+            scenes_to_investigate.append(next_scene)
+        for next_scene in scenes_to_investigate:
             if action_path.count(next_scene) < 2 and (len(action_path) == 0 or action_path[-1] != next_scene):
                 if len(action_path) == 0:
                     # no two of the same scene in a row (doesn't affect anything logically)
@@ -177,7 +177,10 @@ class YamlValidator:
                 else:
                     if action_path[-1] != next_scene:
                         action_path.append(next_scene)
-                paths += self.get_branches_from_scene(data, next_scene, action_path)
+                if next_scene is None:
+                    paths.append(path)
+                else:
+                    paths += self.get_branches_from_scene(data, next_scene, action_path)
             else:
                 paths.append(path)
                 return paths
@@ -192,15 +195,14 @@ class YamlValidator:
         schema = self.api_yaml['components']['schemas']
         top_level = schema['Scenario']['properties']
         required = schema['Scenario']['required'] if 'required' in schema['Scenario'] else []
-        return self.validate_one_level('top', self.loaded_yaml, top_level, required, self.api_yaml)
+        self.validate_one_level('top', self.loaded_yaml, top_level, required, self.api_yaml)
 
 
-    def validate_one_level(self, level_name, to_validate, type_obj, required, api_yaml, persist_characters=False):
+    def validate_one_level(self, level_name, to_validate, type_obj, required, api_yaml, persist_characters=False, override_required=False):
         '''
         Takes in an object to validate (to_validate) and the yaml schema describing the 
         expected types (type_obj)
         '''
-        is_valid = True
         found_keys = []
         
         # do not require characters if persist_characters is true
@@ -229,7 +231,6 @@ class YamlValidator:
             if key not in type_obj:
                 self.logger.log(LogLevel.ERROR, "'" + key + "' is not a valid key at the '" + level_name + "' level of the yaml file. Allowed keys are " + str(list(type_obj.keys())))
                 self.invalid_keys += 1
-                is_valid = False
             else:
                 # begin type-checking
                 this_key_data = type_obj[key]
@@ -238,20 +239,17 @@ class YamlValidator:
                     key_type = type_obj[key]['type']
                     # Basic types listed in PRIMITIVE_TYPE_MAP
                     if key_type in PRIMITIVE_TYPE_MAP:
-                        if not self.validate_primitive(to_validate[key], key_type, key, level_name, type_obj[key]):
-                            is_valid = False
+                        self.validate_primitive(to_validate[key], key_type, key, level_name, type_obj[key], override_required=override_required)
                     # check for objects (key:value pairs)
                     elif key_type == 'object':
                         if 'additionalProperties' in type_obj[key]:
-                            if not self.validate_additional_properties(type_obj[key], to_validate[key], key, level_name, api_yaml):
-                                is_valid = False
+                            self.validate_additional_properties(type_obj[key], to_validate[key], key, level_name, api_yaml)
                         else:
                             self.logger.log(LogLevel.FATAL, "API error: Missing additionalProperties on '" + key + "' object at the '" + level_name + "' level. Please contact TA3 for assistance.")
                             return False
                         
                     elif key_type == 'array':
-                        if not self.validate_array(to_validate[key], key, level_name, key_type, type_obj, api_yaml):
-                            is_valid = False
+                        self.validate_array(to_validate[key], key, level_name, key_type, type_obj, api_yaml)
                     else:
                         self.logger.log(LogLevel.FATAL, "API error: Unhandled validation for type '" +  key_type + "' at the " + level_name + "' level. Please contact TA3 for assistance.")
                         return False
@@ -262,22 +260,22 @@ class YamlValidator:
                     location = type_obj[key]['$ref'].split('/')[1:]
                     if level_name == 'scenes' and location[len(location)-1] == 'State':
                         # state at the scenes level should follow state_changes.yaml
-                        if not self.validate_state_change(to_validate[key], persist_characters):
-                            is_valid = False
+                        self.validate_state_change(to_validate[key], persist_characters)
                     else:
                         ref_loc = api_yaml
                         # access the currect location to get the type map
                         for x in location:
                             ref_loc = ref_loc[x]
                         if 'enum' in ref_loc:
-                            if not self.validate_enum(ref_loc, key, level_name, to_validate[key]):
-                                is_valid = False
+                            self.validate_enum(ref_loc, key, level_name, to_validate[key], override_required=override_required)
                         elif isinstance(to_validate[key], dict):
-                            if not self.validate_object(to_validate[key], ref_loc, key, level_name, type_obj[key]['$ref'], api_yaml):
-                                is_valid = False
+                            # if character's unseen property is True, vitals are not required
+                            override_req_properties = False
+                            if key == 'vitals':
+                                override_req_properties = to_validate.get('unseen', False)
+                            self.validate_object(to_validate[key], ref_loc, key, level_name, type_obj[key]['$ref'], api_yaml, override_req_properties)
                         else:
                             self.log_wrong_type(key, level_name, location[len(location)-1], type(to_validate[key]))
-                            is_valid = False 
                 else:
                     self.logger.log(LogLevel.FATAL, "API Error: Key '" + key + "' at level '" + level_name + "' has no defined type or reference. Please contact TA3 for assistance.")
                     return False
@@ -285,10 +283,9 @@ class YamlValidator:
         # check for missing keys
         for key in type_obj:
             if key not in found_keys:
-                if (key in required):
+                if not override_required and (key in required):
                     self.logger.log(LogLevel.ERROR, "Required key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
                     self.missing_keys += 1
-                    is_valid = False
                 else:
                     self.logger.log(LogLevel.DEBUG, "Optional key '" + key + "' at level '" + level_name + "' is missing in the yaml file.")
         
@@ -297,8 +294,6 @@ class YamlValidator:
                 injury_count = sum(1 for injury in to_validate['injuries'] if injury['name'] not in ['Ear Bleed', 'Asthmatic', 'Internal'] and 'Broken' not in injury['name'])
                 if injury_count > 8 and not self.train_mode:
                     self.logger.log(LogLevel.ERROR, f"Character '{to_validate.get('name')}' has {injury_count} 'masked' injuries (punctures, lacerations, burns), which exceeds the maximum of 8 allowed in the simulation.")
-
-        return is_valid
     
 
     def determine_first_scene(self, data):
@@ -311,10 +306,12 @@ class YamlValidator:
         if first_scene_id is None:
             return scenes[0]
         else:
-            return self.get_scene_by_id(scenes, first_scene_id)
+            return self.get_scene_by_id(first_scene_id)
         
 
-    def get_scene_by_id(self, scenes, scene_id):
+    def get_scene_by_id(self, scene_id):
+        data = copy.deepcopy(self.loaded_yaml)
+        scenes = data.get('scenes', [])
         for x in scenes:
             if x['id'] == scene_id:
                 return x
@@ -331,7 +328,7 @@ class YamlValidator:
         return self.validate_one_level('Scenes/State', obj_to_validate, top_level, required, self.state_changes_yaml, persist_characters)
 
 
-    def validate_enum(self, type_obj, key, level, item):
+    def validate_enum(self, type_obj, key, level, item, override_required=False):
         '''
         Accepts as parameters the object that describes expected types, 
         the key of the object, the level we're looking at, and the value 
@@ -346,39 +343,34 @@ class YamlValidator:
                     self.invalid_values += 1
                     is_valid = False
         else:
-            self.log_wrong_type(key, level, str(str), type(item))
-            is_valid = False 
+            if not (override_required and type(item) == type(None)):
+                self.log_wrong_type(key, level, str(str), type(item))
+                is_valid = False 
         return is_valid
 
 
-    def validate_object(self, item, location, key, level, ref_name, api_yaml):
+    def validate_object(self, item, location, key, level, ref_name, api_yaml, override_required=False):
         '''
         Checks if an item matches the reference location. The reference location
         may reference a full object, small object, or enum. Checks all 3 possibilities.
         '''
-        is_valid = True
         # check large object
         if 'properties' in location:
-            if not self.validate_one_level(key, item, location['properties'], location['required'] if 'required' in location else [], api_yaml):
-                is_valid = False
+            self.validate_one_level(key, item, location['properties'], location['required'] if 'required' in location else [], api_yaml, override_required=override_required)
         # check small object
         elif 'additionalProperties' in location:
-            if not self.validate_additional_properties(location, item, key, level, api_yaml):
-                is_valid = False
+            self.validate_additional_properties(location, item, key, level, api_yaml)
         # check enum
         elif 'enum' in location:
-            if not self.validate_enum(location, key, level, item):
-                is_valid = False
+            self.validate_enum(location, key, level, item)
         else:
             self.logger.log(LogLevel.FATAL, "API missing enum, property, or additional properties for '" + ref_name + "'. Cannot parse. Please contact TA3 for assistance.")
-        return is_valid
     
 
     def validate_additional_properties(self, type_obj, item, key, level, api_yaml):
         '''
         Accepts an object that describes the type we're looking for and an item to validate
         '''
-        is_valid = True
         if 'type' in type_obj['additionalProperties']:
             val_type = type_obj['additionalProperties']['type']
             # two types of objects exist: 1. list of key-value 
@@ -387,17 +379,14 @@ class YamlValidator:
                     for k in pair_set:
                         if not self.do_types_match(pair_set[k], PRIMITIVE_TYPE_MAP[val_type]):
                             self.log_wrong_type(k, level, val_type, type(pair_set[k]))
-                            is_valid = False
             # 2. object with key-value
             else:
                 if isinstance(item, dict):
                     for k in item:
                         if not self.do_types_match(item[k], PRIMITIVE_TYPE_MAP[val_type]):
                             self.log_wrong_type(k, level, val_type, type(item[k]))
-                            is_valid = False
                 else:
                     self.log_wrong_type(key, level, 'object', type(item))
-                    is_valid = False 
         elif '$ref' in type_obj['additionalProperties']:
             location = type_obj['additionalProperties']['$ref'].split('/')[1:]
             ref_loc = api_yaml
@@ -406,30 +395,24 @@ class YamlValidator:
             if isinstance(item, list):
                 for pair_set in item:
                     for k in pair_set:
-                        if not self.validate_object(pair_set[k], ref_loc, key, level, type_obj['additionalProperties']['$ref'], api_yaml):
-                            is_valid = False
+                        self.validate_object(pair_set[k], ref_loc, key, level, type_obj['additionalProperties']['$ref'], api_yaml)
             else:
                 if isinstance(item, dict):
                     for k in item:
-                        if not self.validate_object(item[k], ref_loc, key, level, type_obj['additionalProperties']['$ref'], api_yaml):
-                            is_valid = False
+                        self.validate_object(item[k], ref_loc, key, level, type_obj['additionalProperties']['$ref'], api_yaml)
                 else:
                     self.log_wrong_type(key, level, 'object', type(item))
-                    is_valid = False      
         else:
             self.logger.log(LogLevel.FATAL, "API Error: Additional Properties must either have a type or ref, but at level '" + level + "' for property '" + key + "' it does not. Please contact TA3 for assistance.")
-            return False
-        return is_valid
+            return 
 
 
     def validate_array(self, item, key, level, key_type, typed_keys, api_yaml):
         '''
         Looks at an array and ensures that each item in the array matches expectations
         '''
-        is_valid = True
         if not isinstance(item, list):
             self.log_wrong_type(key, level, key_type, type(item))
-            is_valid = False
         else:
             # get type of item in array and check that each item matches
             item_type = typed_keys[key]['items']
@@ -440,47 +423,42 @@ class YamlValidator:
                 for x in location:
                     ref_loc = ref_loc[x]
                 for i in item:
-                    if not self.validate_object(i, ref_loc, key, level, typed_keys[key]['items']['$ref'], api_yaml):
-                        is_valid = False
+                    self.validate_object(i, ref_loc, key, level, typed_keys[key]['items']['$ref'], api_yaml)
             # check basic types
             elif 'type' in item_type:
                 expected = item_type['type']
                 if expected in PRIMITIVE_TYPE_MAP:
                     for i in item:
-                        if not self.validate_primitive(i, expected, key, level, item_type):
-                            is_valid = False
+                        self.validate_primitive(i, expected, key, level, item_type)
             else:
                 self.logger.log(LogLevel.FATAL, "API Error: Missing type definition or reference at level '" + level + "' for property '" + key + "'. Please contact TA3 for assistance.")
-                return False
-        return is_valid
+                return
     
 
-    def validate_primitive(self, item, expected_type, key, level, type_obj):
+    def validate_primitive(self, item, expected_type, key, level, type_obj, override_required=False):
         '''
         Looks at an object against an expected primitive type to see if it matches
         '''
         is_valid = True 
         # first validate enums
         if PRIMITIVE_TYPE_MAP[expected_type] == str and 'enum' in type_obj:
-            if not self.validate_enum(type_obj, key, level, item):
+            if not self.validate_enum(type_obj, key, level, item, override_required=override_required):
                 is_valid = False
         # then validate the rest
         elif not self.do_types_match(item, PRIMITIVE_TYPE_MAP[expected_type]):
-            self.log_wrong_type(key, level, expected_type, type(item))
-            is_valid = False
+            if not(type(item) == type(None) and override_required):
+                self.log_wrong_type(key, level, expected_type, type(item))
+                is_valid = False
         if is_valid:
             # check for min/max only if type is valid
             if 'minimum' in type_obj:
                 if item < type_obj['minimum']:
-                    is_valid = False
                     self.logger.log(LogLevel.ERROR, "Key '" + key + "' at level '" + level + "' has a minimum of " + str(type_obj['minimum']) + " but is " + str(item) + ". (" + str(item) + " < " + str(type_obj['minimum']) + ")")
                     self.out_of_range += 1
             if 'maximum' in type_obj:
                 if item > type_obj['maximum']:
-                    is_valid = False
                     self.logger.log(LogLevel.ERROR, "Key '" + key + "' at level '" + level + "' has a maximum of " + str(type_obj['maximum']) + " but is " + str(item) + ". (" + str(item) + " > " + str(type_obj['maximum']) + ")")
                     self.out_of_range += 1
-        return is_valid
 
 
     def do_types_match(self, item, type):
@@ -535,6 +513,9 @@ class YamlValidator:
         self.check_first_scene()
         self.is_pulse_oximeter_configured()
         self.check_scene_env_type()
+        self.validate_pretreated_injuries()
+        self.validate_unseen_character_actions()
+        self.validate_evac_ids()
 
 
     def simple_requirements(self):
@@ -610,7 +591,7 @@ class YamlValidator:
         return found_indices
 
 
-    def search_for_key(self, should_find, found, expected_required, explanation, expected_val=[]):
+    def search_for_key(self, should_find, found, expected_required, explanation, expected_val=[], log_level='error'):
         '''
         Searches for a key that is either required or ignored based on the additional dependencies. 
         @param should_find is a boolean of if we need this key or don't need this key
@@ -655,19 +636,31 @@ class YamlValidator:
                 else:
                     if should_find:
                         # we expected to find this key, error
-                        self.logger.log(LogLevel.ERROR, "Key '" + k + "' is required because '" + '.'.join(found) + "' " + explanation + ", but it is missing.")
-                        self.missing_keys += 1
+                        if log_level == 'error':
+                            self.logger.log(LogLevel.ERROR, "Key '" + k + "' is required because '" + '.'.join(found) + "' " + explanation + ", but it is missing.")
+                            self.missing_keys += 1
+                        else:
+                            self.logger.log(LogLevel.WARN, "Key '" + k + "' is recommended because '" + '.'.join(found) + "' " + explanation + ", but it is missing.")
+                            self.warning_count += 1    
                     else:
                         # otherwise, we did not want to find the key, so we're good here
                         found_key = False
                         break
             if should_find is not None and not should_find and found_key:
-                self.logger.log(LogLevel.ERROR, "Key '" + k + "' is not allowed because '" + '.'.join(found) + "' " + explanation + ".")
-                self.invalid_keys += 1
+                if log_level == 'error':
+                    self.logger.log(LogLevel.ERROR, "Key '" + k + "' is not allowed because '" + '.'.join(found) + "' " + explanation + ".")
+                    self.invalid_keys += 1
+                else:
+                    self.logger.log(LogLevel.WARN, "Key '" + k + "' is not expected because '" + '.'.join(found) + "' " + explanation + ".")
+                    self.warning_count += 1
             elif found_key and len(expected_val) > 0:
                 if data not in expected_val:
-                    self.logger.log(LogLevel.ERROR, "Key '" + k + "' must have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is '" + str(data) + "'")
-                    self.invalid_values += 1
+                    if log_level == 'error':
+                        self.logger.log(LogLevel.ERROR, "Key '" + k + "' must have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is '" + str(data) + "'")
+                        self.invalid_values += 1
+                    else:
+                        self.logger.log(LogLevel.WARN, "Key '" + k + "' was expected have one of the following values " + str(expected_val) + " because '" + '.'.join(found) + "' " + explanation + ", but instead value is '" + str(data) + "'")
+                        self.warning_count += 1
                     
 
     def conditional_requirements(self):
@@ -681,6 +674,7 @@ class YamlValidator:
             for entry in self.dep_json['conditionalRequired'][req]:
                 value = entry['conditions']['value'] if 'value' in entry['conditions'] else ''
                 length = entry['conditions']['length'] if 'length' in entry['conditions'] else -1
+                log_level = entry.get('logLevel', 'error')
                 all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, length=length)
                 for x in all_found:
                     found = x.split('.')
@@ -689,7 +683,7 @@ class YamlValidator:
                         continue 
                     else:
                         # start searching for the key(s) that is/are required now that the first key has been found
-                        self.search_for_key(True, found, entry['required'], "meets conditions " + str(entry['conditions']))
+                        self.search_for_key(True, found, entry['required'], "meets conditions " + str(entry['conditions']), log_level=log_level)
 
 
     def conditional_forbid(self):
@@ -1197,6 +1191,33 @@ class YamlValidator:
                     self.logger.log(LogLevel.WARN, f"Key 'type' should not be redefined in scene states, but changes from '{orig_type}' to '{new_type}' in scene '{scene['id']}'. This redefinition will be ignored.")
 
 
+    def get_branch_segments_for_scene(self, scene_id):
+        segments = []
+        for branch in self.branches:
+            if scene_id in branch:
+                # get every occurrence (not just the first) of scene_id in the branch
+                for i in range(len(branch)):
+                    if branch[i] == scene_id:
+                        segments.append(branch[:i+1]) 
+        segments = sorted(self.remove_duplicate_sublists(segments), key=len)
+
+        # get segments that appear at the beginning of every path for this branch
+        critical_segments = []
+        for i in range(len(segments)):
+            s1 = segments[i]
+            if len(s1) > len(segments[0]):
+                break
+            is_in_all = True
+            for s2 in segments:
+                if len(self.remove_duplicate_sublists([s1, s2[:len(s1)]])) != 1:
+                    is_in_all = False
+                    break
+            if is_in_all:
+                critical_segments.append(s1)
+
+        return {'segments': segments, 'critical': critical_segments}
+
+
     def get_characters_in_scene(self, data, scene_id):
         '''
         Gets all characters that could possibly be allowed in a scene
@@ -1204,7 +1225,7 @@ class YamlValidator:
         def get_basic_chars(scene):
             characters = []
             for c in scene.get('state', {}).get('characters', []):
-                characters.append(c['id'])
+                characters.append({'id': c['id'], 'unseen': c.get('unseen', False)})
             return characters
         
         def get_removed_chars(scene):
@@ -1214,44 +1235,49 @@ class YamlValidator:
             return characters
 
         first_scene_id = self.determine_first_scene(data)['id']
-        this_scene = self.get_scene_by_id(data['scenes'], scene_id)
-        chars = {'possible': [], 'removed': []}
+        this_scene = self.get_scene_by_id(scene_id)
+        chars = {'possible': [], 'removed': [], 'seen': [], 'unseen': []}
         if this_scene.get('persist_characters', False):
-            segments = []
-            for branch in self.branches:
-                if scene_id in branch:
-                    # get every occurrence (not just the first) of scene_id in the branch
-                    for i in range(len(branch)):
-                        if branch[i] == scene_id:
-                            segments.append(branch[:i+1]) 
-            segments = sorted(self.remove_duplicate_sublists(segments), key=len)
-
-            # get segments that appear at the beginning of every path for this branch
-            critical_segments = []
-            for i in range(len(segments)):
-                s1 = segments[i]
-                if len(s1) > len(segments[0]):
-                    break
-                is_in_all = True
-                for s2 in segments:
-                    if len(self.remove_duplicate_sublists([s1, s2[:len(s1)]])) != 1:
-                        is_in_all = False
-                        break
-                if is_in_all:
-                    critical_segments.append(s1)
+            all_segs = self.get_branch_segments_for_scene(scene_id)
+            segments = all_segs['segments']
+            critical_segments = all_segs['critical']
 
             for segment in segments:
                 tmp_chars = []
                 tmp_removed = []
+                tmp_seen = []
+                tmp_unseen = []
                 for sid in segment:
                     if sid == first_scene_id and len(tmp_chars) == 0:
                         # get scenario characters from first scene
-                        tmp_chars += get_basic_chars(data)
+                        for x in get_basic_chars(data):
+                            tmp_chars.append(x['id'])
+                            if x['unseen']:
+                                if x['id'] in tmp_seen:
+                                    tmp_seen.remove(x['id'])
+                                if x['id'] not in tmp_unseen:
+                                    tmp_unseen.append(x['id'])
+                            else:
+                                if x['id'] in tmp_unseen:
+                                    tmp_unseen.remove(x['id'])
+                                if x['id'] not in tmp_seen:
+                                    tmp_seen.append(x['id'])
                     else:
-                        scene = self.get_scene_by_id(data['scenes'], sid)
+                        scene = self.get_scene_by_id(sid)
                         if scene.get('persist_characters', False):
                             # modify allowed characters up to this point
-                            tmp_chars += get_basic_chars(scene)
+                            for x in get_basic_chars(scene):
+                                tmp_chars.append(x['id'])
+                                if x['unseen']:
+                                    if x['id'] in tmp_seen:
+                                        tmp_seen.remove(x['id'])
+                                    if x['id'] not in tmp_unseen:
+                                        tmp_unseen.append(x['id'])
+                                else:
+                                    if x['id'] in tmp_unseen:
+                                        tmp_unseen.remove(x['id'])
+                                    if x['id'] not in tmp_seen:
+                                        tmp_seen.append(x['id'])
                             tmp_chars = list(set(tmp_chars))
                             for c in get_removed_chars(scene):
                                 if sid != segment[-1]:
@@ -1261,17 +1287,57 @@ class YamlValidator:
                                         tmp_removed.append(c)
                         else:
                             # if persist characters is false at any point in the path, start fresh!
-                            tmp_chars = get_basic_chars(scene)
+                            tmp_chars = []
+                            tmp_seen = []
+                            tmp_unseen = []
+                            for x in get_basic_chars(scene):
+                                tmp_chars.append(x['id'])
+                                if x['unseen']:
+                                    if x['id'] in tmp_seen:
+                                        tmp_seen.remove(x['id'])
+                                    if x['id'] not in tmp_unseen:
+                                        tmp_unseen.append(x['id'])
+                                else:
+                                    if x['id'] in tmp_unseen:
+                                        tmp_unseen.remove(x['id'])
+                                    if x['id'] not in tmp_seen:
+                                        tmp_seen.append(x['id'])
                 if len(tmp_chars) > 0:
                     if segment in critical_segments:
                         chars['possible'].append(tmp_chars)
                     elif len(critical_segments) == 0:
                         chars['possible'].append(tmp_chars)
                 chars['removed'] += tmp_removed
+                chars['unseen'] += tmp_unseen
+                chars['seen'] += tmp_seen
         elif this_scene['id'] != first_scene_id:
-            chars['possible'] = [get_basic_chars(scene)]
+            chars['possible'] = []
+            for x in get_basic_chars(this_scene):
+                chars['possible'].append(x['id'])
+                if x['unseen']:
+                    if x['id'] in chars['seen']:
+                        chars['seen'].remove(x['id'])
+                    if x['id'] not in chars['unseen']:
+                        chars['unseen'].append(x['id'])
+                else:
+                    if x['id'] in chars['unseen']:
+                        chars['unseen'].remove(x['id'])
+                    if x['id'] not in chars['seen']:
+                        chars['seen'].append(x['id'])
         elif this_scene['id'] == first_scene_id:
-            chars['possible'] = [get_basic_chars(data)]
+            chars['possible'] = []
+            for x in get_basic_chars(data):
+                chars['possible'].append(x['id'])
+                if x['unseen']:
+                    if x['id'] in chars['seen']:
+                        chars['seen'].remove(x['id'])
+                    if x['id'] not in chars['unseen']:
+                        chars['unseen'].append(x['id'])
+                else:
+                    if x['id'] in chars['unseen']:
+                        chars['unseen'].remove(x['id'])
+                    if x['id'] not in chars['seen']:
+                        chars['seen'].append(x['id'])
         return chars
 
 
@@ -1299,41 +1365,22 @@ class YamlValidator:
             return cur
 
         first_scene_id = self.determine_first_scene(data)['id']
-        this_scene = self.get_scene_by_id(data['scenes'], scene_id)
+        this_scene = self.get_scene_by_id(scene_id)
         possible_supplies = []
         if this_scene.get('supplies', None) is None:
-            segments = []
-            for branch in self.branches:
-                if scene_id in branch:
-                    # get every occurrence (not just the first) of scene_id in the branch
-                    for i in range(len(branch)):
-                        if branch[i] == scene_id:
-                            segments.append(branch[:i+1]) 
-            segments = sorted(self.remove_duplicate_sublists(segments), key=len)
-
-            # get segments that appear at the beginning of every path for this branch
-            critical_segments = []
-            for i in range(len(segments)):
-                s1 = segments[i]
-                if len(s1) > len(segments[0]):
-                    break
-                is_in_all = True
-                for s2 in segments:
-                    if len(self.remove_duplicate_sublists([s1, s2[:len(s1)]])) != 1:
-                        is_in_all = False
-                        break
-                if is_in_all:
-                    critical_segments.append(s1)
+            all_segs = self.get_branch_segments_for_scene(scene_id)
+            segments = all_segs['segments']
+            critical_segments = all_segs['critical']
 
             for segment in segments:
                 tmp_possible = []
                 for sid in segment:
-                    if sid == first_scene_id:
+                    if sid == first_scene_id and len(tmp_possible) == 0:
                         # get scenario supplies for first scene
                         tmp_possible = override_supplies(tmp_possible, get_supplies(data))
                     else:
                         # new supplies always overwrites previous supplies
-                        scene = self.get_scene_by_id(data['scenes'], sid)
+                        scene = self.get_scene_by_id(sid)
                         tmp_supplies = override_supplies(tmp_possible, get_supplies(scene))
                         if len(tmp_supplies) > 0:
                             tmp_possible = override_supplies(tmp_possible, get_supplies(scene))
@@ -1348,6 +1395,153 @@ class YamlValidator:
             possible_supplies = [get_supplies(data)]
         return possible_supplies
     
+    
+    def get_evac_ids_in_scene(self, data, scene_id):
+        '''
+        Gets the evac_ids that could be allowed in a scene
+        '''
+        def get_evac_ids(scene):
+            dec_env = scene.get('state', {}).get('environment', {}).get('decision_environment', {}).get('aid_delay', None)
+            if dec_env is not None:
+                delay_ids = []
+                for x in dec_env:
+                    delay_ids.append(x['id'])
+                return delay_ids
+            else:
+                return None
+
+        first_scene_id = self.determine_first_scene(data)['id']
+        this_scene = self.get_scene_by_id(scene_id)
+        possible_ids = []
+        if this_scene.get('state', {}).get('environment', {}).get('decision_environment', {}).get('aid_delay', None) is None:
+            all_segs = self.get_branch_segments_for_scene(scene_id)
+            segments = all_segs['segments']
+            critical_segments = all_segs['critical']
+
+            for segment in segments:
+                tmp_possible = []
+                for sid in segment:
+                    if sid == first_scene_id and len(tmp_possible) == 0:
+                        # get evac ids for the first scene from scenario state
+                        tmp_tmp = get_evac_ids(data)
+                        tmp_possible = tmp_tmp if tmp_tmp is not None else []
+                    else:
+                        # new aid_delays always overwrites old evac_ids
+                        tmp_tmp = get_evac_ids(self.get_scene_by_id(sid))
+                        if tmp_tmp is not None:
+                            tmp_possible = tmp_tmp
+                if len(tmp_possible) > 0:
+                    if segment in critical_segments:
+                        possible_ids.append(tmp_possible)
+                    elif len(critical_segments) == 0:
+                        possible_ids.append(tmp_possible)
+        elif this_scene['id'] != first_scene_id:
+            tmp_tmp = get_evac_ids(this_scene)
+            possible_ids = [tmp_tmp] if tmp_tmp is not None else []
+        elif this_scene['id'] == first_scene_id:
+            tmp_tmp = get_evac_ids(data)
+            possible_ids = [tmp_tmp] if tmp_tmp is not None else []
+
+        return possible_ids
+
+
+    def validate_pretreated_injuries(self):
+        '''
+        Checks that for all injuries:
+        - treatments_applied == 0 or treatments_applied == treatments_required
+        - status is "treated" iff treatments_applied == treatments_required
+        '''
+        def check_single_character(c, scene_name):
+            for inj in c.get('injuries', []):
+                applied = inj.get('treatments_applied', 0)
+                if applied != 0 and applied != inj.get('treatments_required', 0):
+                    self.logger.log(LogLevel.ERROR, f"Value of 'treatments_applied' for character '{c['id']}' at scene '{scene_name}' must be equal to '0' or 'treatments_required', but instead is '{applied}'.")
+                    self.invalid_values += 1     
+                if applied == inj.get('treatments_required', 1) and inj.get('status', None) != 'treated':
+                    self.logger.log(LogLevel.ERROR, f"Value of injury 'status' for character '{c['id']}' at scene '{scene_name}' must be 'treated' since 'treatments_applied' == 'treatments_required'.")
+                    self.invalid_values += 1    
+                if inj.get('status', None) == 'treated' and applied != inj.get('treatments_required', 0):
+                    self.logger.log(LogLevel.ERROR, f"Value of injury 'status' for character '{c['id']}' at scene '{scene_name}' is 'treated', but 'treatments_applied' != 'treatments_required'.")
+                    self.invalid_values += 1         
+
+        data = copy.deepcopy(self.loaded_yaml)
+        for c in data['state'].get('characters', []):
+            check_single_character(c, 'scenario-level')
+        for scene in data['scenes']:
+            for c in scene.get('state', {}).get('characters', []):
+                check_single_character(c, scene['id'])
+
+
+    def validate_unseen_character_actions(self):
+        '''
+        Checks all actions to ensure that:
+        - if a character is unseen, the action type is MOVE_TO or MOVE_TO_EVAC
+        - if a character is not unseen, the action type is _not_ MOVE_TO
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        for scene in data['scenes']:
+            for action in scene.get('action_mapping', []):
+                char = action.get('character_id', None)
+                action_type = action.get('action_type', None)
+                if char is None:
+                    continue
+                else:
+                    # get which characters are known to be seen or unseen in this scene
+                    char_details = self.get_characters_in_scene(data, scene['id'])
+                    unseen = list(set(char_details['unseen']))
+                    seen = list(set(char_details['seen']))   
+                    unknown = []
+                    for x in unseen:
+                        if x in seen:
+                            unknown.append(x)
+                            unseen.remove(x)
+                            seen.remove(x)
+                    if char in unseen:
+                        if action_type not in ['MOVE_TO', 'MOVE_TO_EVAC']:
+                            self.logger.log(LogLevel.WARN, f"Action types 'MOVE_TO' and 'MOVE_TO_EVAC' are the only actions allowed for unseen characters, but in scene '{scene['id']}', '{char}' may be unseen with unallowed action type '{action_type}'.")
+                            self.warning_count += 1       
+                    elif char in seen:
+                        if action_type == 'MOVE_TO':
+                            self.logger.log(LogLevel.WARN, f"Action type 'MOVE_TO' is only allowed for unseen characters, but in scene '{scene['id']}', '{char}' may be not unseen and has action type '{action_type}'.")
+                            self.warning_count += 1     
+                    elif char in unknown:
+                        self.logger.log(LogLevel.WARN, f"Action types allowed are specific for unseen vs seen characters. Due to different branching paths, in scene '{scene['id']}', character '{char}' may either be seen or unseen, leading to ambiguous validity tests.")
+                        self.warning_count += 1     
+                    
+
+    def validate_evac_ids(self):
+        '''
+        Makes sure that any evac_ids listed in action_mapping parameters
+        are allowed in the scene.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        for scene in data['scenes']:
+            used_evac_ids = set([])
+            for action in scene.get('action_mapping', []):
+                if action.get('parameters', {}).get('evac_id', None) is not None:
+                    used_evac_ids.update([action['parameters']['evac_id']])
+            used_evac_ids = list(used_evac_ids)
+            if len(used_evac_ids) > 0:
+                allowed = self.get_evac_ids_in_scene(data, scene['id'])
+                for val in used_evac_ids:
+                    allowed_count = 0
+                    unallowed_count = 0
+                    for x in allowed:
+                        if val in x:
+                            allowed_count += 1
+                        else:
+                            unallowed_count += 1
+                    if unallowed_count > 0:
+                        if allowed_count == 0:
+                            self.logger.log(LogLevel.ERROR, f"Value '{val}' for key 'evac_id' in scene '{scene['id']}'s action_mapping is never available to this scene.")
+                            self.invalid_values += 1
+                        else:
+                            self.logger.log(LogLevel.WARN, f"Value '{val}' for key 'evac_id' in scene '{scene['id']}'s action_mapping may not always be available to this scene due to some branching behvaiors. Please check to ensure that all branches will provide the correct evac_ids to the scene.")
+                            self.warning_count += 1 
+                    if len(allowed) == 0:
+                        self.logger.log(LogLevel.ERROR, f"No 'evac_id's are available to scene '{scene['id']}', but its action_mapping uses evac_id (value='{val}').")
+                        self.invalid_values += 1
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ITM - YAML Validator')
