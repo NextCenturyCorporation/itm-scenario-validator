@@ -277,7 +277,7 @@ class JsonConverter:
                 injury = {
                     'name': split_name[-1] if 'Broken' not in i['type'] else 'Broken Bone',
                     'location': INJ_LOC_MAP[(' ').join(split_name[:-1])],
-                    'status': 'discoverable',
+                    'status': 'visible',
                     'severity': severity
                 }
                 if injury['name'] in written_injuries:
@@ -290,14 +290,15 @@ class JsonConverter:
                 unstructured_inj = 'Has no known injuries.'
             else:
                 unstructured_inj = "Has"
+                pronoun = 'his' if demographics['sex'] == 'M' else 'her'
                 for inj_set in written_injuries:
                     if len(written_injuries[inj_set]) == 1:
                         if inj_set == "Shrapnel":
-                            unstructured_inj += f" shrapnel in their {written_injuries[inj_set][0]},".lower()
+                            unstructured_inj += f" shrapnel in {pronoun} {written_injuries[inj_set][0]},".lower()
                         elif inj_set == "Amputation":
                             unstructured_inj += f" an amputated {written_injuries[inj_set][0]},".lower()
                         else:
-                            unstructured_inj += f" a {inj_set} on their {written_injuries[inj_set][0]},".lower()
+                            unstructured_inj += f" a {inj_set} on {pronoun} {written_injuries[inj_set][0]},".lower()
                             
                     else:
                         unstructured_inj += f" several {inj_set} injuries,".lower()
