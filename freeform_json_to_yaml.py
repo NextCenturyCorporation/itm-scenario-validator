@@ -164,11 +164,18 @@ class JsonConverter:
         yaml_data['id'] = self.json_data['scenarioData']['name']
         yaml_data['name'] = self.json_data['scenarioData']['description']
         yaml_state = {}
-        yaml_state['unstructured'] = 'TODO'
+        unstructured = 'TODO'
+        narrative_sections = self.json_data.get('narrative', {}).get('narrativeSections', [])
+        for x in narrative_sections:
+            if 'additionalInfo' in x:
+                # get the first additional info available for unstructured text
+                unstructured = x['additionalInfo']
+                break
+
+        yaml_state['unstructured'] = unstructured
         sim_env = ENV_MAP[self.json_data['scene'].split('-')[1].replace('sub', 'submarine')]
-        dec_env = {'unstructured': 'TODO'}
         
-        yaml_state['environment'] = {'sim_environment': sim_env, 'decision_environment': dec_env}
+        yaml_state['environment'] = {'sim_environment': sim_env}
         yaml_state['supplies'] = self.get_supplies()
         yaml_state['characters'] = self.get_characters()
         yaml_data['state'] = yaml_state
@@ -208,15 +215,35 @@ class JsonConverter:
             new_c = {}
             new_c['id'] = c['name']
             new_c['name'] = c['raceEthnicity']['firstName']
-            new_c['unstructured'] = f"Patient is in a {c['animations']['pose']} position."
-            new_c['unstructured_postassess'] = new_c['unstructured'] + 'TODO'
+            new_c['unstructured'] = f""
             patient = c['patient']
             race = c['raceEthnicity']['preset']
-            new_c['demographics'] = {
+
+            demographics = {
                 'age': randint(25, 35) if patient in ['Helga', 'Bob', 'Lily', 'Military Mike'] else randint(45, 58),
                 'sex': 'M' if patient in ['Gary', 'Military Mike', 'Bob'] else 'F',
                 'race': race.split(' ')[0] if 'Islander' not in race and 'Indian' not in race else race
             }
+
+            is_military = False
+            us_military = True
+            for gear in c['militaryGear']:
+                if len(c['militaryGear'][gear]) > 0:
+                    is_military = True
+                    break
+            if c['clothing']['bottomColor'] != 'original' or c['clothing']['topColor'] != 'original':
+                us_military = False
+
+            if is_military:
+                demographics['military_disposition'] = 'Allied US' if us_military else 'Allied'
+                sim_env = ENV_MAP[self.json_data['scene'].split('-')[1].replace('sub', 'submarine')]
+                if sim_env != 'submarine':
+                    demographics['role'] = 'Infantry'
+                demographics['mission_importance'] = 'normal'
+                if us_military:
+                    demographics['military_branch'] = 'US Army' if sim_env in ['jungle', 'desert', 'urban'] else 'US Navy'
+            
+            new_c['demographics'] = demographics
             vitals = c['vitals']
             new_c['vitals'] = {
                 'avpu': 'ALERT' if MENTAL_STATUS_MAP[vitals['mood']] != 'UNRESPONSIVE' else 'UNRESPONSIVE',
@@ -227,6 +254,7 @@ class JsonConverter:
                 'spo2': 0 if vitals['SpO2'] == 'none' else 90 if vitals['SpO2'] == 'low' else 97
             }
             injuries = []
+            written_injuries = {}
             for i in c['injuries']:
                 split_name = i['type'].split(' ')
                 severity = SEVERITY_MAP[i.get('bloodPool', 'None')]
@@ -252,8 +280,32 @@ class JsonConverter:
                     'status': 'discoverable',
                     'severity': severity
                 }
+                if injury['name'] in written_injuries:
+                    written_injuries[injury['name']].append(injury['location'])
+                else:
+                    written_injuries[injury['name']] = [injury['location']]
                 injuries.append(injury)
             new_c['injuries'] = injuries
+            if len(written_injuries) == 0:
+                unstructured_inj = 'Has no known injuries.'
+            else:
+                unstructured_inj = "Has"
+                for inj_set in written_injuries:
+                    if len(written_injuries[inj_set]) == 1:
+                        if inj_set == "Shrapnel":
+                            unstructured_inj += f" shrapnel in their {written_injuries[inj_set][0]},".lower()
+                        elif inj_set == "Amputation":
+                            unstructured_inj += f" an amputated {written_injuries[inj_set][0]},".lower()
+                        else:
+                            unstructured_inj += f" a {inj_set} on their {written_injuries[inj_set][0]},".lower()
+                            
+                    else:
+                        unstructured_inj += f" several {inj_set} injuries,".lower()
+                comma_separated = unstructured_inj.split(',')
+                unstructured_inj = ','.join(comma_separated[:-2]) + ' and' + comma_separated[-2] + '.'
+            new_c['unstructured'] += f"{'Male' if demographics['sex'] == 'M' else 'Female'}, about {demographics['age']} years old, in a {c['animations']['pose']} position. " + unstructured_inj
+            if is_military:
+                new_c['unstructured'] += f" Wearing a {'US' if us_military else 'local'} military uniform."
             yaml_characters.append(new_c)
         return yaml_characters
 
