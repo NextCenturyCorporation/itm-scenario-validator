@@ -86,6 +86,42 @@ INJ_LOC_MAP = {
     "R Lower Leg": "right calf"
 }
 
+ENV_MAP = {
+    "desert": {
+        'type': 'desert',
+        'weather': 'clear',
+        'lighting': 'bright',
+        'visibility': 'excellent',
+        'noise_peak': 'noisy',
+        'temperature': 92,
+        'fauna': 'normal'
+    },
+    "jungle": {
+        'type': 'jungle',
+        'terrain': 'jungle',
+        'temperature': 88,
+        'humidity': 90,
+        'visibility': 'low',
+        'flora': 'lush'
+    },
+    "submarine": {
+        'type': 'submarine',
+        'terrain': 'indoors',
+        'visibility': 'low',
+        'fauna': 'none',
+        'flora': 'none'
+    },
+    "urban": {
+        'type': 'urban',
+        'terrain': 'urban',
+        'lighting': 'normal',
+        'visibility': 'moderate',
+        'noise_ambient': 'noisy',
+        'flora': 'none',
+        'fauna': 'none'
+    }
+}
+
 SEVERITY_MAP = {
     "None": "minor",
     "Smallest": "minor",
@@ -129,7 +165,7 @@ class JsonConverter:
         yaml_data['name'] = self.json_data['scenarioData']['description']
         yaml_state = {}
         yaml_state['unstructured'] = 'TODO'
-        sim_env = {'type': self.json_data['scene'].split('-')[1].replace('sub', 'submarine')}
+        sim_env = ENV_MAP[self.json_data['scene'].split('-')[1].replace('sub', 'submarine')]
         dec_env = {'unstructured': 'TODO'}
         
         yaml_state['environment'] = {'sim_environment': sim_env, 'decision_environment': dec_env}
