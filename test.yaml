@@ -1,0 +1,268 @@
+id: Desert
+name: Open Desert Scenario with Four Casualties
+state:
+  unstructured: you are a medic! yay!
+  environment:
+    sim_environment:
+      type: desert
+      weather: clear
+      lighting: bright
+      visibility: excellent
+      noise_peak: noisy
+      temperature: 92
+      fauna: normal
+  supplies:
+    - type: Tourniquet
+      quantity: 999
+    - type: Pressure bandage
+      quantity: 999
+    - type: Hemostatic gauze
+      quantity: 999
+    - type: Decompression Needle
+      quantity: 999
+    - type: Nasopharyngeal airway
+      quantity: 999
+    - type: Splint
+      quantity: 999
+    - type: Pain Medications
+      quantity: 999
+    - type: Blood
+      quantity: 999
+    - type: IV Bag
+      quantity: 999
+    - type: Burn Dressing
+      quantity: 999
+    - type: Epi Pen
+      quantity: 999
+    - type: Vented Chest Seal
+      quantity: 999
+    - type: Blanket
+      quantity: 999
+    - type: Fentanyl Lollipop
+      quantity: 999
+    - type: Pulse Oximeter
+      quantity: 1
+      reusable: true
+  characters:
+    - id: Open World Marine 1 Female
+      name: Heather
+      unstructured: Female, about 30 years old, in a kneeling position. Wearing a
+        US military uniform.
+      unstructured_postassess: Female, about 30 years old, in a kneeling position.
+        Wearing a US military uniform. Has a puncture on her left bicep and a laceration
+        on her right forearm.
+      demographics:
+        age: 30
+        sex: F
+        race: Pacific Islander
+        military_disposition: Allied US
+        role: Infantry
+        mission_importance: normal
+        military_branch: US Navy
+      vitals:
+        avpu: ALERT
+        ambulatory: true
+        mental_status: UPSET
+        breathing: NORMAL
+        heart_rate: NORMAL
+        spo2: 97
+      injuries:
+        - name: Puncture
+          location: left bicep
+          status: discoverable
+          severity: moderate
+        - name: Laceration
+          location: right forearm
+          status: discoverable
+          severity: moderate
+    - id: Open World Marine 2 Male
+      name: Maurice
+      unstructured: Male, about 34 years old, in a supine position. Wearing a US military
+        uniform.
+      unstructured_postassess: Male, about 34 years old, in a supine position. Wearing
+        a US military uniform. Has a broken bone on his right leg and an amputated
+        left wrist.
+      demographics:
+        age: 34
+        sex: M
+        race: Hispanic
+        military_disposition: Allied US
+        role: Infantry
+        mission_importance: normal
+        military_branch: US Navy
+      vitals:
+        avpu: ALERT
+        ambulatory: false
+        mental_status: AGONY
+        breathing: FAST
+        heart_rate: FAST
+        spo2: 90
+      injuries:
+        - name: Broken Bone
+          location: right leg
+          status: discoverable
+          severity: minor
+        - name: Amputation
+          location: left wrist
+          status: discoverable
+          severity: extreme
+    - id: Open World Civilian 1 Male
+      name: William
+      unstructured: Male, about 57 years old, in a sittingGround position.
+      unstructured_postassess: Male, about 57 years old, in a sittingGround position.
+        Has a puncture on his right shoulder and a broken bone on his left shoulder.
+      demographics:
+        age: 57
+        sex: M
+        race: White
+      vitals:
+        avpu: ALERT
+        ambulatory: false
+        mental_status: UPSET
+        breathing: NORMAL
+        heart_rate: FAST
+        spo2: 97
+      injuries:
+        - name: Puncture
+          location: right shoulder
+          status: discoverable
+          severity: major
+        - name: Broken Bone
+          location: left shoulder
+          status: discoverable
+          severity: minor
+    - id: Open World Civilian 2 Female
+      name: Kimberly
+      unstructured: Female, about 51 years old, in a supine position.
+      unstructured_postassess: Female, about 51 years old, in a supine position. Has
+        several puncture injuries, a laceration on her right calf and shrapnel in
+        her left face.
+      demographics:
+        age: 51
+        sex: F
+        race: White
+      vitals:
+        avpu: UNRESPONSIVE
+        ambulatory: false
+        mental_status: UNRESPONSIVE
+        breathing: FAST
+        heart_rate: FAST
+        spo2: 90
+      injuries:
+        - name: Puncture
+          location: left bicep
+          status: discoverable
+          severity: major
+        - name: Puncture
+          location: left stomach
+          status: discoverable
+          severity: major
+        - name: Laceration
+          location: right calf
+          status: discoverable
+          severity: major
+        - name: Shrapnel
+          location: left face
+          status: discoverable
+          severity: moderate
+        - name: Puncture
+          location: left side
+          status: discoverable
+          severity: major
+scenes:
+  - id: 0
+    end_scene_allowed: true
+    restricted_actions:
+      - DIRECT_MOBILE_CHARACTERS
+      - SEARCH
+      - MOVE_TO_EVAC
+    action_mapping:
+      - action_id: sitrep
+        action_type: SITREP
+        unstructured: Ask for a SITREP from all patients
+        probe_id: action-probe
+        choice: sitrep
+        conditions:
+          elapsed_time_gt: 30000000
+      - action_id: check_vitals
+        action_type: CHECK_ALL_VITALS
+        unstructured: Check a patient's vital signs
+        probe_id: action-probe
+        choice: check-all-vitals
+        repeatable: true
+        conditions:
+          elapsed_time_gt: 30000000
+      - action_id: tag-heather
+        action_type: TAG_CHARACTER
+        unstructured: Tag Heather
+        character_id: Open World Marine 1 Female
+        probe_id: tagging-probe
+        choice: tag-heather
+        repeatable: true
+        conditions:
+          elapsed_time_gt: 30000000
+      - action_id: treat-heather
+        action_type: APPLY_TREATMENT
+        unstructured: Treat an injury on Heather
+        character_id: Open World Marine 1 Female
+        probe_id: action-probe
+        choice: treat-heather
+        repeatable: true
+        conditions:
+          elapsed_time_gt: 30000000
+      - action_id: tag-maurice
+        action_type: TAG_CHARACTER
+        unstructured: Tag Maurice
+        character_id: Open World Marine 2 Male
+        probe_id: tagging-probe
+        choice: tag-maurice
+        repeatable: true
+        conditions:
+          elapsed_time_gt: 30000000
+      - action_id: treat-maurice
+        action_type: APPLY_TREATMENT
+        unstructured: Treat an injury on Maurice
+        character_id: Open World Marine 2 Male
+        probe_id: action-probe
+        choice: treat-maurice
+        repeatable: true
+        conditions:
+          elapsed_time_gt: 30000000
+      - action_id: tag-william
+        action_type: TAG_CHARACTER
+        unstructured: Tag William
+        character_id: Open World Civilian 1 Male
+        probe_id: tagging-probe
+        choice: tag-william
+        repeatable: true
+        conditions:
+          elapsed_time_gt: 30000000
+      - action_id: treat-william
+        action_type: APPLY_TREATMENT
+        unstructured: Treat an injury on William
+        character_id: Open World Civilian 1 Male
+        probe_id: action-probe
+        choice: treat-william
+        repeatable: true
+        conditions:
+          elapsed_time_gt: 30000000
+      - action_id: tag-kimberly
+        action_type: TAG_CHARACTER
+        unstructured: Tag Kimberly
+        character_id: Open World Civilian 2 Female
+        probe_id: tagging-probe
+        choice: tag-kimberly
+        repeatable: true
+        conditions:
+          elapsed_time_gt: 30000000
+      - action_id: treat-kimberly
+        action_type: APPLY_TREATMENT
+        unstructured: Treat an injury on Kimberly
+        character_id: Open World Civilian 2 Female
+        probe_id: action-probe
+        choice: treat-kimberly
+        repeatable: true
+        conditions:
+          elapsed_time_gt: 30000000
+    transitions:
+      elapsed_time_gt: 30000000

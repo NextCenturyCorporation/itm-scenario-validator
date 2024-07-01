@@ -215,7 +215,8 @@ class JsonConverter:
             new_c = {}
             new_c['id'] = c['name']
             new_c['name'] = c['raceEthnicity']['firstName']
-            new_c['unstructured'] = f""
+            new_c['unstructured'] = ""
+            new_c['unstructured_postassess'] = ""
             patient = c['patient']
             race = c['raceEthnicity']['preset']
 
@@ -277,7 +278,7 @@ class JsonConverter:
                 injury = {
                     'name': split_name[-1] if 'Broken' not in i['type'] else 'Broken Bone',
                     'location': INJ_LOC_MAP[(' ').join(split_name[:-1])],
-                    'status': 'visible',
+                    'status': 'discoverable',
                     'severity': severity
                 }
                 if injury['name'] in written_injuries:
@@ -304,9 +305,10 @@ class JsonConverter:
                         unstructured_inj += f" several {inj_set} injuries,".lower()
                 comma_separated = unstructured_inj.split(',')
                 unstructured_inj = ','.join(comma_separated[:-2]) + ' and' + comma_separated[-2] + '.'
-            new_c['unstructured'] += f"{'Male' if demographics['sex'] == 'M' else 'Female'}, about {demographics['age']} years old, in a {c['animations']['pose']} position. " + unstructured_inj
+            new_c['unstructured'] += f"{'Male' if demographics['sex'] == 'M' else 'Female'}, about {demographics['age']} years old, in a {c['animations']['pose']} position." 
             if is_military:
                 new_c['unstructured'] += f" Wearing a {'US' if us_military else 'local'} military uniform."
+            new_c['unstructured_postassess'] += new_c['unstructured'] + " " + unstructured_inj
             yaml_characters.append(new_c)
         return yaml_characters
 
