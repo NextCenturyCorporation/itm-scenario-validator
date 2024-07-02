@@ -280,6 +280,13 @@ class JsonConverter:
                         'status': 'hidden'
                     }
                     written_injuries[injury['name']] = ['internal']
+                elif i['type'] == 'Ear Bleed':
+                    injury = {
+                        'name': 'Ear Bleed',
+                        'location': "right face" if randint(1, 2) > 1 else "left face",
+                        'status': 'discoverable'
+                    }
+                    written_injuries[injury['name']] = [injury['location']]
                 else:
                     if i['type'] == 'Forehead Scrape':
                         injury = {
@@ -324,6 +331,8 @@ class JsonConverter:
                             unstructured_inj += f" an amputated {written_injuries[inj_set][0]},".lower()
                         elif inj_set == "Asthmatic":
                             is_asthmatic = True
+                        elif inj_set == 'Ear Bleed':
+                            unstructured_inj += f" an ear bleed,"
                         else:
                             unstructured_inj += f" a {inj_set} on {pronoun} {written_injuries[inj_set][0]},".lower()
                             
