@@ -550,6 +550,11 @@ components:
           $ref: "#/components/schemas/Environment"
         threat_state:
           $ref: "#/components/schemas/ThreatState"
+        events:
+          type: array
+          description: A list of scenario events to inform decision-making
+          items:
+            $ref: "#/components/schemas/Event"
         supplies:
           type: array
           description: A list of supplies available to the medic
@@ -666,11 +671,11 @@ components:
           type: string
           description: Natural language, plain text description of decision-impacting environmental factors
           example: Injuries triggered by an IED detonation.  Helicopter Evac expected in one hour for up to three casualties.
-        aid_delay:
+        aid:
           type: array
-          description: A list of evacuation opportunities
+          description: A list of available forms of aid
           items:
-            $ref: "#/components/schemas/AidDelay"
+            $ref: "#/components/schemas/Aid"
         movement_restriction:
           $ref: "#/components/schemas/MovementRestrictionEnum"
         sound_restriction:
@@ -686,26 +691,38 @@ components:
         city_infrastructure:
           type: string
           description: Refers to building/city infrastructure that should be noted and known (safe house, etc.)
-    AidDelay:
+    Aid:
       required:
         - id
         - delay
       type: object
-      description: Properties related to CASEVAC or MEDEVAC
+      description: "Properties related to evacuation, available hospitals, or other forms of aid"
       properties:
         id:
           type: string
-          description: An identifier for the evacuation opportunity, unique within the scene
+          description: "An identifier for the aid opportunity, unique within the scene"
         delay:
           type: number
           format: float
-          description: CASEVAC or MEDEVAC timer, in minutes
-          minimum: 1.0
+          description: "Time until aid is available, in minutes; 0 means ready now"
+          minimum: 0
         type:
           $ref: "#/components/schemas/AidTypeEnum"
+        level:
+          type: integer
+          description: >
+            Refers to the kinds of resources/capabilities available in a trauma center; Level 1 has more resources than Level 5.
+            See [amtrauma.org](https://www.amtrauma.org/page/traumalevels/)
+          minimum: 1
+          maximum: 5
+        patients_treated:
+          type: array
+          description: "A list of types of patients that can be helped; if omitted, then no restrictions or restrictions are irrelevant"
+          items:
+            $ref: "#/components/schemas/MilitaryDispositionEnum"
         max_transport:
           type: integer
-          description: Maximum number of casualties that can be transported
+          description: Maximum number of casualties that can be accommodated
           minimum: 1
     ThreatState:
       required:
@@ -739,6 +756,39 @@ components:
           $ref: "#/components/schemas/ThreatTypeEnum"
         severity:
           $ref: "#/components/schemas/ThreatSeverityEnum"
+    Event:
+      required:
+        - unstructured
+        - type
+      type: object
+      description: a unit of structured communication from scenario to ADM
+      properties:
+        unstructured:
+          type: string
+          description: Natural language, plain text description of the event
+        type:
+          $ref: "#/components/schemas/EventTypeEnum"
+        source:
+          type: string
+          description: "The 'subject' of the event; can be a character `id` or an `EntityTypeEnum`"
+        object:
+          type: string
+          description: "The 'object' of the event; can be a character `id` or an `EntityTypeEnum`"
+        action_id:
+          type: string
+          description: An action ID from among the available actions
+        relevant_state:
+          type: array
+          description: An array of relevant state for the Event
+          items:
+            description: >
+              string paths within the `State` object, in which indexed lists are context-sensitive:
+              for an aid or a character, it's the id;
+              for a supply, it's the type;
+              for a threat, it's the threat_type;
+              for an injury, it's the location
+            type: string
+            example: environment.decision_environment.aid[civilian_facility].max_transport
     Supplies:
       required:
         - quantity
@@ -1424,12 +1474,14 @@ components:
         - maroon
     AidTypeEnum:
       type: string
-      description: Means of evacuation
+      description: Types of aid
       enum:
-        - air
-        - ground
-        - water
-        - unknown
+        - local military
+        - local non-military
+        - air evac
+        - ground evac
+        - water evac
+        - unknown evac
     ThreatTypeEnum:
       type: string
       description: the type or nature of the threat
@@ -1454,6 +1506,38 @@ components:
         - substantial
         - severe
         - extreme
+    EventTypeEnum:
+      type: string
+      description: "an enumeration of available event types; the 'verb' of the event"
+      enum:
+        - change
+        - emphasize
+        - inform
+        - order
+        - recommend
+        - tbd
+    EntityTypeEnum:
+      type: string
+      description: an enumeration of available entity types; can be a subject or object
+      enum:
+        - ally
+        - adversary
+        - civilian
+        - commander
+        - everybody
+        - medic
+        - tbd
+    MessageTypeEnum:
+      type: string
+      description: an enumeration of available message types
+      enum:
+        - allow
+        - ask
+        - delegate
+        - deny
+        - recommend
+        - wait
+        - tbd
     SupplyTypeEnum:
       type: string
       description: an enumeration of available supply types
@@ -1816,6 +1900,7 @@ components:
         - CHECK_RESPIRATION
         - DIRECT_MOBILE_CHARACTERS
         - END_SCENE
+        - MESSAGE
         - MOVE_TO
         - MOVE_TO_EVAC
         - SEARCH

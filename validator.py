@@ -698,6 +698,7 @@ class YamlValidator:
                 value = entry['conditions']['value'] if 'value' in entry['conditions'] else ''
                 length = entry['conditions']['length'] if 'length' in entry['conditions'] else -1
                 exists = bool(entry['conditions']['exists']) if 'exists' in entry['conditions'] else True
+                log_level = entry.get('logLevel', 'error')
                 all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, length=length, exists=exists)
                 for x in all_found:
                     found = x.split('.')
@@ -706,7 +707,7 @@ class YamlValidator:
                         continue 
                     else:
                         # start searching for the key(s) that is/are required now that the first key has been found
-                        self.search_for_key(False, found, entry['forbid'], "meets conditions " + str(entry['conditions']))
+                        self.search_for_key(False, found, entry['forbid'], "meets conditions " + str(entry['conditions']), log_level=log_level)
 
 
     def simple_value_matching(self):
@@ -1109,8 +1110,9 @@ class YamlValidator:
                                 self.invalid_values += 1 
                         # validate params only includes expected values
                         for key in params:
-                            if key not in ['treatment', 'location', 'category', 'evac_id']:
-                                self.logger.log(LogLevel.ERROR, "'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(['treatment', 'location', 'category', 'evac_id']) + " but has key '" + key + "'.")
+                            allowed_params = ['treatment', 'location', 'category', 'evac_id', 'type', 'object', 'action_type', 'aid_id', 'recipient', 'character_id']
+                            if key not in allowed_params:
+                                self.logger.log(LogLevel.ERROR, "'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(allowed_params) + " but has key '" + key + "'.")
                                 self.invalid_keys += 1 
                     j += 1
             i += 1
@@ -1401,7 +1403,7 @@ class YamlValidator:
         Gets the evac_ids that could be allowed in a scene
         '''
         def get_evac_ids(scene):
-            dec_env = scene.get('state', {}).get('environment', {}).get('decision_environment', {}).get('aid_delay', None)
+            dec_env = scene.get('state', {}).get('environment', {}).get('decision_environment', {}).get('aid', None)
             if dec_env is not None:
                 delay_ids = []
                 for x in dec_env:
@@ -1413,7 +1415,7 @@ class YamlValidator:
         first_scene_id = self.determine_first_scene(data)['id']
         this_scene = self.get_scene_by_id(scene_id)
         possible_ids = []
-        if this_scene.get('state', {}).get('environment', {}).get('decision_environment', {}).get('aid_delay', None) is None:
+        if this_scene.get('state', {}).get('environment', {}).get('decision_environment', {}).get('aid', None) is None:
             all_segs = self.get_branch_segments_for_scene(scene_id)
             segments = all_segs['segments']
             critical_segments = all_segs['critical']
