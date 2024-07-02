@@ -68,6 +68,7 @@ INJ_LOC_MAP = {
     "R Side": "right side",
     "L Side": "left side",
     "R Chest": "right chest",
+    "C Chest": "center chest",
     "L Chest": "left chest",
     "R Wrist": "right wrist",
     "L Wrist": "left wrist",
@@ -131,6 +132,18 @@ SEVERITY_MAP = {
     "Largest": "extreme"
 }
 
+POSE_MAP = {
+    "standing": "standing",
+    "sittingGround": "sitting on the ground",
+    "sittingChair": "sitting on a chair",
+    "kneeling": "kneeling",
+    "supine": "in a supine position",
+    "recovery": "in a recovery position on the ground",
+    "fetal": "in a fetal position on the ground",
+    "prone": "in a prone position on the ground",
+    "shooting": "actively shooting"
+}
+
 class JsonConverter:
     json_data = {}
     output_dest = None
@@ -163,6 +176,7 @@ class JsonConverter:
         yaml_data = {}
         yaml_data['id'] = self.json_data['scenarioData']['name']
         yaml_data['name'] = self.json_data['scenarioData']['description']
+        sim_env = ENV_MAP[self.json_data['scene'].split('-')[1].replace('sub', 'submarine')]
         yaml_state = {}
         unstructured = 'TODO'
         narrative_sections = self.json_data.get('narrative', {}).get('narrativeSections', [])
@@ -171,9 +185,11 @@ class JsonConverter:
                 # get the first additional info available for unstructured text
                 unstructured = x['additionalInfo']
                 break
+        if unstructured == 'TODO':
+            unstructured = f"You are a medic in {'a' if sim_env['type'] != 'urban' else 'an'} {sim_env['type']} environment. Several members of your team {'and some civilians ' if sim_env['type'] != 'submarine' else ''}have been injured. Please treat these casualties."
 
         yaml_state['unstructured'] = unstructured
-        sim_env = ENV_MAP[self.json_data['scene'].split('-')[1].replace('sub', 'submarine')]
+        
         
         yaml_state['environment'] = {'sim_environment': sim_env}
         yaml_state['supplies'] = self.get_supplies()
@@ -237,7 +253,7 @@ class JsonConverter:
 
             if is_military:
                 demographics['military_disposition'] = 'Allied US' if us_military else 'Allied'
-                sim_env = ENV_MAP[self.json_data['scene'].split('-')[1].replace('sub', 'submarine')]
+                sim_env = self.json_data['scene'].split('-')[1].replace('sub', 'submarine')
                 if sim_env != 'submarine':
                     demographics['role'] = 'Infantry'
                 demographics['mission_importance'] = 'normal'
@@ -252,39 +268,44 @@ class JsonConverter:
                 'mental_status': MENTAL_STATUS_MAP[vitals['mood']],
                 'breathing': BREATHING_MAP[vitals['breath']],
                 'heart_rate': PULSE_MAP[vitals['pulse']],
-                'spo2': 0 if vitals['SpO2'] == 'none' else 90 if vitals['SpO2'] == 'low' else 97
+                'spo2': 67 if vitals['SpO2'] == 'none' else 85 if vitals['SpO2'] == 'low' else 95
             }
             injuries = []
             written_injuries = {}
             for i in c['injuries']:
-                split_name = i['type'].split(' ')
-                severity = SEVERITY_MAP[i.get('bloodPool', 'None')]
-                if severity == 'minor':
-                    # no blood pool assigned, decide on our own
-                    if 'Puncture' in i['type']:
-                        severity = 'major'
-                    if 'Ampuation' in i['type']:
-                        severity = 'extreme'
-                    if 'Laceration' in i['type'] or 'Abrasion' in i['type']:
-                        severity = 'moderate' if 'Thigh' not in i['type'] else 'major'
-                    if 'Shrapnel' in i['type']:
-                        severity = 'major'
-                    if 'Chest Collapse' in i['type']:
-                        severity = 'extreme'
-                    if 'Burn' in i['type']:
-                        severity = 'major'
-                    if 'Broken Bone' in i['type']:
-                        severity = 'moderate'
-                injury = {
-                    'name': split_name[-1] if 'Broken' not in i['type'] else 'Broken Bone',
-                    'location': INJ_LOC_MAP[(' ').join(split_name[:-1])],
-                    'status': 'discoverable',
-                    'severity': severity
-                }
-                if injury['name'] in written_injuries:
-                    written_injuries[injury['name']].append(injury['location'])
+                if i['type'] == 'Asthmatic':
+                    injury = {
+                        'name': 'Asthmatic',
+                        'location': "internal",
+                        'status': 'hidden'
+                    }
+                    written_injuries[injury['name']] = ['internal']
                 else:
-                    written_injuries[injury['name']] = [injury['location']]
+                    if i['type'] == 'Forehead Scrape':
+                        injury = {
+                            'name': "Laceration",
+                            'location': "left face",
+                            'status': 'discoverable'
+                        } 
+                    else:
+                        split_name = i['type'].split(' ')
+                        injury = {
+                            'name': split_name[-1] if 'Broken' not in i['type'] else 'Broken Bone',
+                            'location': INJ_LOC_MAP[(' ').join(split_name[:-1])],
+                            'status': 'discoverable'
+                        }
+                    bloodPool = i.get('bloodPool', None)
+                    if bloodPool is not None:
+                        severity = SEVERITY_MAP[bloodPool]
+                    elif 'Burn' in i['type']:
+                        severity = 'major'
+
+                    injury['severity'] = severity
+                    
+                    if injury['name'] in written_injuries:
+                        written_injuries[injury['name']].append(injury['location'])
+                    else:
+                        written_injuries[injury['name']] = [injury['location']]
                 injuries.append(injury)
             new_c['injuries'] = injuries
             if len(written_injuries) == 0:
@@ -292,23 +313,38 @@ class JsonConverter:
             else:
                 unstructured_inj = "Has"
                 pronoun = 'his' if demographics['sex'] == 'M' else 'her'
+                is_asthmatic = False
                 for inj_set in written_injuries:
                     if len(written_injuries[inj_set]) == 1:
-                        if inj_set == "Shrapnel":
+                        if inj_set == 'Collapse':
+                            unstructured_inj += f" a collapsed {written_injuries[inj_set][0]},".lower()
+                        elif inj_set == "Shrapnel":
                             unstructured_inj += f" shrapnel in {pronoun} {written_injuries[inj_set][0]},".lower()
                         elif inj_set == "Amputation":
                             unstructured_inj += f" an amputated {written_injuries[inj_set][0]},".lower()
+                        elif inj_set == "Asthmatic":
+                            is_asthmatic = True
                         else:
                             unstructured_inj += f" a {inj_set} on {pronoun} {written_injuries[inj_set][0]},".lower()
                             
                     else:
-                        unstructured_inj += f" several {inj_set} injuries,".lower()
+                        if inj_set == 'Collapse':
+                            unstructured_inj += f" a collapsed left and right chest,".lower()
+                        if inj_set == 'Asthmatic':
+                            is_asthmatic = True
+                        else:
+                            unstructured_inj += f" several {inj_set} injuries,".lower()
                 comma_separated = unstructured_inj.split(',')
-                unstructured_inj = ','.join(comma_separated[:-2]) + ' and' + comma_separated[-2] + '.'
-            new_c['unstructured'] += f"{'Male' if demographics['sex'] == 'M' else 'Female'}, about {demographics['age']} years old, in a {c['animations']['pose']} position." 
+                if len(comma_separated) == 2:
+                    unstructured_inj = comma_separated[0] + '.'
+                else:
+                    unstructured_inj = ','.join(comma_separated[:-2]) + f'{", " if len(comma_separated) > 3 else " "}and' + comma_separated[-2] + '.'
+            new_c['unstructured'] += f"{'Male' if demographics['sex'] == 'M' else 'Female'}, about {demographics['age']} years old, {POSE_MAP[c['animations']['pose']]}." 
             if is_military:
                 new_c['unstructured'] += f" Wearing a {'US' if us_military else 'local'} military uniform."
             new_c['unstructured_postassess'] += new_c['unstructured'] + " " + unstructured_inj
+            if is_asthmatic:
+                new_c['unstructured_postassess'] += " Patient is asthmatic."
             yaml_characters.append(new_c)
         return yaml_characters
 
@@ -320,7 +356,7 @@ class JsonConverter:
         scene = {}
         scene['id'] = 0
         scene['end_scene_allowed'] = True
-        scene['restricted_actions'] = ['DIRECT_MOBILE_CHARACTERS', 'SEARCH', 'MOVE_TO_EVAC']
+        scene['restricted_actions'] = ['DIRECT_MOBILE_CHARACTERS', 'SEARCH', 'MOVE_TO_EVAC', 'MESSAGE']
         actions = []
 
         # add sitrep action
