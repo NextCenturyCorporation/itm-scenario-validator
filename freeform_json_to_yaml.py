@@ -343,11 +343,14 @@ class JsonConverter:
                             is_asthmatic = True
                         else:
                             unstructured_inj += f" several {inj_set} injuries,".lower()
-                comma_separated = unstructured_inj.split(',')
-                if len(comma_separated) == 2:
-                    unstructured_inj = comma_separated[0] + '.'
+                if unstructured_inj != 'Has':
+                    comma_separated = unstructured_inj.split(',')
+                    if len(comma_separated) == 2:
+                        unstructured_inj = comma_separated[0] + '.'
+                    else:
+                        unstructured_inj = ','.join(comma_separated[:-2]) + f'{", " if len(comma_separated) > 3 else " "}and' + comma_separated[-2] + '.'
                 else:
-                    unstructured_inj = ','.join(comma_separated[:-2]) + f'{", " if len(comma_separated) > 3 else " "}and' + comma_separated[-2] + '.'
+                    unstructured_inj = ""
             new_c['unstructured'] += f"{'Male' if demographics['sex'] == 'M' else 'Female'}, about {demographics['age']} years old, {POSE_MAP[c['animations']['pose']]}." 
             if is_military:
                 new_c['unstructured'] += f" Wearing a {'US' if us_military else 'local'} military uniform."
