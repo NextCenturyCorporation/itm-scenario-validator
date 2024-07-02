@@ -208,3 +208,9 @@ When not running in training mode (-t), additional checks are implemented:
 * `rank` and `rank_title` are not allowed if `military_branch` is not provided
 * `military_branch`, `rank`, and `rank_title` must match the information found [here](https://www.military.com/join-military/military-ranks-everything-you-need-know.html)
 
+## Converting from JSON to YAML
+To convert a file from sim JSON format to YAML, run `python3 freeform_json_to_yaml.py -i [input-path] -o [output-path]`.
+
+Currently, this cannot handle multiple scenes. This will work best for freeform scenarios that have one narrative element with an `additionalInfo` property that explains the scene and no other interaction from the sim to the participant. 
+
+The script will take data from the JSON file inputted and output it in a valid YAML format. 

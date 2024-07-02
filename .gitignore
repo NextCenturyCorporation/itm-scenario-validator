@@ -8,3 +8,4 @@ __pycache__
 output/*
 participant-data/*
 test_yamls
+freeform_jsons
