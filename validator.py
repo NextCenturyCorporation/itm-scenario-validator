@@ -145,7 +145,6 @@ class YamlValidator:
         Creates and returns a list of all scene branches.
         '''
         paths = self.get_branches_from_scene(data, self.determine_first_scene(data)['id'])
-
         # remove duplicates (same order, same elements)
         return self.remove_duplicate_sublists(paths)
 
@@ -163,10 +162,10 @@ class YamlValidator:
         default_next = scene.get('next_scene', scenes[scene_ind+1]['id'] if scene_ind+1 < len(scenes) else None) 
         scenes_to_investigate = []
         for a in scene['action_mapping']:
-            action_path = copy.deepcopy(path)
             next_scene = a.get('next_scene', default_next)
             scenes_to_investigate.append(next_scene)
         for next_scene in scenes_to_investigate:
+            action_path = copy.deepcopy(path)
             if action_path.count(next_scene) < 2 and (len(action_path) == 0 or action_path[-1] != next_scene):
                 if len(action_path) == 0:
                     # no two of the same scene in a row (doesn't affect anything logically)
@@ -177,13 +176,11 @@ class YamlValidator:
                 else:
                     if action_path[-1] != next_scene:
                         action_path.append(next_scene)
-                if next_scene is None:
-                    paths.append(path)
-                else:
+                paths.append(path)
+                if next_scene is not None:
                     paths += self.get_branches_from_scene(data, next_scene, action_path)
             else:
                 paths.append(path)
-                return paths
         return paths
     
 
@@ -516,6 +513,7 @@ class YamlValidator:
         self.validate_pretreated_injuries()
         self.validate_unseen_character_actions()
         self.validate_evac_ids()
+        self.validate_events()
 
 
     def simple_requirements(self):
@@ -1243,7 +1241,6 @@ class YamlValidator:
             all_segs = self.get_branch_segments_for_scene(scene_id)
             segments = all_segs['segments']
             critical_segments = all_segs['critical']
-
             for segment in segments:
                 tmp_chars = []
                 tmp_removed = []
@@ -1543,6 +1540,63 @@ class YamlValidator:
                     if len(allowed) == 0:
                         self.logger.log(LogLevel.ERROR, f"No 'evac_id's are available to scene '{scene['id']}', but its action_mapping uses evac_id (value='{val}').")
                         self.invalid_values += 1
+
+
+    def validate_events(self):
+        ''' 
+        Validates events in every state:
+        1. Source is recommended
+        2. Source and Object must be valid character ids or an EntityTypeEnum
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic', 'tbd']
+        for scene in data['scenes']:
+            events = scene.get('state', {}).get('events', [])
+            chars = self.get_characters_in_scene(data, scene['id'])
+            missing = 0
+            for event in events:
+                source = event.get('source', None)
+                obj = event.get('object', None)
+                if source is None:
+                    missing += 1
+                elif source not in entity_type_enum:
+                    in_any_group = False
+                    in_all_groups = True
+                    for group in chars['possible']:
+                        if source in group:
+                            in_any_group = True
+                        else:
+                            in_all_groups = False
+                    if not in_any_group:
+                        self.logger.log(LogLevel.ERROR, f"The 'source' parameter for an event in scene '{scene['id']}' is '{source}', but must be one of {entity_type_enum + chars['possible']}.")
+                        self.invalid_values += 1 
+                    elif not in_all_groups:
+                        self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in scene '{scene['id']}' is '{source}', but that character might not be available in some branches.")
+                        self.warning_count += 1     
+                    elif source in chars['removed']:
+                        self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in scene '{scene['id']}' is '{source}', but that character might be removed in some branches.")
+                        self.warning_count += 1 
+
+                if obj is not None and obj not in entity_type_enum:
+                    in_any_group = False
+                    in_all_groups = True
+                    for group in chars['possible']:
+                        if source in group:
+                            in_any_group = True
+                        else:
+                            in_all_groups = False
+                    if not in_any_group:
+                        self.logger.log(LogLevel.ERROR, f"The 'object' parameter for an event in scene '{scene['id']}' is '{obj}', but must be one of {entity_type_enum + chars['possible']}.")
+                        self.invalid_values += 1 
+                    elif not in_all_groups:
+                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in scene '{scene['id']}' is '{obj}', but that character might not be available in some branches.")
+                        self.warning_count += 1     
+                    elif source in chars['removed']:
+                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in scene '{scene['id']}' is '{obj}', but that character might be removed in some branches.")
+                        self.warning_count += 1 
+            if missing > 0:
+                self.logger.log(LogLevel.WARN, f"The 'object' parameter is recommended for all events, but is missing for {missing} event{'s' if missing > 1 else ''} in scene '{scene['id']}'.")
+                self.warning_count += 1 
 
 
 if __name__ == '__main__':
