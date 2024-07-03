@@ -154,6 +154,7 @@ class JsonConverter:
     output_dest = None
     character_names = []
     unique_names = {}
+    character_ids = []
 
     def __init__(self, input_path, output_path):
         f = None
@@ -240,13 +241,20 @@ class JsonConverter:
             first_name = c['raceEthnicity']['firstName']
             new_c['name'] = first_name
             if first_name in self.character_names:
-                LOGGER.log(LogLevel.ERROR, f"Duplicate character name '{first_name}' in JSON file.")
                 new_name = first_name + '-' + str(self.character_names.count(first_name))
+                LOGGER.log(LogLevel.ERROR, f"Duplicate character name '{first_name}' in JSON file. Renamed to '{new_name}' to create a valid yaml. Please consider fixing the JSON.")
                 new_c['name'] = new_name
-                self.unique_names[new_name] = c
-            else:
-                self.unique_names[first_name] = c
-            self.character_names.append(first_name)
+                first_name = new_name
+            self.unique_names[first_name] = c
+            self.character_names.append(c['raceEthnicity']['firstName'])
+            cid = c['name']
+            if cid in self.character_ids:
+                new_id = cid + '-' + str(self.character_ids.count(cid))
+                LOGGER.log(LogLevel.ERROR, f"Duplicate character id '{cid}' in JSON file. Renamed to '{new_id}' to create a valid yaml. Please consider fixing the JSON.")
+                new_c['id'] = new_id
+                self.unique_names[first_name]['name'] = new_id
+            self.character_ids.append(cid)
+            
             
             new_c['unstructured'] = ""
             new_c['unstructured_postassess'] = ""
