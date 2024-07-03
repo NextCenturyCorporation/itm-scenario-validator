@@ -290,7 +290,36 @@ class JsonConverter:
             injuries = []
             written_injuries = {}
             for i in c['injuries']:
-                if i['type'] == 'Asthmatic':
+                if i['type'] == 'Full Body Burn':
+                    injury = {
+                        'name': 'Burn',
+                        'location': "left side",
+                        'status': 'discoverable',
+                        'severity': 'extreme'
+                    }
+                    injuries.append(injury)
+                    injury = {
+                        'name': 'Burn',
+                        'location': "right side",
+                        'status': 'discoverable',
+                        'severity': 'extreme'
+                    }
+                    written_injuries[injury['name']] = ['whole body']
+                elif i['type'] == 'L Body Burn':
+                    injury = {
+                        'name': 'Burn',
+                        'location': "left side",
+                        'status': 'discoverable',
+                        'severity': 'extreme'
+                    }
+                elif i['type'] == 'R Body Burn':
+                    injury = {
+                        'name': 'Burn',
+                        'location': "right side",
+                        'status': 'discoverable',
+                        'severity': 'extreme'
+                    }
+                elif i['type'] == 'Asthmatic':
                     injury = {
                         'name': 'Asthmatic',
                         'location': "internal",
@@ -323,13 +352,13 @@ class JsonConverter:
                         severity = SEVERITY_MAP[bloodPool]
                     elif 'Burn' in i['type']:
                         severity = 'major'
-
-                    injury['severity'] = severity
-                    
-                    if injury['name'] in written_injuries:
-                        written_injuries[injury['name']].append(injury['location'])
-                    else:
-                        written_injuries[injury['name']] = [injury['location']]
+                    if 'Full Body' not in i['type']:
+                        if 'L Body' not in i['type'] and 'R Body' not in i['type']:
+                            injury['severity'] = severity
+                        if injury['name'] in written_injuries:
+                            written_injuries[injury['name']].append(injury['location'])
+                        else:
+                            written_injuries[injury['name']] = [injury['location']]
                 injuries.append(injury)
             new_c['injuries'] = injuries
             if len(written_injuries) == 0:
@@ -340,7 +369,9 @@ class JsonConverter:
                 is_asthmatic = False
                 for inj_set in written_injuries:
                     if len(written_injuries[inj_set]) == 1:
-                        if inj_set == 'Chest Collapse':
+                        if inj_set == 'Burn':
+                            unstructured_inj += f" burns covering {pronoun} {written_injuries[inj_set][0]},"
+                        elif inj_set == 'Chest Collapse':
                             unstructured_inj += f" a collapsed {written_injuries[inj_set][0]},".lower()
                         elif inj_set == "Shrapnel":
                             unstructured_inj += f" shrapnel in {pronoun} {written_injuries[inj_set][0]},".lower()
