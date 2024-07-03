@@ -145,6 +145,9 @@ class YamlValidator:
         Creates and returns a list of all scene branches.
         '''
         paths = self.get_branches_from_scene(data, self.determine_first_scene(data)['id'])
+        scenes = data['scenes']
+        if len(scenes) == 1:
+            paths.append([scenes[0]['id']])
         # remove duplicates (same order, same elements)
         return self.remove_duplicate_sublists(paths)
 
