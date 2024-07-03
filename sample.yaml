@@ -108,7 +108,7 @@ state:
         mental_status: UNRESPONSIVE # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
         breathing: FAST # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
         heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
-        spo2: 92 # a percentage
+        spo2: NORMAL # controlled vocab includes NORMAL, LOW, NONE
       injuries:
         - name: Internal # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
           location: internal # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
@@ -141,13 +141,12 @@ state:
         mental_status: CONFUSED # Like unresponsive, but could be an indication of non-English speaking
         breathing: NORMAL # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
         heart_rate: FAINT # controlled vocab includes NONE, FAINT, NORMAL, FAST
-        spo2: 94 # a percentage
+        spo2: NORMAL # controlled vocab includes NORMAL, LOW, NONE
       injuries:
         - name: Laceration # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
           location: left face # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
           status: visible
           severity: minor
-
 # - Each scene has associated state, including mission parameters, environment, characters, etc.
 # - Each scene has a set of actions that map to probe responses
 #   - Action mappings can be flagged as intent_action, where the ADM will only intend an action instead of taking one.
@@ -349,7 +348,7 @@ scenes:
             mental_status: AGONY # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
             breathing: FAST # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
             heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
-            spo2: 97 # a percentage
+            spo2: NORMAL # controlled vocab includes NORMAL, LOW, NONE
           injuries:
             - name: Burn # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
               location: unspecified # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
@@ -384,7 +383,7 @@ scenes:
             mental_status: CALM # controlled vocab includes AGONY, CALM, CONFUSED, SHOCK, UPSET, UNRESPONSIVE
             breathing: NORMAL # controlled vocab includes NORMAL, FAST, RESTRICTED, NONE
             heart_rate: NORMAL # controlled vocab includes NONE, FAINT, NORMAL, FAST
-            spo2: 99 # a percentage
+            spo2: NORMAL # controlled vocab includes NORMAL, LOW, NONE
       events:
         - unstructured: The captain tells you the helicopter has been delayed and is still 50 minutes away.
           type: change # The nature or type of the event; controlled vocab includes change, emphasize, inform, order, recommend

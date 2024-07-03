@@ -74,6 +74,14 @@ components:
       - PAIN
       - UNRESPONSIVE
       type: string
+    BloodOxygenEnum:
+      description: A description of the percentage of oxygen in someone's blood, as
+        measured by a pulse oximeter
+      enum:
+      - NORMAL
+      - LOW
+      - NONE
+      type: string
     BreathingLevelEnum:
       description: Descriptive breathing level
       enum:
@@ -1049,11 +1057,7 @@ components:
         mental_status:
           $ref: '#/components/schemas/MentalStatusEnum'
         spo2:
-          description: blood oxygen level (percentage)
-          format: float
-          maximum: 100.0
-          minimum: 0.0
-          type: number
+          $ref: '#/components/schemas/BloodOxygenEnum'
       required:
       - avpu
       - mental_status

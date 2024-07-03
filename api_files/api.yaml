@@ -932,11 +932,7 @@ components:
         heart_rate:
           $ref: "#/components/schemas/HeartRateEnum"
         spo2:
-          type: number
-          format: float
-          description: blood oxygen level (percentage)
-          minimum: 0.0
-          maximum: 100.0
+          $ref: "#/components/schemas/BloodOxygenEnum"
     Injury:
       required:
         - location
@@ -1906,6 +1902,13 @@ components:
         - SEARCH
         - SITREP
         - TAG_CHARACTER
+    BloodOxygenEnum:
+      type: string
+      description: A description of the percentage of oxygen in someone's blood, as measured by a pulse oximeter
+      enum:
+        - NORMAL
+        - LOW
+        - NONE
   responses:
     server_error:
       description: An exception occurred on the server; see returned error string.
