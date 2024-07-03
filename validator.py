@@ -514,7 +514,7 @@ class YamlValidator:
         self.check_scene_env_type()
         self.validate_pretreated_injuries()
         self.validate_unseen_character_actions()
-        self.validate_evac_ids()
+        self.validate_aid_ids()
         self.validate_events()
         self.validate_messages()
         self.are_all_scenes_reachable()
@@ -1112,7 +1112,7 @@ class YamlValidator:
                                 self.invalid_values += 1 
                         # validate params only includes expected values
                         for key in params:
-                            allowed_params = ['treatment', 'location', 'category', 'evac_id', 'type', 'object', 'action_type', 'aid_id', 'recipient', 'character_id']
+                            allowed_params = ['treatment', 'location', 'category', 'aid_id', 'type', 'object', 'action_type', 'aid_id', 'recipient', 'character_id']
                             if key not in allowed_params:
                                 self.logger.log(LogLevel.ERROR, "'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(allowed_params) + " but has key '" + key + "'.")
                                 self.invalid_keys += 1 
@@ -1401,11 +1401,11 @@ class YamlValidator:
         return possible_supplies
     
     
-    def get_evac_ids_in_scene(self, data, scene_id):
+    def get_aid_ids_in_scene(self, data, scene_id):
         '''
-        Gets the evac_ids that could be allowed in a scene
+        Gets the aid_ids that could be allowed in a scene
         '''
-        def get_evac_ids(scene):
+        def get_aid_ids(scene):
             dec_env = scene.get('state', {}).get('environment', {}).get('decision_environment', {}).get('aid', None)
             if dec_env is not None:
                 delay_ids = []
@@ -1428,11 +1428,11 @@ class YamlValidator:
                 for sid in segment:
                     if sid == first_scene_id and len(tmp_possible) == 0:
                         # get evac ids for the first scene from scenario state
-                        tmp_tmp = get_evac_ids(data)
+                        tmp_tmp = get_aid_ids(data)
                         tmp_possible = tmp_tmp if tmp_tmp is not None else []
                     else:
-                        # new aid_delays always overwrites old evac_ids
-                        tmp_tmp = get_evac_ids(self.get_scene_by_id(sid))
+                        # new aid_delays always overwrites old aid_ids
+                        tmp_tmp = get_aid_ids(self.get_scene_by_id(sid))
                         if tmp_tmp is not None:
                             tmp_possible = tmp_tmp
                 if len(tmp_possible) > 0:
@@ -1441,10 +1441,10 @@ class YamlValidator:
                     elif len(critical_segments) == 0:
                         possible_ids.append(tmp_possible)
         elif this_scene['id'] != first_scene_id:
-            tmp_tmp = get_evac_ids(this_scene)
+            tmp_tmp = get_aid_ids(this_scene)
             possible_ids = [tmp_tmp] if tmp_tmp is not None else []
         elif this_scene['id'] == first_scene_id:
-            tmp_tmp = get_evac_ids(data)
+            tmp_tmp = get_aid_ids(data)
             possible_ids = [tmp_tmp] if tmp_tmp is not None else []
 
         return possible_ids
@@ -1514,21 +1514,21 @@ class YamlValidator:
                         self.warning_count += 1     
                     
 
-    def validate_evac_ids(self):
+    def validate_aid_ids(self):
         '''
-        Makes sure that any evac_ids listed in action_mapping parameters
+        Makes sure that any aid_ids listed in action_mapping parameters
         are allowed in the scene.
         '''
         data = copy.deepcopy(self.loaded_yaml)
         for scene in data['scenes']:
-            used_evac_ids = set([])
+            used_aid_ids = set([])
             for action in scene.get('action_mapping', []):
-                if action.get('parameters', {}).get('evac_id', None) is not None:
-                    used_evac_ids.update([action['parameters']['evac_id']])
-            used_evac_ids = list(used_evac_ids)
-            if len(used_evac_ids) > 0:
-                allowed = self.get_evac_ids_in_scene(data, scene['id'])
-                for val in used_evac_ids:
+                if action.get('parameters', {}).get('aid_id', None) is not None:
+                    used_aid_ids.update([action['parameters']['aid_id']])
+            used_aid_ids = list(used_aid_ids)
+            if len(used_aid_ids) > 0:
+                allowed = self.get_aid_ids_in_scene(data, scene['id'])
+                for val in used_aid_ids:
                     allowed_count = 0
                     unallowed_count = 0
                     for x in allowed:
@@ -1538,13 +1538,13 @@ class YamlValidator:
                             unallowed_count += 1
                     if unallowed_count > 0:
                         if allowed_count == 0:
-                            self.logger.log(LogLevel.ERROR, f"Value '{val}' for key 'evac_id' in scene '{scene['id']}'s action_mapping is never available to this scene.")
+                            self.logger.log(LogLevel.ERROR, f"Value '{val}' for key 'aid_id' in scene '{scene['id']}'s action_mapping is never available to this scene.")
                             self.invalid_values += 1
                         else:
-                            self.logger.log(LogLevel.WARN, f"Value '{val}' for key 'evac_id' in scene '{scene['id']}'s action_mapping may not always be available to this scene due to some branching behvaiors. Please check to ensure that all branches will provide the correct evac_ids to the scene.")
+                            self.logger.log(LogLevel.WARN, f"Value '{val}' for key 'aid_id' in scene '{scene['id']}'s action_mapping may not always be available to this scene due to some branching behvaiors. Please check to ensure that all branches will provide the correct aid_ids to the scene.")
                             self.warning_count += 1 
                     if len(allowed) == 0:
-                        self.logger.log(LogLevel.ERROR, f"No 'evac_id's are available to scene '{scene['id']}', but its action_mapping uses evac_id (value='{val}').")
+                        self.logger.log(LogLevel.ERROR, f"No 'aid_id's are available to scene '{scene['id']}', but its action_mapping uses aid_id (value='{val}').")
                         self.invalid_values += 1
 
 
@@ -1601,7 +1601,7 @@ class YamlValidator:
                         self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in scene '{scene['id']}' is '{obj}', but that character might be removed in some branches.")
                         self.warning_count += 1 
             if missing > 0:
-                self.logger.log(LogLevel.WARN, f"The 'object' parameter is recommended for all events, but is missing for {missing} event{'s' if missing > 1 else ''} in scene '{scene['id']}'.")
+                self.logger.log(LogLevel.WARN, f"The 'source' parameter is recommended for all events, but is missing for {missing} event{'s' if missing > 1 else ''} in scene '{scene['id']}'.")
                 self.warning_count += 1 
 
 

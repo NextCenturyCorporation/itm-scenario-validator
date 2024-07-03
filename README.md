@@ -103,7 +103,7 @@ In order for a yaml file to be considered "valid", the following conditions must
         * Only one `unstructured` property is required in the whole object
         * `Mission`, `Environment`, `DecisionEnvironment`, and `SimEnvironment` only require the `unstructured` property
         * `type` is a prohibted key in `SimEnvironment`
-        * `AidDelay` only requires `id`
+        * `Aid` only requires `id`
         
 ### Dependencies
 #### Conditional Requirements
@@ -117,7 +117,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_RESPIRATION", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_BLOOD_OXYGEN", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].parameters.evac_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].parameters.aid_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].parameters.category` is required
 * If `scenes[n].action_mapping[m].action_type` is "MESSAGE", `scenes[n].action_mapping[m].parameters.type` is required
@@ -135,8 +135,8 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `state.characters[n].injuries[m].source_character` must be one of the `state.characters.character_id`'s
 * `scenes[n].tagging.reference` must be one of the `scenes[n].id`'s 
 * `scenes[n].action_mapping[m].next_scene` must be one of the `scenes[n].id`'s
-* `scenes[n].action_mapping[m].parameters.evac_id` must be one of the `scenes[n].state.environment.decision_environment.aid[p].id`'s
-* `scenes[n].state.events[m].action_id` must be one of the `scenes[n].action_mapping[x].action_.id`'s
+* `scenes[n].action_mapping[m].parameters.aid_id` must be one of the `scenes[n].state.environment.decision_environment.aid[p].id`'s
+* `scenes[n].state.events[m].action_id` must be one of the `scenes[n].action_mapping[x].action_id`'s
 
 #### Character Matching
 If persist_characters is false:
@@ -159,7 +159,7 @@ In addition, if a character is removed anywhere throughout the scenario, a warni
 * `state.characters[].id` must not have any repeated values
 * `scenes[].id` must not have any repeated values
 * `state.environment.decision_environment.aid[].id` must not have any repeated values
-* Every `unstructured` property must be unique within a scene's `action_mapping` list
+* `scenes[].action_mapping[].unstructured` must not have any repeated values
 
 #### Training Only Supplies
 Any supply name placed in this array will be excluded from the allowed supplies if eval mode is true.

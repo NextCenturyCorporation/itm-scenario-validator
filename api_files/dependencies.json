@@ -100,7 +100,7 @@
                     "value": "MOVE_TO_EVAC"
                 },
                 "required": [
-                    "scenes[].action_mapping[].parameters.evac_id",
+                    "scenes[].action_mapping[].parameters.aid_id",
                     "scenes[].action_mapping[].character_id"
                 ],
                 "logLevel": "warn"
@@ -204,7 +204,7 @@
                 ]
             }
         ],
-        "scenes[].action_mapping[].parameters.character_id": [
+        "scenes[].action_mapping[].character_id": [
             {
                 "conditions": {
                     "exists": true
