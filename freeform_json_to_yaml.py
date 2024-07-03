@@ -152,6 +152,8 @@ POSE_MAP = {
 class JsonConverter:
     json_data = {}
     output_dest = None
+    character_names = []
+    unique_names = {}
 
     def __init__(self, input_path, output_path):
         f = None
@@ -235,7 +237,17 @@ class JsonConverter:
         for c in characters:
             new_c = {}
             new_c['id'] = c['name']
-            new_c['name'] = c['raceEthnicity']['firstName']
+            first_name = c['raceEthnicity']['firstName']
+            new_c['name'] = first_name
+            if first_name in self.character_names:
+                LOGGER.log(LogLevel.ERROR, f"Duplicate character name '{first_name}' in JSON file.")
+                new_name = first_name + '-' + str(self.character_names.count(first_name))
+                new_c['name'] = new_name
+                self.unique_names[new_name] = c
+            else:
+                self.unique_names[first_name] = c
+            self.character_names.append(first_name)
+            
             new_c['unstructured'] = ""
             new_c['unstructured_postassess'] = ""
             patient = c['patient']
@@ -282,7 +294,7 @@ class JsonConverter:
                     injury = {
                         'name': 'Asthmatic',
                         'location': "internal",
-                        'status': 'hidden'
+                        'status': 'discoverable'
                     }
                     written_injuries[injury['name']] = ['internal']
                 elif i['type'] == 'Ear Bleed':
@@ -399,13 +411,12 @@ class JsonConverter:
 
 
         # add tagging and treating actions for all patients (repeatable)
-        for c in self.json_data['patientDataList']:
-            name = c['raceEthnicity']['firstName']
+        for name in self.unique_names:
             tag_action = {
                 'action_id': 'tag-' + name.lower(),
                 'action_type': 'TAG_CHARACTER',
                 'unstructured': 'Tag ' + name,
-                'character_id': c['name'],
+                'character_id': self.unique_names[name]['name'],
                 'probe_id': 'tagging-probe',
                 'choice': 'tag-' + name.lower(),
                 'repeatable': True,
@@ -417,7 +428,7 @@ class JsonConverter:
                 'action_id': 'treat-' + name.lower(),
                 'action_type': 'APPLY_TREATMENT',
                 'unstructured': 'Treat an injury on ' + name,
-                'character_id': c['name'],
+                'character_id': self.unique_names[name]['name'],
                 'probe_id': 'action-probe',
                 'choice': 'treat-' + name.lower(),
                 'repeatable': True,
