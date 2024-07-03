@@ -87,6 +87,11 @@ INJ_LOC_MAP = {
     "R Lower Leg": "right calf"
 }
 
+INJ_TYPE_MAP = {
+    "Broken": "Broken Bone",
+    "Collapse": "Chest Collapse"
+}
+
 ENV_MAP = {
     "desert": {
         'type': 'desert',
@@ -268,7 +273,7 @@ class JsonConverter:
                 'mental_status': MENTAL_STATUS_MAP[vitals['mood']],
                 'breathing': BREATHING_MAP[vitals['breath']],
                 'heart_rate': PULSE_MAP[vitals['pulse']],
-                'spo2': 67 if vitals['SpO2'] == 'none' else 85 if vitals['SpO2'] == 'low' else 95
+                'spo2': 'NONE' if vitals['SpO2'] == 'none' else 'LOW' if vitals['SpO2'] == 'low' else 'NORMAL'
             }
             injuries = []
             written_injuries = {}
@@ -297,7 +302,7 @@ class JsonConverter:
                     else:
                         split_name = i['type'].split(' ')
                         injury = {
-                            'name': split_name[-1] if 'Broken' not in i['type'] else 'Broken Bone',
+                            'name': split_name[-1] if split_name[-1] not in INJ_TYPE_MAP else INJ_TYPE_MAP[split_name[-1]],
                             'location': INJ_LOC_MAP[(' ').join(split_name[:-1])],
                             'status': 'discoverable'
                         }
@@ -323,7 +328,7 @@ class JsonConverter:
                 is_asthmatic = False
                 for inj_set in written_injuries:
                     if len(written_injuries[inj_set]) == 1:
-                        if inj_set == 'Collapse':
+                        if inj_set == 'Chest Collapse':
                             unstructured_inj += f" a collapsed {written_injuries[inj_set][0]},".lower()
                         elif inj_set == "Shrapnel":
                             unstructured_inj += f" shrapnel in {pronoun} {written_injuries[inj_set][0]},".lower()
@@ -332,12 +337,12 @@ class JsonConverter:
                         elif inj_set == "Asthmatic":
                             is_asthmatic = True
                         elif inj_set == 'Ear Bleed':
-                            unstructured_inj += f" an ear bleed,"
+                            unstructured_inj += f" blood coming out of {pronoun} {written_injuries[inj_set][0].split(' ')[0]} ear,"
                         else:
                             unstructured_inj += f" a {inj_set} on {pronoun} {written_injuries[inj_set][0]},".lower()
                             
                     else:
-                        if inj_set == 'Collapse':
+                        if inj_set == 'Chest Collapse':
                             unstructured_inj += f" a collapsed left and right chest,".lower()
                         if inj_set == 'Asthmatic':
                             is_asthmatic = True
