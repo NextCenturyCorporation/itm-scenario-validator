@@ -149,7 +149,6 @@ class YamlValidator:
         return self.remove_duplicate_sublists(paths)
 
 
-
     def get_branches_from_scene(self, data, scene_id, path=[]):
         '''
         Given a starting scene_id, updates the path with branches
@@ -514,6 +513,8 @@ class YamlValidator:
         self.validate_unseen_character_actions()
         self.validate_evac_ids()
         self.validate_events()
+        self.validate_messages()
+        self.are_all_scenes_reachable()
 
 
     def simple_requirements(self):
@@ -1323,6 +1324,7 @@ class YamlValidator:
                         chars['unseen'].remove(x['id'])
                     if x['id'] not in chars['seen']:
                         chars['seen'].append(x['id'])
+            chars['possible'] = [chars['possible']]
         elif this_scene['id'] == first_scene_id:
             chars['possible'] = []
             for x in get_basic_chars(data):
@@ -1337,6 +1339,7 @@ class YamlValidator:
                         chars['unseen'].remove(x['id'])
                     if x['id'] not in chars['seen']:
                         chars['seen'].append(x['id'])
+            chars['possible'] = [chars['possible']]
         return chars
 
 
@@ -1597,6 +1600,47 @@ class YamlValidator:
             if missing > 0:
                 self.logger.log(LogLevel.WARN, f"The 'object' parameter is recommended for all events, but is missing for {missing} event{'s' if missing > 1 else ''} in scene '{scene['id']}'.")
                 self.warning_count += 1 
+
+
+    def validate_messages(self):
+        ''' 
+        Validates all messages:
+        1. Object must be a valid character id or an EntityTypeEnum
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic', 'tbd']
+        for scene in data['scenes']:
+            for a in scene.get('action_mapping', []):
+                if a['action_type'] != 'MESSAGE':
+                    continue
+                chars = self.get_characters_in_scene(data, scene['id'])
+                obj = a.get('parameters', {}).get('object', None)
+                if obj is not None and obj not in entity_type_enum:
+                    in_any_group = False
+                    in_all_groups = True
+                    for group in chars['possible']:
+                        if obj in group:
+                            in_any_group = True
+                        else:
+                            in_all_groups = False
+                    if not in_any_group:
+                        self.logger.log(LogLevel.ERROR, f"The 'object' parameter for the MESSAGE action '{a['action_id']}' in scene '{scene['id']}' is '{obj}', but must be one of {entity_type_enum + chars['possible']}.")
+                        self.invalid_values += 1 
+                    elif not in_all_groups:
+                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for for the MESSAGE action '{a['action_id']}' in scene '{scene['id']}' is '{obj}', but that character might not be available in some branches.")
+                        self.warning_count += 1     
+                    elif obj in chars['removed']:
+                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for for the MESSAGE action '{a['action_id']}' in scene '{scene['id']}' is '{obj}', but that character might be removed in some branches.")
+                        self.warning_count += 1 
+
+
+    def are_all_scenes_reachable(self):
+        data = copy.deepcopy(self.loaded_yaml)
+        for scene in data['scenes']:
+            all_scenes_hit = [branch for branch_set in self.branches for branch in branch_set]
+            if scene['id'] not in all_scenes_hit:
+                self.logger.log(LogLevel.WARN, f"Scene {scene['id']} is unreachable.")
+                self.warning_count += 1     
 
 
 if __name__ == '__main__':
