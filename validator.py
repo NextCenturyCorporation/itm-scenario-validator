@@ -163,10 +163,10 @@ class YamlValidator:
         default_next = scene.get('next_scene', scenes[scene_ind+1]['id'] if scene_ind+1 < len(scenes) else None) 
         scenes_to_investigate = []
         for a in scene['action_mapping']:
-            action_path = copy.deepcopy(path)
             next_scene = a.get('next_scene', default_next)
             scenes_to_investigate.append(next_scene)
         for next_scene in scenes_to_investigate:
+            action_path = copy.deepcopy(path)
             if action_path.count(next_scene) < 2 and (len(action_path) == 0 or action_path[-1] != next_scene):
                 if len(action_path) == 0:
                     # no two of the same scene in a row (doesn't affect anything logically)
@@ -177,13 +177,11 @@ class YamlValidator:
                 else:
                     if action_path[-1] != next_scene:
                         action_path.append(next_scene)
-                if next_scene is None:
-                    paths.append(path)
-                else:
+                paths.append(path)
+                if next_scene is not None:
                     paths += self.get_branches_from_scene(data, next_scene, action_path)
             else:
                 paths.append(path)
-                return paths
         return paths
     
 
