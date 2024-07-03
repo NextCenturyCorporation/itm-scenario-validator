@@ -159,6 +159,7 @@ In addition, if a character is removed anywhere throughout the scenario, a warni
 * `state.characters[].id` must not have any repeated values
 * `scenes[].id` must not have any repeated values
 * `state.environment.decision_environment.aid[].id` must not have any repeated values
+* Every `unstructured` property must be unique within a scene's `action_mapping` list
 
 #### Training Only Supplies
 Any supply name placed in this array will be excluded from the allowed supplies if eval mode is true.

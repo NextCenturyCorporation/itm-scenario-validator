@@ -1939,7 +1939,8 @@
         "scenes[].state.characters[].id": "scenes[]",
         "scenes[].action_mapping[].action_id": "scenes[]",
         "scenes[].id": "scenes",
-        "state.characters[].id": "state"
+        "state.characters[].id": "state",
+        "scenes[].action_mapping[].unstructured": "scenes[]"
     },
     "trainingOnlySupplies": []
 }
