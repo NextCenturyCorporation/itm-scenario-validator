@@ -158,14 +158,18 @@ class YamlValidator:
         that can be taken from that scene
         '''
         paths = []
-        scenes = data['scenes']
         scene = self.get_scene_by_id(scene_id)
-        scene_ind = scenes.index(scene)
-        default_next = scene.get('next_scene', scenes[scene_ind+1]['id'] if scene_ind+1 < len(scenes) else None) 
+        next_scene_id = None
+        if type(scene_id) is int and int(scene_id) >= 0:
+            next_scene_id = int(scene_id) + 1
+            if self.get_scene_by_id(next_scene_id) is None:
+                next_scene_id = None
+        default_next = scene.get('next_scene', next_scene_id) 
         scenes_to_investigate = []
         for a in scene['action_mapping']:
             next_scene = a.get('next_scene', default_next)
             scenes_to_investigate.append(next_scene)
+        scenes_to_investigate = list(set(scenes_to_investigate))
         for next_scene in scenes_to_investigate:
             action_path = copy.deepcopy(path)
             if action_path.count(next_scene) < 2 and (len(action_path) == 0 or action_path[-1] != next_scene):
@@ -183,6 +187,8 @@ class YamlValidator:
                     paths += self.get_branches_from_scene(data, next_scene, action_path)
             else:
                 paths.append(path)
+        if len(scenes_to_investigate) == 0:
+            paths.append(path)
         return paths
     
 
@@ -314,6 +320,7 @@ class YamlValidator:
         for x in scenes:
             if x['id'] == scene_id:
                 return x
+        return None
 
 
     def validate_state_change(self, obj_to_validate, persist_characters=False):
@@ -1642,7 +1649,7 @@ class YamlValidator:
         for scene in data['scenes']:
             all_scenes_hit = [branch for branch_set in self.branches for branch in branch_set]
             if scene['id'] not in all_scenes_hit:
-                self.logger.log(LogLevel.WARN, f"Scene {scene['id']} is unreachable.")
+                self.logger.log(LogLevel.WARN, f"Scene '{scene['id']}' is unreachable.")
                 self.warning_count += 1     
 
 
