@@ -53,6 +53,14 @@
             },
             {
                 "conditions": {
+                    "value": "MESSAGE"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.type"
+                ]
+            },
+            {
+                "conditions": {
                     "value": "CHECK_ALL_VITALS"
                 },
                 "required": [
@@ -92,7 +100,7 @@
                     "value": "MOVE_TO_EVAC"
                 },
                 "required": [
-                    "scenes[].action_mapping[].parameters.evac_id",
+                    "scenes[].action_mapping[].parameters.aid_id",
                     "scenes[].action_mapping[].character_id"
                 ],
                 "logLevel": "warn"
@@ -107,6 +115,82 @@
                 ],
                 "logLevel": "warn"
             }
+        ],
+        "scenes[].state.events[].type": [
+            {
+                "conditions": {
+                    "value": "change"
+                },
+                "required": [
+                    "scenes[].state.events[].relevant_state"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "emphasize"
+                },
+                "required": [
+                    "scenes[].state.events[].relevant_state"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "inform"
+                },
+                "required": [
+                    "scenes[].state.events[].relevant_state"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "order"
+                },
+                "required": [
+                    "scenes[].state.events[].action_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "recommend"
+                },
+                "required": [
+                    "scenes[].state.events[].action_id"
+                ]
+            }
+        ],
+        "scenes[].action_mapping[].parameters.type": [
+            {
+                "conditions": {
+                    "value": "ask"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.action_type"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "allow"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.action_type"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "delegate"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.action_type"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "recommend"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.action_type"
+                ]
+            }
         ]
     },
     "conditionalForbid": {
@@ -118,6 +202,17 @@
                 "forbid": [
                     "scenes[].state"
                 ]
+            }
+        ],
+        "scenes[].action_mapping[].character_id": [
+            {
+                "conditions": {
+                    "exists": true
+                },
+                "forbid": [
+                    "scenes[].action_mapping[].parameters.recipient"
+                ],
+                "logLevel": "warn"
             }
         ],
         "state.characters[].demographics.military_disposition": [
@@ -193,6 +288,25 @@
         ]
     },
     "simpleAllowedValues": {
+        "scenes[].action_mapping[].action_type": {
+            "MESSAGE": {
+                "scenes[].action_mapping[].parameters.action_type": [
+                    "APPLY_TREATMENT",
+                    "CHECK_ALL_VITALS",
+                    "CHECK_BLOOD_OXYGEN",
+                    "CHECK_PULSE",
+                    "CHECK_RESPIRATION",
+                    "DIRECT_MOBILE_CHARACTERS",
+                    "END_SCENE",
+                    "MESSAGE",
+                    "MOVE_TO",
+                    "MOVE_TO_EVAC",
+                    "SEARCH",
+                    "SITREP",
+                    "TAG_CHARACTER"
+                ]
+            }
+        },
         "state.characters[].injuries[].name": {
             "Ear Bleed": {
                 "state.characters[].injuries[].location": [
@@ -1807,7 +1921,8 @@
         "state.characters[].injuries[].source_character": "state.characters[].id",
         "scenes[].action_mapping[].next_scene": "scenes[].id",
         "first_scene": "scenes[].id",
-        "scenes[].tagging.reference": "scenes[].id"
+        "scenes[].tagging.reference": "scenes[].id",
+        "scenes[].state.events[].action_id": "scenes[].action_mapping[].action_id"
     },
     "characterMatching": [
         "scenes[].state.characters[].injuries[].source_character",
@@ -1819,12 +1934,13 @@
         "scenes[].state.mission.character_importance[]"
     ],
     "unique": {
-        "state.environment.decision_environment.aid_delay[].id": "state",
-        "scenes[].state.environment.decision_environment.aid_delay[].id": "scenes[]",
+        "state.environment.decision_environment.aid[].id": "state",
+        "scenes[].state.environment.decision_environment.aid[].id": "scenes[]",
         "scenes[].state.characters[].id": "scenes[]",
         "scenes[].action_mapping[].action_id": "scenes[]",
         "scenes[].id": "scenes",
-        "state.characters[].id": "state"
+        "state.characters[].id": "state",
+        "scenes[].action_mapping[].unstructured": "scenes[]"
     },
     "trainingOnlySupplies": []
 }

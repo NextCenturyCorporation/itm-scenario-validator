@@ -137,28 +137,43 @@ components:
       - CHECK_RESPIRATION
       - DIRECT_MOBILE_CHARACTERS
       - END_SCENE
+      - MESSAGE
       - MOVE_TO
       - MOVE_TO_EVAC
       - SEARCH
       - SITREP
       - TAG_CHARACTER
       type: string
-    AidDelay:
-      description: Properties related to CASEVAC or MEDEVAC
+    Aid:
+      description: Properties related to evacuation, available hospitals, or other
+        forms of aid
       properties:
         delay:
-          description: CASEVAC or MEDEVAC timer, in minutes
+          description: Time until aid is available, in minutes; 0 means ready now
           format: float
-          minimum: 1.0
+          minimum: 0
           type: number
         id:
-          description: An identifier for the evacuation opportunity, unique within
-            the scene
+          description: An identifier for the aid opportunity, unique within the scene
           type: string
-        max_transport:
-          description: Maximum number of casualties that can be transported
+        level:
+          description: 'Refers to the kinds of resources/capabilities available in
+            a trauma center; Level 1 has more resources than Level 5. See [amtrauma.org](https://www.amtrauma.org/page/traumalevels/)
+
+            '
+          maximum: 5
           minimum: 1
           type: integer
+        max_transport:
+          description: Maximum number of casualties that can be accommodated
+          minimum: 1
+          type: integer
+        patients_treated:
+          description: A list of types of patients that can be helped; if omitted,
+            then no restrictions or restrictions are irrelevant
+          items:
+            $ref: '#/components/schemas/MilitaryDispositionEnum'
+          type: array
         type:
           $ref: '#/components/schemas/AidTypeEnum'
       required:
@@ -166,12 +181,14 @@ components:
       - delay
       type: object
     AidTypeEnum:
-      description: Means of evacuation
+      description: Types of aid
       enum:
-      - air
-      - ground
-      - water
-      - unknown
+      - local military
+      - local non-military
+      - air evac
+      - ground evac
+      - water evac
+      - unknown evac
       type: string
     AirQualityEnum:
       description: Air Quality Index (AQI); see [airnow.gov](https://www.airnow.gov/aqi/aqi-basics/)
@@ -275,6 +292,14 @@ components:
       - VOICE
       - PAIN
       - UNRESPONSIVE
+      type: string
+    BloodOxygenEnum:
+      description: A description of the percentage of oxygen in someone's blood, as
+        measured by a pulse oximeter
+      enum:
+      - NORMAL
+      - LOW
+      - NONE
       type: string
     BreathingLevelEnum:
       description: Descriptive breathing level
@@ -453,10 +478,10 @@ components:
     DecisionEnvironment:
       description: Environmental elements that impact decision-making
       properties:
-        aid_delay:
-          description: A list of evacuation opportunities
+        aid:
+          description: A list of available forms of aid
           items:
-            $ref: '#/components/schemas/AidDelay'
+            $ref: '#/components/schemas/Aid'
           type: array
         air_quality:
           $ref: '#/components/schemas/AirQualityEnum'
@@ -538,6 +563,17 @@ components:
       - indirect
       - none
       type: string
+    EntityTypeEnum:
+      description: an enumeration of available entity types; can be a subject or object
+      enum:
+      - ally
+      - adversary
+      - civilian
+      - commander
+      - everybody
+      - medic
+      - tbd
+      type: string
     Environment:
       description: Environmental parameters that impact either decision-making, the
         simulation environment, or both
@@ -549,6 +585,49 @@ components:
       required:
       - sim_environment
       type: object
+    Event:
+      description: a unit of structured communication from scenario to ADM
+      properties:
+        action_id:
+          description: An action ID from among the available actions
+          type: string
+        object:
+          description: The 'object' of the event; can be a character `id` or an `EntityTypeEnum`
+          type: string
+        relevant_state:
+          description: An array of relevant state for the Event
+          items:
+            description: 'string paths within the `State` object, in which indexed
+              lists are context-sensitive: for an aid or a character, it''s the id;
+              for a supply, it''s the type; for a threat, it''s the threat_type; for
+              an injury, it''s the location
+
+              '
+            example: environment.decision_environment.aid[civilian_facility].max_transport
+            type: string
+          type: array
+        source:
+          description: The 'subject' of the event; can be a character `id` or an `EntityTypeEnum`
+          type: string
+        type:
+          $ref: '#/components/schemas/EventTypeEnum'
+        unstructured:
+          description: Natural language, plain text description of the event
+          type: string
+      required:
+      - unstructured
+      - type
+      type: object
+    EventTypeEnum:
+      description: an enumeration of available event types; the 'verb' of the event
+      enum:
+      - change
+      - emphasize
+      - inform
+      - order
+      - recommend
+      - tbd
+      type: string
     FaunaTypeEnum:
       description: Descriptor of local animal/insect activity
       enum:
@@ -740,6 +819,17 @@ components:
       - SHOCK
       - UPSET
       - UNRESPONSIVE
+      type: string
+    MessageTypeEnum:
+      description: an enumeration of available message types
+      enum:
+      - allow
+      - ask
+      - delegate
+      - deny
+      - recommend
+      - wait
+      - tbd
       type: string
     MetaInfo:
       description: Includes meta info to assist with debugging. Only provided during
@@ -1083,6 +1173,7 @@ components:
       - CHECK_PULSE
       - CHECK_RESPIRATION
       - DIRECT_MOBILE_CHARACTERS
+      - MESSAGE
       - MOVE_TO
       - MOVE_TO_EVAC
       - SEARCH
@@ -1274,6 +1365,11 @@ components:
           type: array
         environment:
           $ref: '#/components/schemas/Environment'
+        events:
+          description: A list of scenario events to inform decision-making
+          items:
+            $ref: '#/components/schemas/Event'
+          type: array
         meta_info:
           $ref: '#/components/schemas/MetaInfo'
         mission:
@@ -1464,11 +1560,7 @@ components:
         mental_status:
           $ref: '#/components/schemas/MentalStatusEnum'
         spo2:
-          description: blood oxygen level (percentage)
-          format: float
-          maximum: 100.0
-          minimum: 0.0
-          type: number
+          $ref: '#/components/schemas/BloodOxygenEnum'
       required:
       - avpu
       - mental_status

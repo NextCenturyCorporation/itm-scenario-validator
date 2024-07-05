@@ -68,7 +68,7 @@ The dependencies json lists specific rules for the validator to follow. When lis
 | -- | -- | -- |
 | `simpleRequired` | "If [field1] is provided, then [field2] is required." | A dictionary where each key is [field1] and the value is a list of [field2] names |
 | `conditionalRequired` | "If [field1] is provided and [conditions] apply, then [field2] is required." | A dictionary where each key is [field1] and the value is a list of objects that define conditions and [field2] names. Optional field "logLevel" exists, with options for "warn" and "error". Defaults to "error". |
-| `conditionalForbid` | "If [field1] has a value of [value1], then [field2] should not be provided" | A dictionary where each key is [field1] and the value is a list of objects that define conditions and [field2] names. If [field2] is in the yaml to validate when the conditions are true, a warning will be given. |
+| `conditionalForbid` | "If [field1] has a value of [value1], then [field2] should not be provided" | A dictionary where each key is [field1] and the value is a list of objects that define conditions and [field2] names. If [field2] is in the yaml to validate when the conditions are true, a warning will be given. Optional field "logLevel" exists, with options for "warn" and "error". Defaults to "error". |
 | `simpleAllowedValues` | "If [field1] has a value of [value1], then [field2] values must be [...]" | A dictionary where each key is a [field1] and the value is an object where each key is a possible value for field 1. Those keys are mapped to objects whose keys are [field2] names with a matching value of an array of possible allowed values for field2 |
 | `deepLinks` | "If [field1] has a value matching one of [a, b, ...] and [field2] has a value matching one of [c, d, ...], then [field3] value must match one of [e, f, ...]" | An object where each key is a shared parent of all fields throughout the rest of the object. For example, fa.fb[].fc is the parent of field1, field2, and field3. Each value contains "sharedParent", "condition" and "requirement".  "condition" is an object where each key-value pair refers to a field (key) and the list of its possible values it must match (value) in order for "requirement" to be required. "requirement" is an object where each key-value pair refers to a field (key) and the list of allowed values (value) for it given the conditions |
 | `valueMatch` | "[field1] must match one of the values from [field2]" | An object in the form [field1]: [field2]. Each value of the object is a field name whose values form the complete list of valid values for the corresponding key, [field1]. The value of [field1] must match one of these values. |
@@ -103,7 +103,7 @@ In order for a yaml file to be considered "valid", the following conditions must
         * Only one `unstructured` property is required in the whole object
         * `Mission`, `Environment`, `DecisionEnvironment`, and `SimEnvironment` only require the `unstructured` property
         * `type` is a prohibted key in `SimEnvironment`
-        * `AidDelay` only requires `id`
+        * `Aid` only requires `id`
         
 ### Dependencies
 #### Conditional Requirements
@@ -117,20 +117,26 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_RESPIRATION", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "CHECK_BLOOD_OXYGEN", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].parameters.evac_id` is required
+* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].parameters.aid_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].character_id` is required
 * If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].parameters.category` is required
+* If `scenes[n].action_mapping[m].action_type` is "MESSAGE", `scenes[n].action_mapping[m].parameters.type` is required
+* If `scenes[n].state.events[m].type` is "change", "emphasize", or "inform", `scenes[n].state.events[m].relevant_state` is required
+* If `scenes[n].state.events[m].type` is "order" or "recommend", `scenes[n].state.events[m].action_id` is required
+* If `scenes[n].action_mapping[m].parameters.type` is "ask", "allow", "delegate", or "recommend", `scenes[n].action_mapping[m].parameters.action_type` is required
 
 #### Conditional Prohibitions
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
 * If `scenes[n].action_mapping[m].action_type' is "CHECK_BLOOD_OXYGEN" or "CHECK_ALL_VITALS" and there is no pulse oximeter correctly configured in the supplies for the scene, a warning will be given. 
 * If `scenes[n].persist_characters` is false or does not exist, `scenes[n].removed_characters` must not exist
+* If `scenes[n].action_mapping[m].parameters.character_id` exists, `scenes[n].action_mapping[m].parameters.recipient` must not exist (it will be ignored)
 
 #### Value Matching
 * `state.characters[n].injuries[m].source_character` must be one of the `state.characters.character_id`'s
 * `scenes[n].tagging.reference` must be one of the `scenes[n].id`'s 
 * `scenes[n].action_mapping[m].next_scene` must be one of the `scenes[n].id`'s
-* `scenes[n].action_mapping[m].parameters.evac_id` must be one of the `scenes[n].state.environment.decision_environment.aid_delay[p].id`'s
+* `scenes[n].action_mapping[m].parameters.aid_id` must be one of the `scenes[n].state.environment.decision_environment.aid[p].id`'s
+* `scenes[n].state.events[m].action_id` must be one of the `scenes[n].action_mapping[x].action_id`'s
 
 #### Character Matching
 If persist_characters is false:
@@ -147,15 +153,17 @@ Otherwise, complete the same checks, but match it up against all characters defi
 In addition, if a character is removed anywhere throughout the scenario, a warning will be issued. Please make sure that your branching scenes do not cause a situation where a character has been removed and then used.
 
 #### Uniqueness
-* `scenes[].state.environment.decision_environment.aid_delay[].id` must not have any repeated values within each `scene`
+* `scenes[].state.environment.decision_environment.aid[].id` must not have any repeated values within each `scene`
 * `scenes[].state.characters[].id` must not have any repeated values within each `scene`
 * `scenes[].action_mapping[].action_id` must not have any repeated values within each `scene`
 * `state.characters[].id` must not have any repeated values
 * `scenes[].id` must not have any repeated values
-* `state.environment.decision_environment.aid_delay[].id` must not have any repeated values
+* `state.environment.decision_environment.aid[].id` must not have any repeated values
+* `scenes[].action_mapping[].unstructured` must not have any repeated values
 
 #### Training Only Supplies
 Any supply name placed in this array will be excluded from the allowed supplies if eval mode is true.
+
 
 #### Other Rules
 * At least one scene must have `final_scene=true`
@@ -168,6 +176,13 @@ Any supply name placed in this array will be excluded from the allowed supplies 
     * This does not include "normal", which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance "normal", or a character may specify `mission_importance` with "normal" and `character_importance` may not list that character 
 * If the scene is the first scene, `scenes[].state` should _not_ be provided
 * No blanket can appear on the character at the start. 
+
+
+#### Message/Event Rules
+* `source` is recommended for all events
+* `source` and `object` must be either a valid character id or an `EntityTypeEnum` for all events
+* `action_type` must be a valid action type (`ActionTypeEnum`) for all messages
+* `object` must be either a valid character id or an `EntityTypeEnum` for all messages
 
 
 #### Injury treatment rules
