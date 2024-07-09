@@ -209,17 +209,17 @@ When not running in training mode (-t), additional checks are implemented:
 * Injuries are only allowed to have specific locations. Please follow the table to create valid matches. 
 | Injury name | Allowed Locations |
 | --- | --- |
-| `Traumatic Brain Injury` | `head`, `unspecified` |
-| `Open Abdominal Wound` | `stomach`, `unspecified` |
-| `Ear Bleed` | `left face`, `unspecified` |
-| `Asthmatic` | `unspecified`, `internal` |
-| `Laceration` | `left face`, `left forearm`, `right forearm`, `left stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist`, `unspecified` |
-| `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest`, `left calf`, `right calf`, `unspecified` |
-| `Shrapnel` | `left face`, `right face`, `left calf`, `right calf`, `unspecified` |
-| `Chest Collapse` | `left chest`, `right chest`, `unspecified` |
-| `Amputation` | `left wrist`, `right wrist`, `left calf`, `right calf`, `left thigh`, `right thigh`, `unspecified` |
-| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `neck`, `right bicep`, `left biecp`, `unspecified` |
-| `Broken Bone` | `right leg`, `left leg`, `right shoulder`, `left shoulder`, `unspecified` |
+| `Traumatic Brain Injury` | `head` |
+| `Open Abdominal Wound` | `stomach` |
+| `Ear Bleed` | `left face` |
+| `Asthmatic` | `internal` |
+| `Laceration` | `left face`, `left forearm`, `right forearm`, `left stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist` |
+| `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest`, `left calf`, `right calf` |
+| `Shrapnel` | `left face`, `right face`, `left calf`, `right calf` |
+| `Chest Collapse` | `left chest`, `right chest` |
+| `Amputation` | `left wrist`, `right wrist`, `left calf`, `right calf`, `left thigh`, `right thigh` |
+| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `neck`, `right bicep`, `left biecp` |
+| `Broken Bone` | `right leg`, `left leg`, `right shoulder`, `left shoulder` |
 | `Internal` | `internal`, `unspecified` | 
 
 #### Military Branches, Ranks, and Rank Titles

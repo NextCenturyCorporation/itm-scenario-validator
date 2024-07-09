@@ -388,25 +388,21 @@
         "state.characters[].injuries[].name": {
             "Traumatic Brain Injury": {
                 "state.characters[].injuries[].location": [
-                    "head",
-                    "unspecified"
+                    "head"
                 ]
             },
             "Open Abdominal Wound": {
                 "state.characters[].injuries[].location": [
-                    "stomach",
-                    "unspecified"
+                    "stomach"
                 ]
             },
             "Ear Bleed": {
                 "state.characters[].injuries[].location": [
-                    "left face",
-                    "unspecified"
+                    "left face"
                 ]
             },
             "Asthmatic": {
                 "state.characters[].injuries[].location": [
-                    "unspecified",
                     "internal"
                 ]
             },
@@ -421,8 +417,7 @@
                     "left calf",
                     "right calf",
                     "left hand",
-                    "right hand",
-                    "unspecified"
+                    "right hand"
                 ]
             },
             "Puncture": {
@@ -443,8 +438,7 @@
                     "right chest",
                     "center chest",
                     "left calf",
-                    "right calf",
-                    "unspecified"
+                    "right calf"
                 ]
             },
             "Shrapnel": {
@@ -452,15 +446,13 @@
                     "left face",
                     "right face",
                     "left calf",
-                    "right calf",
-                    "unspecified"
+                    "right calf"
                 ]
             },
             "Chest Collapse": {
                 "state.characters[].injuries[].location": [
                     "left chest",
-                    "right chest",
-                    "unspecified"
+                    "right chest"
                 ]
             },
             "Amputation": {
@@ -470,8 +462,7 @@
                     "left calf",
                     "right calf",
                     "left thigh",
-                    "right thigh",
-                    "unspecified"
+                    "right thigh"
                 ]
             },
             "Burn": {
@@ -488,8 +479,7 @@
                     "left chest",
                     "left bicep",
                     "right bicep",
-                    "neck",
-                    "unspecified"
+                    "neck"
                 ]
             },
             "Broken Bone": {
@@ -497,8 +487,7 @@
                     "right shoulder",
                     "left shoulder",
                     "left leg",
-                    "right leg",
-                    "unspecified"
+                    "right leg"
                 ]
             },
             "Internal": {
