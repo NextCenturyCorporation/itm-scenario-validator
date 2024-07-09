@@ -42,7 +42,7 @@ state:
         - id: air_evac
           delay: 5 # Time until aid is available, in minutes; 0 means ready now
           type: air evac # controlled vocab includes local military, local non-military, air evac, ground evac, water evac, unknown evac
-          level: 2 # Refers to the kinds of resources/capabilities available in a trauma center; Level 1 has more resources than Level 5 (see https://www.amtrauma.org/page/traumalevels/).
+          role: 2 # The characterization of health support for the distribution of medical resources and capabilities; Role 1 has higher capability than Role 4. (see https://health.mil/Reference-Center/Glossary-Terms/2018/06/22/Roles-of-Medical-Care).
           patients_treated: # A list of types of patients that can be helped; if omitted, then no restrictions or restrictions are irrelevant
             - Allied
             - Allied US
@@ -110,16 +110,16 @@ state:
         heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
         spo2: NORMAL # controlled vocab includes NORMAL, LOW, NONE
       injuries:
-        - name: Internal # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
-          location: internal # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
+        - name: Internal # controlled vocab includes Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
+          location: internal # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
           status: hidden # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
           source_character: Civilian_01 # The character id of the person responsible for the injury
-        - name: Puncture # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
-          location: right side # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
+        - name: Puncture # controlled vocab includes Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
+          location: right side # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
           status: discoverable # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
           treatments_required: 3 # How many successful treatments until fully treated?
-        - name: Laceration # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
-          location: left hand # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
+        - name: Laceration # controlled vocab includes Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
+          location: left hand # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
           status: treated # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
     - id: Civilian_01
       name: Unknown civilian
@@ -143,8 +143,8 @@ state:
         heart_rate: FAINT # controlled vocab includes NONE, FAINT, NORMAL, FAST
         spo2: NORMAL # controlled vocab includes NORMAL, LOW, NONE
       injuries:
-        - name: Laceration # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
-          location: left face # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
+        - name: Laceration # controlled vocab includes Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
+          location: left face # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
           status: visible
           severity: minor
 # - Each scene has associated state, including mission parameters, environment, characters, etc.
@@ -350,8 +350,8 @@ scenes:
             heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
             spo2: NORMAL # controlled vocab includes NORMAL, LOW, NONE
           injuries:
-            - name: Burn # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone
-              location: unspecified # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, unspecified.  Most locations allow a left and right designation.
+            - name: Burn # controlled vocab includes Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
+              location: unspecified # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
               severity: substantial # controlled vocab: minor, moderate, substantial, major, extreme
               status: discoverable # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
         - id: Captain_01
@@ -401,17 +401,17 @@ scenes:
             You can also try to evac one casualty by ground immediately, but you're more likely to encounter hostiles.
           aid:
             - id: air_evac # Notice that when you update an aid entry, you must also include unchanged parameters
-              delay: 50
-              type: air evac
-              level: 2
-              patients_treated:
+              delay: 50 # Time until aid is available, in minutes; 0 means ready now
+              type: air evac # controlled vocab includes local military, local non-military, air evac, ground evac, water evac, unknown evac
+              role: 2 # The characterization of health support for the distribution of medical resources and capabilities; Role 1 has higher capability than Role 4. (see https://health.mil/Reference-Center/Glossary-Terms/2018/06/22/Roles-of-Medical-Care).
+              patients_treated: # A list of types of patients that can be helped; if omitted, then no restrictions or restrictions are irrelevant
                 - Allied
                 - Allied US
               max_transport: 3
             - id: ground_evac
-              delay: 0
-              type: ground evac
-              max_transport: 1
+              delay: 0 # Time until aid is available, in minutes; 0 means ready now
+              type: ground evac # controlled vocab includes local military, local non-military, air evac, ground evac, water evac, unknown evac
+              max_transport: 1 # Maximum number of casualties that can be accommodated
     probe_config:
       - probe_id: adept-september-demo-probe-5
         description: Evacuation probe

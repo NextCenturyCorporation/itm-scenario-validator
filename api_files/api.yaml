@@ -708,13 +708,13 @@ components:
           minimum: 0
         type:
           $ref: "#/components/schemas/AidTypeEnum"
-        level:
+        role:
           type: integer
           description: >
-            Refers to the kinds of resources/capabilities available in a trauma center; Level 1 has more resources than Level 5.
-            See [amtrauma.org](https://www.amtrauma.org/page/traumalevels/)
+            The characterization of health support for the distribution of medical resources and capabilities; Role 1 has higher capability than Role 4.
+            See [health.mil](https://health.mil/Reference-Center/Glossary-Terms/2018/06/22/Roles-of-Medical-Care)
           minimum: 1
-          maximum: 5
+          maximum: 4
         patients_treated:
           type: array
           description: "A list of types of patients that can be helped; if omitted, then no restrictions or restrictions are irrelevant"
@@ -774,6 +774,10 @@ components:
         object:
           type: string
           description: "The 'object' of the event; can be a character `id` or an `EntityTypeEnum`"
+        when:
+          type: number
+          format: float
+          description: "indicates when (in minutes) the event happened (negative value) or is expected to happen (positive value); omit if zero (event happens now)"
         action_id:
           type: string
           description: An action ID from among the available actions
@@ -1787,9 +1791,10 @@ components:
         - Chest Collapse
         - Amputation
         - Burn
-        - Abrasion
         - Broken Bone
         - Internal
+        - Traumatic Brain Injury
+        - Open Abdominal Wound
     InjuryLocationEnum:
       type: string
       description: the injury location on the character's body
@@ -1822,6 +1827,9 @@ components:
         - left neck
         - right neck
         - internal
+        - head
+        - neck
+        - stomach
         - unspecified
     InjurySeverityEnum:
       type: string
