@@ -683,8 +683,9 @@ class YamlValidator:
             for entry in self.dep_json['conditionalRequired'][req]:
                 value = entry['conditions']['value'] if 'value' in entry['conditions'] else ''
                 length = entry['conditions']['length'] if 'length' in entry['conditions'] else -1
+                exists = bool(entry['conditions']['exists']) if 'exists' in entry['conditions'] else True
                 log_level = entry.get('logLevel', 'error')
-                all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, length=length)
+                all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, exists=exists, length=length)
                 for x in all_found:
                     found = x.split('.')
                     if found[len(found)-1] != loc[len(loc)-1]:
@@ -1558,18 +1559,29 @@ class YamlValidator:
     def validate_events(self):
         ''' 
         Validates events in every state:
-        1. Source is recommended
-        2. Source and Object must be valid character ids or an EntityTypeEnum
+        1. 'source' is recommended
+        2. 'source' and 'object' must be valid character ids or an EntityTypeEnum
+        3. 'when' cannot be 0
         '''
         data = copy.deepcopy(self.loaded_yaml)
         entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic', 'tbd']
-        for scene in data['scenes']:
+        for scene in data['scenes'] + [data]:
             events = scene.get('state', {}).get('events', [])
-            chars = self.get_characters_in_scene(data, scene['id'])
+            is_scenario_state = False
+            if 'id' not in scene or scene['id'] == data['id']:
+                is_scenario_state = True
+                chars = self.get_characters_in_scene(data, self.determine_first_scene(data)['id'])
+            else:
+                chars = self.get_characters_in_scene(data, scene['id'])
             missing = 0
             for event in events:
                 source = event.get('source', None)
                 obj = event.get('object', None)
+                when = event.get('when', None)
+                scene_name_for_errors =  "the scenario state" if is_scenario_state else f"scene \'{scene['id']}\'"
+                if when == 0:
+                    self.logger.log(LogLevel.ERROR, f"The 'when' parameter for an event in {scene_name_for_errors} cannot be 0.")
+                    self.invalid_values += 1 
                 if source is None:
                     missing += 1
                 elif source not in entity_type_enum:
@@ -1581,13 +1593,13 @@ class YamlValidator:
                         else:
                             in_all_groups = False
                     if not in_any_group:
-                        self.logger.log(LogLevel.ERROR, f"The 'source' parameter for an event in scene '{scene['id']}' is '{source}', but must be one of {entity_type_enum + chars['possible']}.")
+                        self.logger.log(LogLevel.ERROR, f"The 'source' parameter for an event in {scene_name_for_errors} is '{source}', but must be one of {entity_type_enum + chars['possible']}.")
                         self.invalid_values += 1 
                     elif not in_all_groups:
-                        self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in scene '{scene['id']}' is '{source}', but that character might not be available in some branches.")
+                        self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in {scene_name_for_errors} is '{source}', but that character might not be available in some branches.")
                         self.warning_count += 1     
                     elif source in chars['removed']:
-                        self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in scene '{scene['id']}' is '{source}', but that character might be removed in some branches.")
+                        self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in {scene_name_for_errors} is '{source}', but that character might be removed in some branches.")
                         self.warning_count += 1 
 
                 if obj is not None and obj not in entity_type_enum:
@@ -1599,16 +1611,16 @@ class YamlValidator:
                         else:
                             in_all_groups = False
                     if not in_any_group:
-                        self.logger.log(LogLevel.ERROR, f"The 'object' parameter for an event in scene '{scene['id']}' is '{obj}', but must be one of {entity_type_enum + chars['possible']}.")
+                        self.logger.log(LogLevel.ERROR, f"The 'object' parameter for an event in {scene_name_for_errors} is '{obj}', but must be one of {entity_type_enum + chars['possible']}.")
                         self.invalid_values += 1 
                     elif not in_all_groups:
-                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in scene '{scene['id']}' is '{obj}', but that character might not be available in some branches.")
+                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in {scene_name_for_errors} is '{obj}', but that character might not be available in some branches.")
                         self.warning_count += 1     
                     elif source in chars['removed']:
-                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in scene '{scene['id']}' is '{obj}', but that character might be removed in some branches.")
+                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in {scene_name_for_errors} is '{obj}', but that character might be removed in some branches.")
                         self.warning_count += 1 
             if missing > 0:
-                self.logger.log(LogLevel.WARN, f"The 'source' parameter is recommended for all events, but is missing for {missing} event{'s' if missing > 1 else ''} in scene '{scene['id']}'.")
+                self.logger.log(LogLevel.WARN, f"The 'source' parameter is recommended for all events, but is missing for {missing} event{'s' if missing > 1 else ''} in {scene_name_for_errors}.")
                 self.warning_count += 1 
 
 

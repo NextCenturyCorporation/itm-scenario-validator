@@ -87,6 +87,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * All keys defined as required by `api.yaml` are required
 * Exceptions to the two rules above include the following:
     * `scenario.scenes` is required
+    * `tag` is not allowed for Characters
     * All vitals properties are required
         * `avpu`
         * `mental_status`
@@ -183,6 +184,7 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 * `source` and `object` must be either a valid character id or an `EntityTypeEnum` for all events
 * `action_type` must be a valid action type (`ActionTypeEnum`) for all messages
 * `object` must be either a valid character id or an `EntityTypeEnum` for all messages
+* `when` cannot be 0
 
 
 #### Injury treatment rules
@@ -207,16 +209,18 @@ When not running in training mode (-t), additional checks are implemented:
 * Injuries are only allowed to have specific locations. Please follow the table to create valid matches. 
 | Injury name | Allowed Locations |
 | --- | --- |
-| `Ear Bleed` | `left face`, `right face` |
+| `Traumatic Brain Injury` | `head`, `unspecified` |
+| `Open Abdominal Wound` | `stomach`, `unspecified` |
+| `Ear Bleed` | `left face`, `unspecified` |
 | `Asthmatic` | `unspecified`, `internal` |
-| `Laceration` | `left face`, `left forearm`, `right forearm`, `left stomach`, `right stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist`, `unspecified` |
-| `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest` |
-| `Shrapnel` | `left face`, `right face`, `left calf`, `right calf` |
-| `Chest Collapse` | `left chest`, `right chest` |
-| `Amputation` | `left wrist`, `right wrist`, `left leg`, `right leg` |
-| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `unspecified` |
+| `Laceration` | `left face`, `left forearm`, `right forearm`, `left stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist`, `unspecified` |
+| `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest`, `left calf`, `right calf`, `unspecified` |
+| `Shrapnel` | `left face`, `right face`, `left calf`, `right calf`, `unspecified` |
+| `Chest Collapse` | `left chest`, `right chest`, `unspecified` |
+| `Amputation` | `left wrist`, `right wrist`, `left calf`, `right calf`, `left thigh`, `right thigh`, `unspecified` |
+| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `neck`, `right bicep`, `left biecp`, `unspecified` |
 | `Broken Bone` | `right leg`, `left leg`, `right shoulder`, `left shoulder`, `unspecified` |
-| `Internal` | `internal` | 
+| `Internal` | `internal`, `unspecified` | 
 
 #### Military Branches, Ranks, and Rank Titles
 * `military_branch` is only allowed if `military_disposition` is "Allied US"
