@@ -1587,13 +1587,17 @@ class YamlValidator:
                 elif source not in entity_type_enum:
                     in_any_group = False
                     in_all_groups = True
+                    char_list = []
                     for group in chars['possible']:
+                        for c in group:
+                            if c not in char_list:
+                                char_list.append(c)
                         if source in group:
                             in_any_group = True
                         else:
                             in_all_groups = False
                     if not in_any_group:
-                        self.logger.log(LogLevel.ERROR, f"The 'source' parameter for an event in {scene_name_for_errors} is '{source}', but must be one of {entity_type_enum + chars['possible']}.")
+                        self.logger.log(LogLevel.ERROR, f"The 'source' parameter for an event in {scene_name_for_errors} is '{source}', but must be one of {entity_type_enum + char_list}.")
                         self.invalid_values += 1 
                     elif not in_all_groups:
                         self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in {scene_name_for_errors} is '{source}', but that character might not be available in some branches.")
@@ -1605,18 +1609,22 @@ class YamlValidator:
                 if obj is not None and obj not in entity_type_enum:
                     in_any_group = False
                     in_all_groups = True
+                    char_list = []
                     for group in chars['possible']:
-                        if source in group:
+                        for c in group:
+                            if c not in char_list:
+                                char_list.append(c)
+                        if obj in group:
                             in_any_group = True
                         else:
                             in_all_groups = False
                     if not in_any_group:
-                        self.logger.log(LogLevel.ERROR, f"The 'object' parameter for an event in {scene_name_for_errors} is '{obj}', but must be one of {entity_type_enum + chars['possible']}.")
+                        self.logger.log(LogLevel.ERROR, f"The 'object' parameter for an event in {scene_name_for_errors} is '{obj}', but must be one of {entity_type_enum + char_list}.")
                         self.invalid_values += 1 
                     elif not in_all_groups:
                         self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in {scene_name_for_errors} is '{obj}', but that character might not be available in some branches.")
                         self.warning_count += 1     
-                    elif source in chars['removed']:
+                    elif obj in chars['removed']:
                         self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in {scene_name_for_errors} is '{obj}', but that character might be removed in some branches.")
                         self.warning_count += 1 
             if missing > 0:
