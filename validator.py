@@ -140,6 +140,34 @@ class YamlValidator:
         return new_lst_of_lsts
     
 
+    def do_lists_match(self, lst1, lst2):
+        '''
+        Check if two lists have the same elements in the same order
+        '''
+        if len(lst1) == len(lst2):
+            for i in range(len(lst1)):
+                if lst1[i] != lst2[i]:
+                    return False
+            return True
+        return False
+
+
+    def remove_covered_sublists(self, list_of_lists):
+        '''
+        We don't need every possible sublist in our branches. This function looks through all the branching lists
+        and removes any sublist that is already covered by a bigger list. This will also remove any duplicate branch paths
+        '''
+        list_of_lists.sort(key=len, reverse=True)        
+        result = []
+        # go through the branches in descending length order
+        for sublist in list_of_lists:
+            # see if the list is already recorded in result. If not, add it!
+            if not any(self.do_lists_match(sublist, sublist_covered[:len(sublist)]) for sublist_covered in result):
+                result.append(sublist)
+        
+        return result
+
+
     def find_all_branch_segments(self, data):
         '''
         Creates and returns a list of all scene branches.
@@ -149,7 +177,7 @@ class YamlValidator:
         if len(scenes) == 1:
             paths.append([scenes[0]['id']])
         # remove duplicates (same order, same elements)
-        return self.remove_duplicate_sublists(paths)
+        return self.remove_covered_sublists(paths)
 
 
     def get_branches_from_scene(self, data, scene_id, path=[]):
