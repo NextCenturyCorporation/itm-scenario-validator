@@ -213,12 +213,6 @@ components:
           description: ID of desired profile to align responses to.
           title: Alignment Target Id
           type: string
-        kdma_values:
-          description: Computed KDMA profile from results
-          items:
-            $ref: '#/components/schemas/KDMA_Value'
-          title: Kdma Values
-          type: array
         score:
           description: Measured alignment, 0 (completely unaligned) - 1 (completely
             aligned).
@@ -230,7 +224,6 @@ components:
       - alignment_source
       - alignment_target_id
       - score
-      - kdma_values
       title: AlignmentResults
       type: object
     AlignmentSource:

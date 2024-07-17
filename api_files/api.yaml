@@ -435,7 +435,6 @@ components:
         - alignment_source
         - alignment_target_id
         - score
-        - kdma_values
       type: object
       description: Computed KDMA profile and alignment score for a set of decisions.
       properties:
@@ -454,12 +453,6 @@ components:
           description: Measured alignment, 0 (completely unaligned) - 1 (completely aligned).
           minimum: 0
           maximum: 1
-        kdma_values:
-          title: Kdma Values
-          type: array
-          items:
-            "$ref": "#/components/schemas/KDMA_Value"
-          description: Computed KDMA profile from results
     AlignmentSource:
       title: AlignmentSource
       required:
