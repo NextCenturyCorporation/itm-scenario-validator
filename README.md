@@ -198,7 +198,7 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 
 #### Unseen Characters
 * If a character's `unseen` property is `true`, none of the `vitals` are required
-* If a specified `character_id` is unseen, then the corresponding `action_type` must be `MOVE_TO` or `MOVE_TO_EVAC`
+* If a specified `character_id` is unseen, and it's not an "intent action", then the corresponding `action_type` must be `MOVE_TO` or `MOVE_TO_EVAC`
 * If a specified `character_id` is NOT unseen, then the corresponding `action_type` cannot be `MOVE_TO`
 
 

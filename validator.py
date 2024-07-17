@@ -1532,6 +1532,8 @@ class YamlValidator:
                 if char is None:
                     continue
                 else:
+                    if action.get('intent_action') == True and action_type != 'MOVE_TO':
+                        continue # You can intend to do almost anything regardless of seen/unseen.
                     # get which characters are known to be seen or unseen in this scene
                     char_details = self.get_characters_in_scene(data, scene['id'])
                     unseen = list(set(char_details['unseen']))
