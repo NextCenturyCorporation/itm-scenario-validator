@@ -125,10 +125,11 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[n].state.events[m].type` is "change", "emphasize", or "inform", `scenes[n].state.events[m].relevant_state` is required
 * If `scenes[n].state.events[m].type` is "order" or "recommend", `scenes[n].state.events[m].action_id` is required
 * If `scenes[n].action_mapping[m].parameters.type` is "ask", "allow", "delegate", or "recommend", `scenes[n].action_mapping[m].parameters.action_type` is required
+* If `scenes[n].action_mapping[m].parameters.type` is "justify", `scenes[n].action_mapping[m].parameters.relevant_state` is required
 
 #### Conditional Prohibitions
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
-* If `scenes[n].action_mapping[m].action_type' is "CHECK_BLOOD_OXYGEN" or "CHECK_ALL_VITALS" and there is no pulse oximeter correctly configured in the supplies for the scene, a warning will be given. 
+* If `scenes[n].action_mapping[m].action_type' is "CHECK_BLOOD_OXYGEN" and there is no pulse oximeter correctly configured in the supplies for the scene, a warning will be given.
 * If `scenes[n].persist_characters` is false or does not exist, `scenes[n].removed_characters` must not exist
 * If `scenes[n].action_mapping[m].parameters.character_id` exists, `scenes[n].action_mapping[m].parameters.recipient` must not exist (it will be ignored)
 
@@ -137,6 +138,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `scenes[n].tagging.reference` must be one of the `scenes[n].id`'s 
 * `scenes[n].action_mapping[m].next_scene` must be one of the `scenes[n].id`'s
 * `scenes[n].action_mapping[m].parameters.aid_id` must be one of the `scenes[n].state.environment.decision_environment.aid[p].id`'s
+* `scenes[n].transitions.actions[m]` must be one of the `scenes[n].action_mapping[x].action_id`'s
 * `scenes[n].state.events[m].action_id` must be one of the `scenes[n].action_mapping[x].action_id`'s
 
 #### Character Matching

@@ -263,6 +263,14 @@
             },
             {
                 "conditions": {
+                    "value": "justify"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.relevant_state"
+                ]
+            },
+            {
+                "conditions": {
                     "value": "recommend"
                 },
                 "required": [
@@ -2006,6 +2014,7 @@
         "scenes[].action_mapping[].next_scene": "scenes[].id",
         "first_scene": "scenes[].id",
         "scenes[].tagging.reference": "scenes[].id",
+        "scenes[].transitions.actions[]": "scenes[].action_mapping[].action_id",
         "scenes[].state.events[].action_id": "scenes[].action_mapping[].action_id",
         "state.events[].action_id": "scenes[].action_mapping[].action_id"
     },
