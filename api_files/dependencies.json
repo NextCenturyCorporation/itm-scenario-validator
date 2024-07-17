@@ -143,6 +143,15 @@
             },
             {
                 "conditions": {
+                    "value": "MOVE_TO"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ],
+                "logLevel": "warn"
+            },
+            {
+                "conditions": {
                     "value": "TAG_CHARACTER"
                 },
                 "required": [
