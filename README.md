@@ -112,23 +112,25 @@ In order for a yaml file to be considered "valid", the following conditions must
 * If `scenes[n].transitions` has a length of 2 or more, `scenes[n].transition_semantics` is required 
 * If `state.characters[n].demographics.military_disposition` is "Allied US", `state.characters[n].demographics.military_branch` is required 
 * If `state.characters[n].injuries[m].name` is "Burn", `state.characters[n].injuries[m].severity` is required 
-* If `scenes[n].action_mapping[m].action_type` is "APPLY_TREATMENT", `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is "CHECK_ALL_VITALS", `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is "CHECK_PULSE", `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is "CHECK_RESPIRATION", `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is "CHECK_BLOOD_OXYGEN", `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].parameters.aid_id` is required
-* If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].character_id` is required
-* If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].parameters.category` is required
+* If `scenes[n].action_mapping[m].action_type` is "APPLY_TREATMENT", `scenes[n].action_mapping[m].character_id` is recommended
+* If `scenes[n].action_mapping[m].action_type` is "CHECK_ALL_VITALS", `scenes[n].action_mapping[m].character_id` is recommended
+* If `scenes[n].action_mapping[m].action_type` is "CHECK_PULSE", `scenes[n].action_mapping[m].character_id` is recommended
+* If `scenes[n].action_mapping[m].action_type` is "CHECK_RESPIRATION", `scenes[n].action_mapping[m].character_id` is recommended
+* If `scenes[n].action_mapping[m].action_type` is "CHECK_BLOOD_OXYGEN", `scenes[n].action_mapping[m].character_id` is recommended
+* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO", `scenes[n].action_mapping[m].character_id` is recommended
+* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].character_id` is recommended
+* If `scenes[n].action_mapping[m].action_type` is "MOVE_TO_EVAC", `scenes[n].action_mapping[m].parameters.aid_id` is recommended
+* If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].character_id` is recommended
+* If `scenes[n].action_mapping[m].action_type` is "TAG_CHARACTER", `scenes[n].action_mapping[m].parameters.category` is recommended
 * If `scenes[n].action_mapping[m].action_type` is "MESSAGE", `scenes[n].action_mapping[m].parameters.type` is required
 * If `scenes[n].state.events[m].type` is "change", "emphasize", or "inform", `scenes[n].state.events[m].relevant_state` is required
 * If `scenes[n].state.events[m].type` is "order" or "recommend", `scenes[n].state.events[m].action_id` is required
 * If `scenes[n].action_mapping[m].parameters.type` is "ask", "allow", "delegate", or "recommend", `scenes[n].action_mapping[m].parameters.action_type` is required
+* If `scenes[n].action_mapping[m].parameters.type` is "justify", `scenes[n].action_mapping[m].parameters.relevant_state` is required
 
 #### Conditional Prohibitions
 * If `state.characters[n].demographics.military_branch` does not exist, `state.characters[n].demographics.rank` *and* `state.characters[n].demographics.rank_title` should _not_ be provided 
-* If `scenes[n].action_mapping[m].action_type' is "CHECK_BLOOD_OXYGEN" or "CHECK_ALL_VITALS" and there is no pulse oximeter correctly configured in the supplies for the scene, a warning will be given. 
+* If `scenes[n].action_mapping[m].action_type' is "CHECK_BLOOD_OXYGEN" and there is no pulse oximeter correctly configured in the supplies for the scene, a warning will be given.
 * If `scenes[n].persist_characters` is false or does not exist, `scenes[n].removed_characters` must not exist
 * If `scenes[n].action_mapping[m].parameters.character_id` exists, `scenes[n].action_mapping[m].parameters.recipient` must not exist (it will be ignored)
 
@@ -137,6 +139,7 @@ In order for a yaml file to be considered "valid", the following conditions must
 * `scenes[n].tagging.reference` must be one of the `scenes[n].id`'s 
 * `scenes[n].action_mapping[m].next_scene` must be one of the `scenes[n].id`'s
 * `scenes[n].action_mapping[m].parameters.aid_id` must be one of the `scenes[n].state.environment.decision_environment.aid[p].id`'s
+* `scenes[n].transitions.actions[m]` must be one of the `scenes[n].action_mapping[x].action_id`'s
 * `scenes[n].state.events[m].action_id` must be one of the `scenes[n].action_mapping[x].action_id`'s
 
 #### Character Matching
@@ -195,7 +198,7 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 
 #### Unseen Characters
 * If a character's `unseen` property is `true`, none of the `vitals` are required
-* If a specified `chaacter_id` is unseen, then the corresponding `action_type` must be `MOVE_TO` or `MOVE_TO_EVAC`
+* If a specified `character_id` is unseen, and it's not an "intent action", then the corresponding `action_type` must be `MOVE_TO` or `MOVE_TO_EVAC`
 * If a specified `character_id` is NOT unseen, then the corresponding `action_type` cannot be `MOVE_TO`
 
 

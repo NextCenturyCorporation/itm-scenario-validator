@@ -143,6 +143,15 @@
             },
             {
                 "conditions": {
+                    "value": "MOVE_TO"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ],
+                "logLevel": "warn"
+            },
+            {
+                "conditions": {
                     "value": "TAG_CHARACTER"
                 },
                 "required": [
@@ -259,6 +268,14 @@
                 },
                 "required": [
                     "scenes[].action_mapping[].parameters.action_type"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "justify"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.relevant_state"
                 ]
             },
             {
@@ -2006,6 +2023,7 @@
         "scenes[].action_mapping[].next_scene": "scenes[].id",
         "first_scene": "scenes[].id",
         "scenes[].tagging.reference": "scenes[].id",
+        "scenes[].transitions.actions[]": "scenes[].action_mapping[].action_id",
         "scenes[].state.events[].action_id": "scenes[].action_mapping[].action_id",
         "state.events[].action_id": "scenes[].action_mapping[].action_id"
     },

@@ -213,12 +213,6 @@ components:
           description: ID of desired profile to align responses to.
           title: Alignment Target Id
           type: string
-        kdma_values:
-          description: Computed KDMA profile from results
-          items:
-            $ref: '#/components/schemas/KDMA_Value'
-          title: Kdma Values
-          type: array
         score:
           description: Measured alignment, 0 (completely unaligned) - 1 (completely
             aligned).
@@ -230,7 +224,6 @@ components:
       - alignment_source
       - alignment_target_id
       - score
-      - kdma_values
       title: AlignmentResults
       type: object
     AlignmentSource:
@@ -571,7 +564,6 @@ components:
       - commander
       - everybody
       - medic
-      - tbd
       type: string
     Environment:
       description: Environmental parameters that impact either decision-making, the
@@ -631,7 +623,6 @@ components:
       - inform
       - order
       - recommend
-      - tbd
       type: string
     FaunaTypeEnum:
       description: Descriptor of local animal/insect activity
@@ -819,6 +810,14 @@ components:
       - bright
       - flashing
       type: string
+    MedicalPoliciesEnum:
+      description: Directives issued by competent military authority
+      enum:
+      - Treat All Neutrally
+      - Treat Enemy LLE
+      - Treat Civilian LLE
+      - Prioritize Mission
+      type: string
     MentalStatusEnum:
       description: Character mental status, which impacts interaction in the sim environment
       enum:
@@ -836,9 +835,9 @@ components:
       - ask
       - delegate
       - deny
+      - justify
       - recommend
       - wait
-      - tbd
       type: string
     MetaInfo:
       description: Includes meta info to assist with debugging. Only provided during
@@ -1001,8 +1000,11 @@ components:
         communication_capability:
           $ref: '#/components/schemas/CommunicationCapabilityEnum'
         medical_policies:
-          description: Medical policies in effect in a mission, to inform decision-making
-          type: string
+          description: A list of medical policies; omit this property if no special
+            policy is in place
+          items:
+            $ref: '#/components/schemas/MedicalPoliciesEnum'
+          type: array
         mission_type:
           $ref: '#/components/schemas/MissionTypeEnum'
         political_climate:

@@ -435,7 +435,6 @@ components:
         - alignment_source
         - alignment_target_id
         - score
-        - kdma_values
       type: object
       description: Computed KDMA profile and alignment score for a set of decisions.
       properties:
@@ -454,12 +453,6 @@ components:
           description: Measured alignment, 0 (completely unaligned) - 1 (completely aligned).
           minimum: 0
           maximum: 1
-        kdma_values:
-          title: Kdma Values
-          type: array
-          items:
-            "$ref": "#/components/schemas/KDMA_Value"
-          description: Computed KDMA profile from results
     AlignmentSource:
       title: AlignmentSource
       required:
@@ -609,8 +602,10 @@ components:
           type: string
           description: The political climate in a mission to inform decision-making
         medical_policies:
-          type: string
-          description: Medical policies in effect in a mission, to inform decision-making
+          type: array
+          description: A list of medical policies; omit this property if no special policy is in place
+          items:
+            $ref: "#/components/schemas/MedicalPoliciesEnum"
     Environment:
       required:
         - sim_environment
@@ -1311,6 +1306,14 @@ components:
         - some
         - extensive
         - crowd
+    MedicalPoliciesEnum:
+      type: string
+      description: Directives issued by competent military authority
+      enum:
+        - Treat All Neutrally
+        - Treat Enemy LLE
+        - Treat Civilian LLE
+        - Prioritize Mission
     CommunicationCapabilityEnum:
       type: string
       description: current availability of internal and external communication
@@ -1515,7 +1518,6 @@ components:
         - inform
         - order
         - recommend
-        - tbd
     EntityTypeEnum:
       type: string
       description: an enumeration of available entity types; can be a subject or object
@@ -1526,7 +1528,6 @@ components:
         - commander
         - everybody
         - medic
-        - tbd
     MessageTypeEnum:
       type: string
       description: an enumeration of available message types
@@ -1535,9 +1536,9 @@ components:
         - ask
         - delegate
         - deny
+        - justify
         - recommend
         - wait
-        - tbd
     SupplyTypeEnum:
       type: string
       description: an enumeration of available supply types

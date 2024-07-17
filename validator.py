@@ -55,26 +55,26 @@ class YamlValidator:
         '''
         self.file = self.validate_file_location(filename)
         try:
-            self.api_file = open(API_YAML)
+            self.api_file = open(API_YAML, encoding='utf-8')
             self.api_yaml = yaml.load(self.api_file, Loader=yaml.CLoader)
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         try:
-            self.state_change_file = open(STATE_YAML)
+            self.state_change_file = open(STATE_YAML, encoding='utf-8')
             self.state_changes_yaml = yaml.load(self.state_change_file, Loader=yaml.CLoader)
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in state api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         try:
             self.loaded_yaml = yaml.load(self.file, Loader=yaml.CLoader)
             try:
-                dup_check_file = open(filename, 'r')
+                dup_check_file = open(filename, 'r', encoding='utf-8')
                 yaml.load(dup_check_file, Loader=UniqueKeyLoader)
             except Exception as e:
                 self.logger.log(LogLevel.FATAL, "Error while loading in yaml file -- " + str(e))
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
         try:
-            self.dep_file = open(DEP_JSON)
+            self.dep_file = open(DEP_JSON, encoding='utf-8')
             self.dep_json = json.load(self.dep_file)
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
@@ -520,7 +520,7 @@ class YamlValidator:
         if not filename.strip().endswith('.yaml'):
             self.logger.log(LogLevel.FATAL, "File must be a yaml file.")
         try:
-            f = open(filename, 'r')
+            f = open(filename, 'r', encoding='utf-8')
             return f
         except:
             self.logger.log(LogLevel.FATAL, "Could not open file " + filename + ". Please make sure the path is valid and the file exists.")
@@ -893,10 +893,15 @@ class YamlValidator:
             # check if the location matches one of the allowed values
             locations = self.property_meets_conditions(key.split('.'), copy.deepcopy(self.loaded_yaml))
             for loc in locations:
+                if loc[-2:] == '[]':
+                    continue
                 v = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
-                if v not in allowed_values:
-                    self.logger.log(LogLevel.ERROR, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
-                    self.invalid_values += 1
+                if type(v) != list:
+                    v = [v]
+                for v_element in v:
+                    if v_element not in allowed_values:
+                        self.logger.log(LogLevel.ERROR, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v_element) + "'")
+                        self.invalid_values += 1
 
 
     def character_matching(self):
@@ -1093,7 +1098,7 @@ class YamlValidator:
 
         for scene in scenes:
             for action in scene.get('action_mapping', []):
-                if action['action_type'] not in ['CHECK_BLOOD_OXYGEN', 'CHECK_ALL_VITALS']:
+                if action['action_type'] not in ['CHECK_BLOOD_OXYGEN']:
                     continue
                 possible_supplies = self.get_supplies_in_scene(data, scene['id'])
                 not_found = False
@@ -1148,7 +1153,7 @@ class YamlValidator:
                                 self.invalid_values += 1 
                         # validate params only includes expected values
                         for key in params:
-                            allowed_params = ['treatment', 'location', 'category', 'aid_id', 'type', 'object', 'action_type', 'aid_id', 'recipient', 'character_id']
+                            allowed_params = ['treatment', 'location', 'category', 'aid_id', 'type', 'object', 'action_type', 'relevant_state', 'recipient', 'character_id']
                             if key not in allowed_params:
                                 self.logger.log(LogLevel.ERROR, "'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(allowed_params) + " but has key '" + key + "'.")
                                 self.invalid_keys += 1 
@@ -1527,6 +1532,8 @@ class YamlValidator:
                 if char is None:
                     continue
                 else:
+                    if action.get('intent_action') == True and action_type != 'MOVE_TO':
+                        continue # You can intend to do almost anything regardless of seen/unseen.
                     # get which characters are known to be seen or unseen in this scene
                     char_details = self.get_characters_in_scene(data, scene['id'])
                     unseen = list(set(char_details['unseen']))
