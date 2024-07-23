@@ -26,6 +26,10 @@ components:
         character_id:
           description: The ID of the character being acted upon
           type: string
+        intent_action:
+          default: false
+          description: Whether this action is to be taken or intended
+          type: boolean
         justification:
           description: A justification of the action taken
           example: Character is the VIP of the scenario
@@ -48,6 +52,8 @@ components:
           - treatment: Tourniquet
           - location: right forearm
           type: object
+        threat_state:
+          $ref: '#/components/schemas/ThreatState'
         unstructured:
           description: Natural language, plain text description of the action
           example: Check Mike's pulse.
@@ -75,6 +81,10 @@ components:
           $ref: '#/components/schemas/SemanticTypeEnum'
         conditions:
           $ref: '#/components/schemas/Conditions'
+        intent_action:
+          default: false
+          description: Whether this mapping is to take an action or to intend one
+          type: boolean
         kdma_association:
           additionalProperties:
             format: float
@@ -86,9 +96,8 @@ components:
           - Mission: 0.8
           type: object
         next_scene:
-          description: The next scene in the scenario, by index
-          minimum: 0
-          type: integer
+          description: The ID of the next scene in the scenario; overrides Scene.next_scene
+          type: string
         parameters:
           additionalProperties:
             type: string
@@ -105,6 +114,8 @@ components:
           description: Whether or not this action should remain after it's selected
             by an ADM
           type: boolean
+        threat_state:
+          $ref: '#/components/schemas/ThreatState'
         unstructured:
           description: Natural language, plain text description of the action
           example: Check Mike's pulse.
@@ -121,31 +132,48 @@ components:
       enum:
       - APPLY_TREATMENT
       - CHECK_ALL_VITALS
+      - CHECK_BLOOD_OXYGEN
       - CHECK_PULSE
       - CHECK_RESPIRATION
       - DIRECT_MOBILE_CHARACTERS
       - END_SCENE
+      - MESSAGE
+      - MOVE_TO
       - MOVE_TO_EVAC
       - SEARCH
       - SITREP
       - TAG_CHARACTER
       type: string
-    AidDelay:
-      description: Properties related to CASEVAC or MEDEVAC
+    Aid:
+      description: Properties related to evacuation, available hospitals, or other
+        forms of aid
       properties:
         delay:
-          description: CASEVAC or MEDEVAC timer, in minutes
+          description: Time until aid is available, in minutes; 0 means ready now
           format: float
-          minimum: 1.0
+          minimum: 0
           type: number
         id:
-          description: An identifier for the evacuation opportunity, unique within
-            the scene
+          description: An identifier for the aid opportunity, unique within the scene
           type: string
-        max_transport:
-          description: Maximum number of casualties that can be transported
+        level:
+          description: 'Refers to the kinds of resources/capabilities available in
+            a trauma center; Level 1 has more resources than Level 5. See [amtrauma.org](https://www.amtrauma.org/page/traumalevels/)
+
+            '
+          maximum: 5
           minimum: 1
           type: integer
+        max_transport:
+          description: Maximum number of casualties that can be accommodated
+          minimum: 1
+          type: integer
+        patients_treated:
+          description: A list of types of patients that can be helped; if omitted,
+            then no restrictions or restrictions are irrelevant
+          items:
+            $ref: '#/components/schemas/MilitaryDispositionEnum'
+          type: array
         type:
           $ref: '#/components/schemas/AidTypeEnum'
       required:
@@ -153,12 +181,14 @@ components:
       - delay
       type: object
     AidTypeEnum:
-      description: Means of evacuation
+      description: Types of aid
       enum:
-      - air
-      - ground
-      - water
-      - unknown
+      - local military
+      - local non-military
+      - air evac
+      - ground evac
+      - water evac
+      - unknown evac
       type: string
     AirQualityEnum:
       description: Air Quality Index (AQI); see [airnow.gov](https://www.airnow.gov/aqi/aqi-basics/)
@@ -254,13 +284,22 @@ components:
       - extreme
       type: string
     AvpuLevelEnum:
-      description: Character level of response.  See [Levels of Response](https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response)
+      description: Character level of response; anything but ALERT is considered unconscious.  See
+        [Levels of Response](https://www.firstresponse.org.uk/first-aid-az/3-general/first-aid/79-levels-of-response)
         for details
       enum:
       - ALERT
       - VOICE
       - PAIN
       - UNRESPONSIVE
+      type: string
+    BloodOxygenEnum:
+      description: A description of the percentage of oxygen in someone's blood, as
+        measured by a pulse oximeter
+      enum:
+      - NORMAL
+      - LOW
+      - NONE
       type: string
     BreathingLevelEnum:
       description: Descriptive breathing level
@@ -279,6 +318,11 @@ components:
           $ref: '#/components/schemas/Demographics'
         directness_of_causality:
           $ref: '#/components/schemas/DirectnessEnum'
+        has_blanket:
+          default: false
+          description: whether or not this character has a blanket (either wrapped
+            around or underneath)
+          type: boolean
         id:
           description: A unique character ID throughout the scenario
           example: Soldier_01
@@ -298,6 +342,11 @@ components:
           $ref: '#/components/schemas/RapportEnum'
         tag:
           $ref: '#/components/schemas/CharacterTagEnum'
+        unseen:
+          default: false
+          description: whether or not this character is visible in the scene or merely
+            heard or reported about from a nearby location
+          type: boolean
         unstructured:
           description: Natural language, plain text description of the character
           example: 22 YO male Marine hit by an IED. Puncture wound on the left side
@@ -308,6 +357,11 @@ components:
           example: 22 YO male Marine hit by an IED. Puncture wound on the left side
             of the neck.  Burns cover about 30 of his body.
           type: string
+        visited:
+          default: false
+          description: whether or not this character has been visited by the ADM in
+            the current scenario
+          type: boolean
         vitals:
           $ref: '#/components/schemas/Vitals'
       required:
@@ -360,19 +414,20 @@ components:
         or send a probe response
       properties:
         actions:
-          description: True if the any of the specified lists of actions have been
-            taken; multiple action ID lists have "or" semantics; multiple action IDs
-            within a list have "and" semantics
+          description: True if any of the specified lists of actions have been taken;
+            multiple action ID lists have "or" semantics; multiple action IDs within
+            a list have "and" semantics
           items:
             items:
               type: string
             type: array
           type: array
         character_vitals:
-          description: True if the specified list of vitals values have been met for
-            the specified character_id
+          description: True if any of the specified collection of vital values have
+            been met for the specified character_id
           items:
-            description: The minimum vitals of the specified character
+            description: True if all vitals values have been met by the specified
+              character_id
             properties:
               character_id:
                 description: The ID of the character in question
@@ -410,8 +465,8 @@ components:
             type: string
           type: array
         supplies:
-          description: True if there are at least the specified quantity of the specified
-            supply types remaining
+          description: True if any of the specified supplies reach or go below the
+            specified quantity
           example:
           - quantity: 1
             reusable: false
@@ -423,10 +478,10 @@ components:
     DecisionEnvironment:
       description: Environmental elements that impact decision-making
       properties:
-        aid_delay:
-          description: A list of evacuation opportunities
+        aid:
+          description: A list of available forms of aid
           items:
-            $ref: '#/components/schemas/AidDelay'
+            $ref: '#/components/schemas/Aid'
           type: array
         air_quality:
           $ref: '#/components/schemas/AirQualityEnum'
@@ -508,6 +563,17 @@ components:
       - indirect
       - none
       type: string
+    EntityTypeEnum:
+      description: an enumeration of available entity types; can be a subject or object
+      enum:
+      - ally
+      - adversary
+      - civilian
+      - commander
+      - everybody
+      - medic
+      - tbd
+      type: string
     Environment:
       description: Environmental parameters that impact either decision-making, the
         simulation environment, or both
@@ -519,6 +585,49 @@ components:
       required:
       - sim_environment
       type: object
+    Event:
+      description: a unit of structured communication from scenario to ADM
+      properties:
+        action_id:
+          description: An action ID from among the available actions
+          type: string
+        object:
+          description: The 'object' of the event; can be a character `id` or an `EntityTypeEnum`
+          type: string
+        relevant_state:
+          description: An array of relevant state for the Event
+          items:
+            description: 'string paths within the `State` object, in which indexed
+              lists are context-sensitive: for an aid or a character, it''s the id;
+              for a supply, it''s the type; for a threat, it''s the threat_type; for
+              an injury, it''s the location
+
+              '
+            example: environment.decision_environment.aid[civilian_facility].max_transport
+            type: string
+          type: array
+        source:
+          description: The 'subject' of the event; can be a character `id` or an `EntityTypeEnum`
+          type: string
+        type:
+          $ref: '#/components/schemas/EventTypeEnum'
+        unstructured:
+          description: Natural language, plain text description of the event
+          type: string
+      required:
+      - unstructured
+      - type
+      type: object
+    EventTypeEnum:
+      description: an enumeration of available event types; the 'verb' of the event
+      enum:
+      - change
+      - emphasize
+      - inform
+      - order
+      - recommend
+      - tbd
+      type: string
     FaunaTypeEnum:
       description: Descriptor of local animal/insect activity
       enum:
@@ -560,6 +669,16 @@ components:
           type: string
         status:
           $ref: '#/components/schemas/InjuryStatusEnum'
+        treatments_applied:
+          default: 0
+          description: The number of successful treatments applied to the injury
+          minimum: 0
+          type: integer
+        treatments_required:
+          description: The number of successful treatments required to treat the injury
+            fully, which sets `status` to `treated`
+          minimum: 1
+          type: integer
       required:
       - location
       - name
@@ -570,6 +689,10 @@ components:
       enum:
       - right forearm
       - left forearm
+      - right hand
+      - left hand
+      - right leg
+      - left leg
       - right calf
       - left calf
       - right thigh
@@ -584,6 +707,7 @@ components:
       - left side
       - right chest
       - left chest
+      - center chest
       - right wrist
       - left wrist
       - left face
@@ -604,12 +728,14 @@ components:
       - extreme
       type: string
     InjuryStatusEnum:
-      description: Whether the injury is known prior- and post-assessment, and whether
-        it's been treated
+      description: Whether the injury is known prior- and post-assessment, and to
+        what extent it's been treated
       enum:
       - hidden
       - discoverable
       - visible
+      - discovered
+      - treated
       type: string
     InjuryTriggerEnum:
       description: What source caused character injuries
@@ -694,6 +820,27 @@ components:
       - UPSET
       - UNRESPONSIVE
       type: string
+    MessageTypeEnum:
+      description: an enumeration of available message types
+      enum:
+      - allow
+      - ask
+      - delegate
+      - deny
+      - recommend
+      - wait
+      - tbd
+      type: string
+    MetaInfo:
+      description: Includes meta info to assist with debugging. Only provided during
+        training sessions.
+      properties:
+        probe_response:
+          $ref: '#/components/schemas/ProbeResponse'
+        scene_id:
+          description: The scene ID, unique throughout the scenario
+          type: string
+      type: object
     MilitaryBranchEnum:
       description: Branch of the US military.
       enum:
@@ -948,6 +1095,27 @@ components:
           description: A valid probe_id from the appropriate TA1
           type: string
       type: object
+    ProbeResponse:
+      description: encapsulates the selection by a DM of an option in response to
+        a probe
+      properties:
+        choice:
+          description: id of choice made
+          type: string
+        justification:
+          description: A justification of the response to the probe
+          type: string
+        probe_id:
+          description: globally unique probe ID
+          type: string
+        scenario_id:
+          description: globally unique scenario ID
+          type: string
+      required:
+      - choice
+      - probe_id
+      - scenario_id
+      type: object
     ProbeResponses:
       description: tag-specific probe responses (choices) for a tagged character
       properties:
@@ -1001,9 +1169,12 @@ components:
       enum:
       - APPLY_TREATMENT
       - CHECK_ALL_VITALS
+      - CHECK_BLOOD_OXYGEN
       - CHECK_PULSE
       - CHECK_RESPIRATION
       - DIRECT_MOBILE_CHARACTERS
+      - MESSAGE
+      - MOVE_TO
       - MOVE_TO_EVAC
       - SEARCH
       - SITREP
@@ -1012,6 +1183,9 @@ components:
     Scenario:
       description: a triage scenario requiring decisions by a medic
       properties:
+        first_scene:
+          description: indicates the first/opening scene ID in the scenario
+          type: string
         id:
           description: a globally unique id for the scenario
           type: string
@@ -1044,14 +1218,25 @@ components:
         end_scene_allowed:
           description: Whether ADMs can explicitly end the scene
           type: boolean
-        index:
-          description: The order the scene appears in the scenario
-          minimum: 0
-          type: integer
+        id:
+          description: The scene ID, unique throughout the scenario
+          type: string
+        next_scene:
+          description: The ID of the default next scene in the scenario; if empty
+            or missing, then by default this is the last scene.
+          type: string
+        persist_characters:
+          description: Whether characters should persist from the previous scene
+          type: boolean
         probe_config:
           description: TA1-provided probe configuration, ignored by TA3
           items:
             $ref: '#/components/schemas/ProbeConfig'
+          type: array
+        removed_characters:
+          description: List of character ids to be removed from the scene
+          items:
+            type: string
           type: array
         restricted_actions:
           description: List of actions that will be excluded from get_available_actions
@@ -1069,7 +1254,7 @@ components:
         transitions:
           $ref: '#/components/schemas/Conditions'
       required:
-      - index
+      - id
       - end_scene_allowed
       - action_mapping
       type: object
@@ -1180,6 +1365,13 @@ components:
           type: array
         environment:
           $ref: '#/components/schemas/Environment'
+        events:
+          description: A list of scenario events to inform decision-making
+          items:
+            $ref: '#/components/schemas/Event'
+          type: array
+        meta_info:
+          $ref: '#/components/schemas/MetaInfo'
         mission:
           $ref: '#/components/schemas/Mission'
         supplies:
@@ -1234,6 +1426,7 @@ components:
       - Epi Pen
       - Vented Chest Seal
       - Pain Medications
+      - Fentanyl Lollipop
       - Splint
       - Blood
       - IV Bag
@@ -1355,12 +1548,6 @@ components:
     Vitals:
       description: Vital levels and other indications of health
       properties:
-        Spo2:
-          description: blood oxygen level (percentage)
-          format: float
-          maximum: 100.0
-          minimum: 0.0
-          type: number
         ambulatory:
           description: whether or not the character can walk
           type: boolean
@@ -1368,15 +1555,13 @@ components:
           $ref: '#/components/schemas/AvpuLevelEnum'
         breathing:
           $ref: '#/components/schemas/BreathingLevelEnum'
-        conscious:
-          description: whether or not the character appears to be conscious
-          type: boolean
         heart_rate:
           $ref: '#/components/schemas/HeartRateEnum'
         mental_status:
           $ref: '#/components/schemas/MentalStatusEnum'
+        spo2:
+          $ref: '#/components/schemas/BloodOxygenEnum'
       required:
-      - conscious
       - avpu
       - mental_status
       - breathing
@@ -1477,7 +1662,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AlignmentResults'
-          description: Successful Response
+          description: Successful Response; if server is configured to run without
+            TA1, then session alignment will be empty/None/null.
         '400':
           description: Session ID not found
         '403':
@@ -1489,7 +1675,50 @@ paths:
                 type: string
                 x-content-type: text/plain
           description: An exception occurred on the server; see returned error string.
+        '503':
+          description: Could not get session alignment from TA1
       summary: Retrieve session alignment from TA1
+      tags:
+      - itm-ta2-eval
+      x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
+  /ta2/intendAction:
+    post:
+      description: Express intent to take the specified Action within a scenario
+      operationId: intend_action
+      parameters:
+      - description: a unique session_id, as returned by /ta2/startSession
+        explode: true
+        in: query
+        name: session_id
+        required: true
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Action'
+        description: Encapsulation of the intended action by a DM in the context of
+          the scenario
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/State'
+          description: Successful operation, scenario state returned
+        '400':
+          description: Invalid action or Session ID, or did not specify an intent
+            action
+        '500':
+          content:
+            text/plain:
+              schema:
+                type: string
+                x-content-type: text/plain
+          description: An exception occurred on the server; see returned error string.
+      summary: Express intent to take an action within a scenario
       tags:
       - itm-ta2-eval
       x-openapi-router-controller: swagger_server.controllers.itm_ta2_eval_controller
@@ -1507,7 +1736,8 @@ paths:
         schema:
           type: string
         style: form
-      - description: a scenario id to start, used internally by TA3
+      - description: the scenario id to run; incompatible with /ta2/startSession's
+          max_scenarios parameter
         explode: true
         in: query
         name: scenario_id
@@ -1524,9 +1754,8 @@ paths:
           description: Successful operation; scenario data returned, or session_complete
             is True
         '400':
-          description: Invalid Session ID or there is already an active scenario
-        '403':
-          description: Specifying a scenario ID is unauthorized
+          description: Invalid Session ID, there is already an active scenario, or
+            scenario_id was specified with max_scenarios
         '404':
           description: Scenario ID not found
         '500':
@@ -1536,6 +1765,8 @@ paths:
                 type: string
                 x-content-type: text/plain
           description: An exception occurred on the server; see returned error string.
+        '503':
+          description: Could not communicate with TA1 server
       summary: Get the next scenario
       tags:
       - itm-ta2-eval
@@ -1546,7 +1777,7 @@ paths:
         scenarios together
       operationId: start_session
       parameters:
-      - description: A self-assigned ADM name.  Can add authentication later.
+      - description: A self-assigned ADM name.
         explode: true
         in: query
         name: adm_name
@@ -1554,7 +1785,15 @@ paths:
         schema:
           type: string
         style: form
-      - description: the type of session to start (`eval` or a TA1 name)
+      - description: a profile of the ADM in terms of its alignment strategy
+        explode: true
+        in: query
+        name: adm_profile
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: the type of session to start (`eval`, `test`, or a TA1 name)
         explode: true
         in: query
         name: session_type
@@ -1634,7 +1873,7 @@ paths:
                 $ref: '#/components/schemas/State'
           description: Successful operation, scenario state returned
         '400':
-          description: Invalid action or Session ID
+          description: Invalid action or Session ID, or specified an intent action
         '500':
           content:
             text/plain:

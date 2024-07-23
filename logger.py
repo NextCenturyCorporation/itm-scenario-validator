@@ -6,6 +6,7 @@ class LogLevel(Enum):
     INFO = 2
     WARN = 3
     ERROR = 4
+    FATAL = 5
     CRITICAL_INFO = float('inf')
 
 class Logger:
@@ -25,9 +26,11 @@ class Logger:
             if (log_level == LogLevel.INFO):
                 premsg = "\033[37mInfo (" + self.calling_class + "):\t"
             if (log_level == LogLevel.WARN):
-                premsg = "\033[93mWarn (" + self.calling_class + "):\t"
+                premsg = "\033[35mPossible Error (" + self.calling_class + "):\t"
             if (log_level == LogLevel.ERROR):
-                premsg = "\033[91mError (" + self.calling_class + "):\t"
+                premsg = "\033[93mError (" + self.calling_class + "):\t"
+            if (log_level == LogLevel.FATAL):
+                premsg = "\033[91mFatal Error (" + self.calling_class + "):\t"
                 print(premsg, msg, '\033[0m', flush=True)
                 exit(1)
             if (log_level == LogLevel.CRITICAL_INFO):

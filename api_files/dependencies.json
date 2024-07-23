@@ -48,6 +48,15 @@
                 },
                 "required": [
                     "scenes[].action_mapping[].character_id"
+                ],
+                "logLevel": "warn"
+            },
+            {
+                "conditions": {
+                    "value": "MESSAGE"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.type"
                 ]
             },
             {
@@ -56,7 +65,8 @@
                 },
                 "required": [
                     "scenes[].action_mapping[].character_id"
-                ]
+                ],
+                "logLevel": "warn"
             },
             {
                 "conditions": {
@@ -64,7 +74,8 @@
                 },
                 "required": [
                     "scenes[].action_mapping[].character_id"
-                ]
+                ],
+                "logLevel": "warn"
             },
             {
                 "conditions": {
@@ -72,16 +83,27 @@
                 },
                 "required": [
                     "scenes[].action_mapping[].character_id"
-                ]
+                ],
+                "logLevel": "warn"
+            },
+            {
+                "conditions": {
+                    "value": "CHECK_BLOOD_OXYGEN"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ],
+                "logLevel": "warn"
             },
             {
                 "conditions": {
                     "value": "MOVE_TO_EVAC"
                 },
                 "required": [
-                    "scenes[].action_mapping[].parameters.evac_id",
+                    "scenes[].action_mapping[].parameters.aid_id",
                     "scenes[].action_mapping[].character_id"
-                ]
+                ],
+                "logLevel": "warn"
             },
             {
                 "conditions": {
@@ -90,6 +112,83 @@
                 "required": [
                     "scenes[].action_mapping[].character_id",
                     "scenes[].action_mapping[].parameters.category"
+                ],
+                "logLevel": "warn"
+            }
+        ],
+        "scenes[].state.events[].type": [
+            {
+                "conditions": {
+                    "value": "change"
+                },
+                "required": [
+                    "scenes[].state.events[].relevant_state"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "emphasize"
+                },
+                "required": [
+                    "scenes[].state.events[].relevant_state"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "inform"
+                },
+                "required": [
+                    "scenes[].state.events[].relevant_state"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "order"
+                },
+                "required": [
+                    "scenes[].state.events[].action_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "recommend"
+                },
+                "required": [
+                    "scenes[].state.events[].action_id"
+                ]
+            }
+        ],
+        "scenes[].action_mapping[].parameters.type": [
+            {
+                "conditions": {
+                    "value": "ask"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.action_type"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "allow"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.action_type"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "delegate"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.action_type"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "recommend"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.action_type"
                 ]
             }
         ]
@@ -103,6 +202,17 @@
                 "forbid": [
                     "scenes[].state"
                 ]
+            }
+        ],
+        "scenes[].action_mapping[].character_id": [
+            {
+                "conditions": {
+                    "exists": true
+                },
+                "forbid": [
+                    "scenes[].action_mapping[].parameters.recipient"
+                ],
+                "logLevel": "warn"
             }
         ],
         "state.characters[].demographics.military_disposition": [
@@ -157,16 +267,43 @@
                     "state.characters[].demographics.rank_title"
                 ]
             }
+        ],
+        "scenes[].persist_characters" : [
+            {
+                "conditions": {
+                    "value": false
+                },
+                "forbid": [
+                    "scenes[].removed_characters"
+                ]
+            },
+            {
+                "conditions": {
+                    "exists": false
+                },
+                "forbid": [
+                    "scenes[].removed_characters"
+                ]
+            }
         ]
     },
     "simpleAllowedValues": {
-        "state.characters[].vitals.conscious": {
-            "False": {
-                "state.characters[].vitals.avpu": [
-                    "UNRESPONSIVE"
-                ],
-                "state.characters[].vitals.mental_status": [
-                    "UNRESPONSIVE"
+        "scenes[].action_mapping[].action_type": {
+            "MESSAGE": {
+                "scenes[].action_mapping[].parameters.action_type": [
+                    "APPLY_TREATMENT",
+                    "CHECK_ALL_VITALS",
+                    "CHECK_BLOOD_OXYGEN",
+                    "CHECK_PULSE",
+                    "CHECK_RESPIRATION",
+                    "DIRECT_MOBILE_CHARACTERS",
+                    "END_SCENE",
+                    "MESSAGE",
+                    "MOVE_TO",
+                    "MOVE_TO_EVAC",
+                    "SEARCH",
+                    "SITREP",
+                    "TAG_CHARACTER"
                 ]
             }
         },
@@ -174,7 +311,8 @@
             "Ear Bleed": {
                 "state.characters[].injuries[].location": [
                     "left face",
-                    "right face"
+                    "right face",
+                    "unspecified"
                 ]
             },
             "Asthmatic": {
@@ -185,6 +323,7 @@
             },
             "Laceration": {
                 "state.characters[].injuries[].location": [
+                    "left face",
                     "left forearm",
                     "right forearm",
                     "left stomach",
@@ -193,8 +332,9 @@
                     "right thigh",
                     "left calf",
                     "right calf",
-                    "left wrist",
-                    "right wrist"
+                    "left hand",
+                    "right hand",
+                    "unspecified"
                 ]
             },
             "Puncture": {
@@ -210,7 +350,11 @@
                     "left side",
                     "right side",
                     "left thigh",
-                    "right thigh"
+                    "right thigh",
+                    "left chest",
+                    "right chest",
+                    "center chest",
+                    "unspecified"
                 ]
             },
             "Shrapnel": {
@@ -218,13 +362,15 @@
                     "left face",
                     "right face",
                     "left calf",
-                    "right calf"
+                    "right calf",
+                    "unspecified"
                 ]
             },
             "Chest Collapse": {
                 "state.characters[].injuries[].location": [
                     "left chest",
-                    "right chest"
+                    "right chest",
+                    "unspecified"
                 ]
             },
             "Amputation": {
@@ -232,7 +378,8 @@
                     "left wrist",
                     "right wrist",
                     "left calf",
-                    "right calf"
+                    "right calf",
+                    "unspecified"
                 ]
             },
             "Burn": {
@@ -243,72 +390,26 @@
                     "left calf",
                     "right thigh",
                     "left thigh",
-                    "right stomach",
-                    "left stomach",
-                    "right bicep",
-                    "left bicep",
-                    "right shoulder",
-                    "left shoulder",
                     "right side",
                     "left side",
                     "right chest",
                     "left chest",
-                    "right wrist",
-                    "left wrist",
-                    "left face",
-                    "right face",
-                    "left neck",
-                    "right neck",
-                    "unspecified"
-                ]
-            },
-            "Abrasion": {
-                "state.characters[].injuries[].location": [
-                    "right forearm",
-                    "left forearm",
-                    "right calf",
-                    "left calf",
-                    "right thigh",
-                    "left thigh",
-                    "right stomach",
-                    "left stomach",
-                    "right bicep",
-                    "left bicep",
-                    "right shoulder",
-                    "left shoulder",
-                    "right side",
-                    "left side",
-                    "right chest",
-                    "left chest",
-                    "right wrist",
-                    "left wrist",
-                    "left face",
-                    "right face",
-                    "left neck",
-                    "right neck",
                     "unspecified"
                 ]
             },
             "Broken Bone": {
                 "state.characters[].injuries[].location": [
-                    "right forearm",
-                    "left forearm",
-                    "right thigh",
-                    "left thigh",
                     "right shoulder",
                     "left shoulder",
-                    "right side",
-                    "left side",
-                    "right wrist",
-                    "left wrist",
-                    "left neck",
-                    "right neck",
+                    "left leg",
+                    "right leg",
                     "unspecified"
                 ]
             },
             "Internal": {
                 "state.characters[].injuries[].location": [
-                    "internal"
+                    "internal",
+                    "unspecified"
                 ]
             }
         },
@@ -1818,21 +1919,28 @@
     },
     "valueMatch": {
         "state.characters[].injuries[].source_character": "state.characters[].id",
-        "scenes[].action_mapping[].next_scene": "scenes[].index",
-        "scenes[].tagging.reference": "scenes[].index"
+        "scenes[].action_mapping[].next_scene": "scenes[].id",
+        "first_scene": "scenes[].id",
+        "scenes[].tagging.reference": "scenes[].id",
+        "scenes[].state.events[].action_id": "scenes[].action_mapping[].action_id"
     },
     "characterMatching": [
         "scenes[].state.characters[].injuries[].source_character",
         "scenes[].action_mapping[].character_id",
         "scenes[].tagging.probe_responses[].character_id",
         "scenes[].transitions.character_vitals[].character_id",
-        "scenes[].action_mapping[].conditions.character_vitals[].character_id"
+        "scenes[].action_mapping[].conditions.character_vitals[].character_id",
+        "scenes[].removed_characters[]",
+        "scenes[].state.mission.character_importance[]"
     ],
     "unique": {
-        "state.environment.decision_environment.aid_delay[].id": "state",
-        "scenes[].state.environment.decision_environment.aid_delay[].id" : "scenes[]",
+        "state.environment.decision_environment.aid[].id": "state",
+        "scenes[].state.environment.decision_environment.aid[].id": "scenes[]",
         "scenes[].state.characters[].id": "scenes[]",
         "scenes[].action_mapping[].action_id": "scenes[]",
-        "state.characters[].id": "state"
-    }
+        "scenes[].id": "scenes",
+        "state.characters[].id": "state",
+        "scenes[].action_mapping[].unstructured": "scenes[]"
+    },
+    "trainingOnlySupplies": []
 }
