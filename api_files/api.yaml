@@ -435,7 +435,6 @@ components:
         - alignment_source
         - alignment_target_id
         - score
-        - kdma_values
       type: object
       description: Computed KDMA profile and alignment score for a set of decisions.
       properties:
@@ -454,12 +453,6 @@ components:
           description: Measured alignment, 0 (completely unaligned) - 1 (completely aligned).
           minimum: 0
           maximum: 1
-        kdma_values:
-          title: Kdma Values
-          type: array
-          items:
-            "$ref": "#/components/schemas/KDMA_Value"
-          description: Computed KDMA profile from results
     AlignmentSource:
       title: AlignmentSource
       required:
@@ -609,8 +602,10 @@ components:
           type: string
           description: The political climate in a mission to inform decision-making
         medical_policies:
-          type: string
-          description: Medical policies in effect in a mission, to inform decision-making
+          type: array
+          description: A list of medical policies; omit this property if no special policy is in place
+          items:
+            $ref: "#/components/schemas/MedicalPoliciesEnum"
     Environment:
       required:
         - sim_environment
@@ -708,13 +703,13 @@ components:
           minimum: 0
         type:
           $ref: "#/components/schemas/AidTypeEnum"
-        level:
+        role:
           type: integer
           description: >
-            Refers to the kinds of resources/capabilities available in a trauma center; Level 1 has more resources than Level 5.
-            See [amtrauma.org](https://www.amtrauma.org/page/traumalevels/)
+            The characterization of health support for the distribution of medical resources and capabilities; Role 1 has higher capability than Role 4.
+            See [health.mil](https://health.mil/Reference-Center/Glossary-Terms/2018/06/22/Roles-of-Medical-Care)
           minimum: 1
-          maximum: 5
+          maximum: 4
         patients_treated:
           type: array
           description: "A list of types of patients that can be helped; if omitted, then no restrictions or restrictions are irrelevant"
@@ -774,6 +769,10 @@ components:
         object:
           type: string
           description: "The 'object' of the event; can be a character `id` or an `EntityTypeEnum`"
+        when:
+          type: number
+          format: float
+          description: "indicates when (in minutes) the event happened (negative value) or is expected to happen (positive value); omit if zero (event happens now)"
         action_id:
           type: string
           description: An action ID from among the available actions
@@ -1307,6 +1306,14 @@ components:
         - some
         - extensive
         - crowd
+    MedicalPoliciesEnum:
+      type: string
+      description: Directives issued by competent military authority
+      enum:
+        - Treat All Neutrally
+        - Treat Enemy LLE
+        - Treat Civilian LLE
+        - Prioritize Mission
     CommunicationCapabilityEnum:
       type: string
       description: current availability of internal and external communication
@@ -1511,7 +1518,6 @@ components:
         - inform
         - order
         - recommend
-        - tbd
     EntityTypeEnum:
       type: string
       description: an enumeration of available entity types; can be a subject or object
@@ -1522,7 +1528,6 @@ components:
         - commander
         - everybody
         - medic
-        - tbd
     MessageTypeEnum:
       type: string
       description: an enumeration of available message types
@@ -1531,9 +1536,9 @@ components:
         - ask
         - delegate
         - deny
+        - justify
         - recommend
         - wait
-        - tbd
     SupplyTypeEnum:
       type: string
       description: an enumeration of available supply types
@@ -1787,9 +1792,10 @@ components:
         - Chest Collapse
         - Amputation
         - Burn
-        - Abrasion
         - Broken Bone
         - Internal
+        - Traumatic Brain Injury
+        - Open Abdominal Wound
     InjuryLocationEnum:
       type: string
       description: the injury location on the character's body
@@ -1822,6 +1828,9 @@ components:
         - left neck
         - right neck
         - internal
+        - head
+        - neck
+        - stomach
         - unspecified
     InjurySeverityEnum:
       type: string

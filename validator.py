@@ -55,26 +55,26 @@ class YamlValidator:
         '''
         self.file = self.validate_file_location(filename)
         try:
-            self.api_file = open(API_YAML)
+            self.api_file = open(API_YAML, encoding='utf-8')
             self.api_yaml = yaml.load(self.api_file, Loader=yaml.CLoader)
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         try:
-            self.state_change_file = open(STATE_YAML)
+            self.state_change_file = open(STATE_YAML, encoding='utf-8')
             self.state_changes_yaml = yaml.load(self.state_change_file, Loader=yaml.CLoader)
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in state api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         try:
             self.loaded_yaml = yaml.load(self.file, Loader=yaml.CLoader)
             try:
-                dup_check_file = open(filename, 'r')
+                dup_check_file = open(filename, 'r', encoding='utf-8')
                 yaml.load(dup_check_file, Loader=UniqueKeyLoader)
             except Exception as e:
                 self.logger.log(LogLevel.FATAL, "Error while loading in yaml file -- " + str(e))
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in yaml file. Please ensure the file is a valid yaml format and try again.\n\n" + str(e) + "\n")
         try:
-            self.dep_file = open(DEP_JSON)
+            self.dep_file = open(DEP_JSON, encoding='utf-8')
             self.dep_json = json.load(self.dep_file)
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in json dependency file. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
@@ -140,6 +140,34 @@ class YamlValidator:
         return new_lst_of_lsts
     
 
+    def do_lists_match(self, lst1, lst2):
+        '''
+        Check if two lists have the same elements in the same order
+        '''
+        if len(lst1) == len(lst2):
+            for i in range(len(lst1)):
+                if lst1[i] != lst2[i]:
+                    return False
+            return True
+        return False
+
+
+    def remove_covered_sublists(self, list_of_lists):
+        '''
+        We don't need every possible sublist in our branches. This function looks through all the branching lists
+        and removes any sublist that is already covered by a bigger list. This will also remove any duplicate branch paths
+        '''
+        list_of_lists.sort(key=len, reverse=True)        
+        result = []
+        # go through the branches in descending length order
+        for sublist in list_of_lists:
+            # see if the list is already recorded in result. If not, add it!
+            if not any(self.do_lists_match(sublist, sublist_covered[:len(sublist)]) for sublist_covered in result):
+                result.append(sublist)
+        
+        return result
+
+
     def find_all_branch_segments(self, data):
         '''
         Creates and returns a list of all scene branches.
@@ -149,7 +177,7 @@ class YamlValidator:
         if len(scenes) == 1:
             paths.append([scenes[0]['id']])
         # remove duplicates (same order, same elements)
-        return self.remove_duplicate_sublists(paths)
+        return self.remove_covered_sublists(paths)
 
 
     def get_branches_from_scene(self, data, scene_id, path=[]):
@@ -492,7 +520,7 @@ class YamlValidator:
         if not filename.strip().endswith('.yaml'):
             self.logger.log(LogLevel.FATAL, "File must be a yaml file.")
         try:
-            f = open(filename, 'r')
+            f = open(filename, 'r', encoding='utf-8')
             return f
         except:
             self.logger.log(LogLevel.FATAL, "Could not open file " + filename + ". Please make sure the path is valid and the file exists.")
@@ -683,8 +711,9 @@ class YamlValidator:
             for entry in self.dep_json['conditionalRequired'][req]:
                 value = entry['conditions']['value'] if 'value' in entry['conditions'] else ''
                 length = entry['conditions']['length'] if 'length' in entry['conditions'] else -1
+                exists = bool(entry['conditions']['exists']) if 'exists' in entry['conditions'] else True
                 log_level = entry.get('logLevel', 'error')
-                all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, length=length)
+                all_found = self.property_meets_conditions(loc, copy.deepcopy(self.loaded_yaml), value=value, exists=exists, length=length)
                 for x in all_found:
                     found = x.split('.')
                     if found[len(found)-1] != loc[len(loc)-1]:
@@ -864,10 +893,15 @@ class YamlValidator:
             # check if the location matches one of the allowed values
             locations = self.property_meets_conditions(key.split('.'), copy.deepcopy(self.loaded_yaml))
             for loc in locations:
+                if loc[-2:] == '[]':
+                    continue
                 v = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
-                if v not in allowed_values:
-                    self.logger.log(LogLevel.ERROR, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v) + "'")
-                    self.invalid_values += 1
+                if type(v) != list:
+                    v = [v]
+                for v_element in v:
+                    if v_element not in allowed_values:
+                        self.logger.log(LogLevel.ERROR, "Key '" + loc.split('.')[-1] + "' at '" + str(loc) + "' must have one of the following values " + str(allowed_values) + " to match one of " + str('.'.join(allowed_loc)) + ", but instead value is '" + str(v_element) + "'")
+                        self.invalid_values += 1
 
 
     def character_matching(self):
@@ -1064,7 +1098,7 @@ class YamlValidator:
 
         for scene in scenes:
             for action in scene.get('action_mapping', []):
-                if action['action_type'] not in ['CHECK_BLOOD_OXYGEN', 'CHECK_ALL_VITALS']:
+                if action['action_type'] not in ['CHECK_BLOOD_OXYGEN']:
                     continue
                 possible_supplies = self.get_supplies_in_scene(data, scene['id'])
                 not_found = False
@@ -1119,7 +1153,7 @@ class YamlValidator:
                                 self.invalid_values += 1 
                         # validate params only includes expected values
                         for key in params:
-                            allowed_params = ['treatment', 'location', 'category', 'aid_id', 'type', 'object', 'action_type', 'aid_id', 'recipient', 'character_id']
+                            allowed_params = ['treatment', 'location', 'category', 'aid_id', 'type', 'object', 'action_type', 'relevant_state', 'recipient', 'character_id']
                             if key not in allowed_params:
                                 self.logger.log(LogLevel.ERROR, "'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(allowed_params) + " but has key '" + key + "'.")
                                 self.invalid_keys += 1 
@@ -1498,6 +1532,8 @@ class YamlValidator:
                 if char is None:
                     continue
                 else:
+                    if action.get('intent_action') == True and action_type != 'MOVE_TO':
+                        continue # You can intend to do almost anything regardless of seen/unseen.
                     # get which characters are known to be seen or unseen in this scene
                     char_details = self.get_characters_in_scene(data, scene['id'])
                     unseen = list(set(char_details['unseen']))
@@ -1558,57 +1594,76 @@ class YamlValidator:
     def validate_events(self):
         ''' 
         Validates events in every state:
-        1. Source is recommended
-        2. Source and Object must be valid character ids or an EntityTypeEnum
+        1. 'source' is recommended
+        2. 'source' and 'object' must be valid character ids or an EntityTypeEnum
+        3. 'when' cannot be 0
         '''
         data = copy.deepcopy(self.loaded_yaml)
         entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic', 'tbd']
-        for scene in data['scenes']:
+        for scene in data['scenes'] + [data]:
             events = scene.get('state', {}).get('events', [])
-            chars = self.get_characters_in_scene(data, scene['id'])
+            is_scenario_state = False
+            if 'id' not in scene or scene['id'] == data['id']:
+                is_scenario_state = True
+                chars = self.get_characters_in_scene(data, self.determine_first_scene(data)['id'])
+            else:
+                chars = self.get_characters_in_scene(data, scene['id'])
             missing = 0
             for event in events:
                 source = event.get('source', None)
                 obj = event.get('object', None)
+                when = event.get('when', None)
+                scene_name_for_errors =  "the scenario state" if is_scenario_state else f"scene \'{scene['id']}\'"
+                if when == 0:
+                    self.logger.log(LogLevel.ERROR, f"The 'when' parameter for an event in {scene_name_for_errors} cannot be 0.")
+                    self.invalid_values += 1 
                 if source is None:
                     missing += 1
                 elif source not in entity_type_enum:
                     in_any_group = False
                     in_all_groups = True
+                    char_list = []
                     for group in chars['possible']:
+                        for c in group:
+                            if c not in char_list:
+                                char_list.append(c)
                         if source in group:
                             in_any_group = True
                         else:
                             in_all_groups = False
                     if not in_any_group:
-                        self.logger.log(LogLevel.ERROR, f"The 'source' parameter for an event in scene '{scene['id']}' is '{source}', but must be one of {entity_type_enum + chars['possible']}.")
+                        self.logger.log(LogLevel.ERROR, f"The 'source' parameter for an event in {scene_name_for_errors} is '{source}', but must be one of {entity_type_enum + char_list}.")
                         self.invalid_values += 1 
                     elif not in_all_groups:
-                        self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in scene '{scene['id']}' is '{source}', but that character might not be available in some branches.")
+                        self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in {scene_name_for_errors} is '{source}', but that character might not be available in some branches.")
                         self.warning_count += 1     
                     elif source in chars['removed']:
-                        self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in scene '{scene['id']}' is '{source}', but that character might be removed in some branches.")
+                        self.logger.log(LogLevel.WARN, f"The 'source' parameter for an event in {scene_name_for_errors} is '{source}', but that character might be removed in some branches.")
                         self.warning_count += 1 
 
                 if obj is not None and obj not in entity_type_enum:
                     in_any_group = False
                     in_all_groups = True
+                    char_list = []
                     for group in chars['possible']:
-                        if source in group:
+                        for c in group:
+                            if c not in char_list:
+                                char_list.append(c)
+                        if obj in group:
                             in_any_group = True
                         else:
                             in_all_groups = False
                     if not in_any_group:
-                        self.logger.log(LogLevel.ERROR, f"The 'object' parameter for an event in scene '{scene['id']}' is '{obj}', but must be one of {entity_type_enum + chars['possible']}.")
+                        self.logger.log(LogLevel.ERROR, f"The 'object' parameter for an event in {scene_name_for_errors} is '{obj}', but must be one of {entity_type_enum + char_list}.")
                         self.invalid_values += 1 
                     elif not in_all_groups:
-                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in scene '{scene['id']}' is '{obj}', but that character might not be available in some branches.")
+                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in {scene_name_for_errors} is '{obj}', but that character might not be available in some branches.")
                         self.warning_count += 1     
-                    elif source in chars['removed']:
-                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in scene '{scene['id']}' is '{obj}', but that character might be removed in some branches.")
+                    elif obj in chars['removed']:
+                        self.logger.log(LogLevel.WARN, f"The 'object' parameter for an event in {scene_name_for_errors} is '{obj}', but that character might be removed in some branches.")
                         self.warning_count += 1 
             if missing > 0:
-                self.logger.log(LogLevel.WARN, f"The 'source' parameter is recommended for all events, but is missing for {missing} event{'s' if missing > 1 else ''} in scene '{scene['id']}'.")
+                self.logger.log(LogLevel.WARN, f"The 'source' parameter is recommended for all events, but is missing for {missing} event{'s' if missing > 1 else ''} in {scene_name_for_errors}.")
                 self.warning_count += 1 
 
 

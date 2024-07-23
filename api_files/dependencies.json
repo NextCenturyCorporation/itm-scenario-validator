@@ -1,6 +1,42 @@
 {
     "simpleRequired": {},
     "conditionalRequired": {
+        "scenes[].state.characters[].unseen": [
+            {
+                "conditions": {
+                    "exists": false
+                },
+                "required": [
+                    "scenes[].state.characters[].vitals"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": false
+                },
+                "required": [
+                    "scenes[].state.characters[].vitals"
+                ]
+            }
+        ],
+        "state.characters[].unseen": [
+            {
+                "conditions": {
+                    "value": false
+                },
+                "required": [
+                    "state.characters[].vitals"
+                ]
+            },
+            {
+                "conditions": {
+                    "exists": false
+                },
+                "required": [
+                    "state.characters[].vitals"
+                ]
+            }
+        ],
         "scenes[].action_mapping[].conditions": [
             {
                 "conditions": {
@@ -107,6 +143,15 @@
             },
             {
                 "conditions": {
+                    "value": "MOVE_TO"
+                },
+                "required": [
+                    "scenes[].action_mapping[].character_id"
+                ],
+                "logLevel": "warn"
+            },
+            {
+                "conditions": {
                     "value": "TAG_CHARACTER"
                 },
                 "required": [
@@ -158,6 +203,48 @@
                 ]
             }
         ],
+        "state.events[].type": [
+            {
+                "conditions": {
+                    "value": "change"
+                },
+                "required": [
+                    "state.events[].relevant_state"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "emphasize"
+                },
+                "required": [
+                    "state.events[].relevant_state"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "inform"
+                },
+                "required": [
+                    "state.events[].relevant_state"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "order"
+                },
+                "required": [
+                    "state.events[].action_id"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "recommend"
+                },
+                "required": [
+                    "state.events[].action_id"
+                ]
+            }
+        ],
         "scenes[].action_mapping[].parameters.type": [
             {
                 "conditions": {
@@ -181,6 +268,14 @@
                 },
                 "required": [
                     "scenes[].action_mapping[].parameters.action_type"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "justify"
+                },
+                "required": [
+                    "scenes[].action_mapping[].parameters.relevant_state"
                 ]
             },
             {
@@ -308,16 +403,23 @@
             }
         },
         "state.characters[].injuries[].name": {
+            "Traumatic Brain Injury": {
+                "state.characters[].injuries[].location": [
+                    "head"
+                ]
+            },
+            "Open Abdominal Wound": {
+                "state.characters[].injuries[].location": [
+                    "stomach"
+                ]
+            },
             "Ear Bleed": {
                 "state.characters[].injuries[].location": [
-                    "left face",
-                    "right face",
-                    "unspecified"
+                    "left face"
                 ]
             },
             "Asthmatic": {
                 "state.characters[].injuries[].location": [
-                    "unspecified",
                     "internal"
                 ]
             },
@@ -327,14 +429,12 @@
                     "left forearm",
                     "right forearm",
                     "left stomach",
-                    "right stomach",
                     "left thigh",
                     "right thigh",
                     "left calf",
                     "right calf",
                     "left hand",
-                    "right hand",
-                    "unspecified"
+                    "right hand"
                 ]
             },
             "Puncture": {
@@ -354,7 +454,8 @@
                     "left chest",
                     "right chest",
                     "center chest",
-                    "unspecified"
+                    "left calf",
+                    "right calf"
                 ]
             },
             "Shrapnel": {
@@ -362,15 +463,13 @@
                     "left face",
                     "right face",
                     "left calf",
-                    "right calf",
-                    "unspecified"
+                    "right calf"
                 ]
             },
             "Chest Collapse": {
                 "state.characters[].injuries[].location": [
                     "left chest",
-                    "right chest",
-                    "unspecified"
+                    "right chest"
                 ]
             },
             "Amputation": {
@@ -379,7 +478,8 @@
                     "right wrist",
                     "left calf",
                     "right calf",
-                    "unspecified"
+                    "left thigh",
+                    "right thigh"
                 ]
             },
             "Burn": {
@@ -394,7 +494,9 @@
                     "left side",
                     "right chest",
                     "left chest",
-                    "unspecified"
+                    "left bicep",
+                    "right bicep",
+                    "neck"
                 ]
             },
             "Broken Bone": {
@@ -402,8 +504,7 @@
                     "right shoulder",
                     "left shoulder",
                     "left leg",
-                    "right leg",
-                    "unspecified"
+                    "right leg"
                 ]
             },
             "Internal": {
@@ -1922,7 +2023,9 @@
         "scenes[].action_mapping[].next_scene": "scenes[].id",
         "first_scene": "scenes[].id",
         "scenes[].tagging.reference": "scenes[].id",
-        "scenes[].state.events[].action_id": "scenes[].action_mapping[].action_id"
+        "scenes[].transitions.actions[]": "scenes[].action_mapping[].action_id",
+        "scenes[].state.events[].action_id": "scenes[].action_mapping[].action_id",
+        "state.events[].action_id": "scenes[].action_mapping[].action_id"
     },
     "characterMatching": [
         "scenes[].state.characters[].injuries[].source_character",

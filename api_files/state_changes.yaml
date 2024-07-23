@@ -12,14 +12,6 @@ components:
         id:
           description: An identifier for the aid opportunity, unique within the scene
           type: string
-        level:
-          description: 'Refers to the kinds of resources/capabilities available in
-            a trauma center; Level 1 has more resources than Level 5. See [amtrauma.org](https://www.amtrauma.org/page/traumalevels/)
-
-            '
-          maximum: 5
-          minimum: 1
-          type: integer
         max_transport:
           description: Maximum number of casualties that can be accommodated
           minimum: 1
@@ -30,6 +22,15 @@ components:
           items:
             $ref: '#/components/schemas/MilitaryDispositionEnum'
           type: array
+        role:
+          description: 'The characterization of health support for the distribution
+            of medical resources and capabilities; Role 1 has higher capability than
+            Role 4. See [health.mil](https://health.mil/Reference-Center/Glossary-Terms/2018/06/22/Roles-of-Medical-Care)
+
+            '
+          maximum: 4
+          minimum: 1
+          type: integer
         type:
           $ref: '#/components/schemas/AidTypeEnum'
       required:
@@ -121,8 +122,6 @@ components:
           type: string
         rapport:
           $ref: '#/components/schemas/RapportEnum'
-        tag:
-          $ref: '#/components/schemas/CharacterTagEnum'
         unseen:
           default: false
           description: whether or not this character is visible in the scene or merely
@@ -162,15 +161,6 @@ components:
       - Medical
       - Specialist
       - Communications
-      type: string
-    CharacterTagEnum:
-      description: the tag assigned to a character
-      enum:
-      - MINIMAL
-      - DELAYED
-      - IMMEDIATE
-      - EXPECTANT
-      example: DELAYED
       type: string
     CivilianPresenceEnum:
       description: Indicator of how many civilians are present in the mission
@@ -316,6 +306,12 @@ components:
         unstructured:
           description: Natural language, plain text description of the event
           type: string
+        when:
+          description: indicates when (in minutes) the event happened (negative value)
+            or is expected to happen (positive value); omit if zero (event happens
+            now)
+          format: float
+          type: number
       required:
       - unstructured
       - type
@@ -328,7 +324,6 @@ components:
       - inform
       - order
       - recommend
-      - tbd
       type: string
     FaunaTypeEnum:
       description: Descriptor of local animal/insect activity
@@ -417,6 +412,9 @@ components:
       - left neck
       - right neck
       - internal
+      - head
+      - neck
+      - stomach
       - unspecified
       type: string
     InjurySeverityEnum:
@@ -470,9 +468,10 @@ components:
       - Chest Collapse
       - Amputation
       - Burn
-      - Abrasion
       - Broken Bone
       - Internal
+      - Traumatic Brain Injury
+      - Open Abdominal Wound
       type: string
     IntentEnum:
       description: The intent of the character
@@ -491,6 +490,14 @@ components:
       - normal
       - bright
       - flashing
+      type: string
+    MedicalPoliciesEnum:
+      description: Directives issued by competent military authority
+      enum:
+      - Treat All Neutrally
+      - Treat Enemy LLE
+      - Treat Civilian LLE
+      - Prioritize Mission
       type: string
     MentalStatusEnum:
       description: Character mental status, which impacts interaction in the sim environment
@@ -663,8 +670,11 @@ components:
         communication_capability:
           $ref: '#/components/schemas/CommunicationCapabilityEnum'
         medical_policies:
-          description: Medical policies in effect in a mission, to inform decision-making
-          type: string
+          description: A list of medical policies; omit this property if no special
+            policy is in place
+          items:
+            $ref: '#/components/schemas/MedicalPoliciesEnum'
+          type: array
         mission_type:
           $ref: '#/components/schemas/MissionTypeEnum'
         political_climate:

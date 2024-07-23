@@ -54,6 +54,8 @@ class ApiGenerator:
         required_scenario = new_api['components']['schemas']['Scenario']['required']
         required_scenario.append('scenes')
 
+        del new_api['components']['schemas']['Character']['properties']['tag']
+
         # validator requires all vitals properties to be specified
         required_vitals = new_api['components']['schemas']['Vitals']['required'] if 'required' in new_api['components']['schemas']['Vitals'] else []
         required_vitals.append('avpu')
