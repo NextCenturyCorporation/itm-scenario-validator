@@ -93,7 +93,7 @@
                     "value": "Burn"
                 },
                 "required": [
-                    "state.characters[].injuries[].severity"
+                    "scenes[].state.characters[].injuries[].severity"
                 ]
             }
         ],
