@@ -491,6 +491,20 @@
                     "left face"
                 ]
             },
+            "Abrasion": {
+                "state.characters[].injuries[].location": [
+                    "left face",
+                    "right face",
+                    "left thigh",
+                    "right thigh",
+                    "left calf",
+                    "right calf",
+                    "left bicep",
+                    "right bicep",
+                    "left forearm",
+                    "right forearm"
+                ]
+            },
             "Asthmatic": {
                 "state.characters[].injuries[].location": [
                     "internal"
@@ -516,6 +530,8 @@
                     "right neck",
                     "left bicep",
                     "right bicep",
+                    "left forearm",
+                    "right forearm",
                     "left shoulder",
                     "right shoulder",
                     "left stomach",
@@ -576,6 +592,8 @@
                 "state.characters[].injuries[].location": [
                     "right shoulder",
                     "left shoulder",
+                    "left wrist",
+                    "right wrist",
                     "left leg",
                     "right leg"
                 ]
@@ -603,6 +621,20 @@
                     "left face"
                 ]
             },
+            "Abrasion": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "left face",
+                    "right face",
+                    "left thigh",
+                    "right thigh",
+                    "left calf",
+                    "right calf",
+                    "left bicep",
+                    "right bicep",
+                    "left forearm",
+                    "right forearm"
+                ]
+            },
             "Asthmatic": {
                 "scenes[].state.characters[].injuries[].location": [
                     "internal"
@@ -628,6 +660,8 @@
                     "right neck",
                     "left bicep",
                     "right bicep",
+                    "left forearm",
+                    "right forearm",
                     "left shoulder",
                     "right shoulder",
                     "left stomach",
@@ -688,6 +722,8 @@
                 "scenes[].state.characters[].injuries[].location": [
                     "right shoulder",
                     "left shoulder",
+                    "left wrist",
+                    "right wrist",
                     "left leg",
                     "right leg"
                 ]

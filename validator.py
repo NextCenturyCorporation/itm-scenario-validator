@@ -1599,7 +1599,7 @@ class YamlValidator:
         3. 'when' cannot be 0
         '''
         data = copy.deepcopy(self.loaded_yaml)
-        entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic', 'tbd']
+        entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic']
         for scene in data['scenes'] + [data]:
             events = scene.get('state', {}).get('events', [])
             is_scenario_state = False
@@ -1673,7 +1673,7 @@ class YamlValidator:
         1. Object must be a valid character id or an EntityTypeEnum
         '''
         data = copy.deepcopy(self.loaded_yaml)
-        entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic', 'tbd']
+        entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic']
         for scene in data['scenes']:
             for a in scene.get('action_mapping', []):
                 if a['action_type'] != 'MESSAGE':
