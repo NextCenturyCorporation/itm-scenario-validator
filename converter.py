@@ -19,7 +19,12 @@ SUPPLY_MAP = {
     "Pain Medications": "painMedsCount",
     "Splint": "splintCount",
     "Blood": "ivBloodCount",
-    "IV Bag": "ivSalineCount"
+    "IV Bag": "ivSalineCount",
+    "Fentanyl Lollipop": "lollipopCount",
+    "Burn Dressing": "burnDressingCount",
+    "Epi Pen": "epiPenCount",
+    "Vented Chest Seal": "chestSealCount",
+    "Blanket": "blanketCount"
 }
 
 MENTAL_STATUS_MAP = {
@@ -61,16 +66,20 @@ INJ_LOC_MAP = {
     "right side": "R Side",
     "left side": "L Side",
     "right chest": "R Chest",
+    "center chest": "C Chest",
     "left chest": "L Chest",
     "right wrist": "R Wrist",
     "left wrist": "L Wrist",
     "left face": "Face",
     "right face": "Face",
     "left neck": "L Neck",
-    "right neck": "R Neck"
+    "right neck": "R Neck",
+    "neck": "C Neck"
 }
 
 ALLOWED_INJURIES = [
+    "Open Abdominal Wound",
+    "Traumatic Brain Injury",
     "Forehead Scrape",
     "Face Shrapnel",
     "Ear Bleed",
@@ -94,6 +103,13 @@ ALLOWED_INJURIES = [
     "R Side Puncture",
     "L Thigh Puncture",
     "R Thigh Puncture",
+    "L Calf Puncture",
+    "R Calf Puncture",
+    "L Chest Puncture",
+    "R Chest Puncture",
+    "C Chest Puncture",
+    "L Thigh Amputation",
+    "R Thigh Amputation",
     "L Shin Amputation",
     "R Shin Amputation",
     "L Calf Laceration",
@@ -101,14 +117,18 @@ ALLOWED_INJURIES = [
     "R Calf Shrapnel",
     "R Calf Laceration",
     "L Thigh Laceration",
+    "R Thigh Laceration",
     "L Neck Puncture",
     "R Neck Puncture",
     "Full Body Burn",
     "L Body Burn" ,
+    "R Body Burn",
     "L Leg Broken",
     "R Leg Broken",
     "L Shoulder Broken",
     "R Shoulder Broken",
+    "L Wrist Broken",
+    "R Wrist Broken",
     "L Lower Leg Burn",
     "R Lower Leg Burn",
     "L Upper Leg Burn",
@@ -116,8 +136,19 @@ ALLOWED_INJURIES = [
     "L Chest Burn",
     "R Chest Burn",
     "L Forearm Burn",
-    "R Forearm Burn"
+    "R Forearm Burn",
+    "L Bicep Burn",
+    "R Bicep Burn",
+    "C Neck Burn"
 ]
+
+SEVERITY_MAP = {
+    "minor": "Smallest",
+    "moderate": "Small",
+    "substantial": "Medium",
+    "major": "Large",
+    "extreme": "Largest"
+}
 
 MALE_VOICES = ['Clyde_Male', 'Drew_Male', 'Giovanni_Male', 'Jami_Male', 'Julien_Male', 'Lev_Male', 'Michael_Male', 'Rashid_Male', 'Shaquille_Male', 'Vijay_Male']
 FEMALE_VOICES = ['Alba_Female', 'Asmodia_Female', 'Diane_Female', 'Enni_Female', 'Gigi_Female', 'Grace_Female', 'Loredana_Female', 'Mampai_Female', 'Matilda_Female', 'Megan_Female']
@@ -332,7 +363,9 @@ class YamlConverter:
                             found = True
                             break
                     if not found:
-                        patients.append(self.convert_patient_data(c, False))
+                        patient = self.convert_patient_data(c, False)
+                        if patient is not None:
+                            patients.append(patient)
             # TODO: start filling narrative with transitions from one scene to the next, hiding and revealing characters
 
         output['patientDataList'] = patients
@@ -364,19 +397,23 @@ class YamlConverter:
         }
 
         # set vitals from yaml
+        vitals = None
+        if 'vitals' not in c:
+            return None
         vitals = c['vitals']
         patient['vitals'] = {
             "pulse": PULSE_MAP[vitals['heart_rate']],
             "breath": BREATHING_MAP[vitals['breathing']],
             "hearing": "normal", # TODO: find hearing?
-            "SpO2": "normal" if vitals['Spo2'] > 88 else "low" if vitals['Spo2'] > 0 else "none",
+            "SpO2": vitals['spo2'].lower() if 'spo2' in vitals else 'normal',
             "mood": MENTAL_STATUS_MAP[vitals['mental_status']]
         }
 
+
         # TODO: set from yaml??
         patient['triageStatus'] = {
-            "triageLevel": "delayed",
-            "sort": self.get_triage_sort(vitals)
+            "triageLevel": "immediate",
+            "sort": "still" #self.get_triage_sort(vitals) if vitals is not None else "waver"
         }
 
         # TODO: set pose from yaml??
@@ -423,7 +460,7 @@ class YamlConverter:
         }
 
         # set military gear and clothing from yaml
-        if c['demographics']['military_disposition'] == 'Civilian':
+        if 'military_disposition' not in c['demographics'] or c['demographics']['military_disposition'] == 'Civilian':
             # get textures based on character!
             top = 0
             bottom = 0
@@ -518,32 +555,73 @@ class YamlConverter:
         inj = ''
         loc = injury['location']
         name = injury['name']
+        blood_pool = injury.get('severity', None) # minor, moderate, substantial, major, extreme
+        treatments_required = injury.get('treatments_required', 0) # number
+        pretreated = injury.get('status', None) == 'treated'
+        to_return = None
         if loc in INJ_LOC_MAP:
-            inj += loc + ' '
+            inj += INJ_LOC_MAP[loc] + ' '
         inj += name if name != "Chest Collapse" else "Collapse"
         if inj not in ALLOWED_INJURIES:
-            if name == "Broken Bone":
+            if name == "Amputation" and 'calf' in loc:
+                if 'left' in loc:
+                    inj = 'L Shin Amputation'
+                elif 'right' in loc:
+                    inj = 'R Shin Amputation'
+            elif name == "Broken Bone":
                 if 'thigh' in loc or 'calf' in loc:
                     if 'left' in loc:
                         inj = 'L Leg Broken'
-                    if 'right' in loc:
+                    elif 'right' in loc:
                         inj = 'R Leg Broken'
-                elif 'side' in loc or 'wrist' in loc or 'neck' in loc or 'forearm' in loc:
+                elif 'wrist' in loc:
+                    if 'left' in loc:
+                        inj = 'L Wrist Broken'
+                    elif 'right' in loc:
+                        inj = 'R Wrist Broken'
+                elif 'side' in loc or 'shoulder' in loc or 'neck' in loc or 'forearm' in loc:
                     if 'left' in loc:
                         inj = 'L Shoulder Broken'
-                    if 'right' in loc:
+                    elif 'right' in loc:
                         inj = 'R Shoulder Broken'
-            if name == "Shrapnel":
+            elif name == "Shrapnel":
                 if 'face' in loc:
                     inj = 'Face Shrapnel'
+            elif name == 'Burn':
+                if 'thigh' in loc and 'right' in loc:
+                    inj = 'R Upper Leg Burn'
+                elif 'thigh' in loc and 'left' in loc:
+                    inj = 'L Upper Leg Burn'
+                elif 'calf' in loc and 'right' in loc:
+                    inj = 'R Lower Leg Burn'
+                elif 'calf' in loc and 'left' in loc:
+                    inj = 'L Lower Leg Burn'
+                elif 'side' in loc and 'right' in loc:
+                    inj = 'R Body Burn'
+                elif 'side' in loc and 'left' in loc:
+                    inj = 'L Body Burn'
+            elif name == 'Laceration':
+                if loc == 'left stomach':
+                    inj = 'Hidden_StomachLaceration'
+                if 'face' in loc:
+                    inj = 'Forehead Scrape'
+            elif name == 'Ear Bleed':
+                inj = 'Ear Bleed'
             if inj in ALLOWED_INJURIES:
                 self.logger.log(LogLevel.WARN, "Replaced injury '" + loc + ' ' + name + "' with '" + inj + "'")
-                return {"type": inj}
+                to_return = {"type": inj}
             else:
                 self.logger.log(LogLevel.WARN, "Could not find match for injury: '" + inj + "'. Skipping...")
                 return None
-        return {"type": inj}
-
+        if to_return is None:
+            to_return = {"type": inj}
+        if blood_pool is not None and 'Broken' not in name and 'Burn' not in name:
+            to_return['bloodPool'] = SEVERITY_MAP[blood_pool]
+        if treatments_required > 0:
+            to_return['treatmentCount'] = treatments_required
+        if pretreated:
+            to_return['pretreated'] = True
+        return to_return
 
     def is_burn_victim(self, injuries):
         '''
@@ -560,7 +638,7 @@ class YamlConverter:
         Calculates the triage sorting level based on vitals
         '''
         sort = 'walker'
-        if not vitals['ambulatory']:
+        if 'ambulatory' not in vitals or not vitals['ambulatory']:
             sort = 'waver'
         if vitals['avpu'] == 'UNRESPONSIVE' or vitals['mental_status'] == "UNRESPONSIVE" or vitals['mental_status'] == "CONFUSED" or vitals['mental_status'] == "SHOCK":
             sort = 'still'
@@ -613,17 +691,21 @@ class YamlConverter:
         should play the patient
         '''
         if demographics['sex'] == 'M':
-            if demographics['military_disposition'] != 'Civilian':
+            if 'military_disposition' in demographics and demographics['military_disposition'] != 'Civilian':
                 return 'Military Mike'
             else:
+                if 'age' not in demographics:
+                    return random.choice(['Military Mike', 'Bob', 'Gary'])
                 if demographics['age'] < 40:
                     return random.choice(['Military Mike', 'Bob', 'Bob'])
                 else:
                     return 'Gary'
         else:
-            if demographics['military_disposition'] != 'Civilian':
+            if 'military_disposition' in demographics and demographics['military_disposition'] != 'Civilian':
                 return 'Lily'
             else:
+                if 'age' not in demographics:
+                    return random.choice(['Helga', 'Lily', 'Gloria']) 
                 if demographics['age'] < 30:
                     return random.choice(['Lily', 'Helga'])
                 elif demographics['age'] < 40:
