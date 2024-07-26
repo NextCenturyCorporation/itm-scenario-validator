@@ -556,28 +556,6 @@ class YamlValidator:
         self.validate_quantized_support()
 
 
-    def validate_quantized_support_new(self):
-        '''
-        Flag if treatments_required > 1 for unsupported injures.
-        In general, these are injuries that aren't successfully treated by hemostatic gauze or pressure bandage.
-        '''
-        data = copy.deepcopy(self.loaded_yaml)
-
-        for scene in data['scenes']:
-            if 'state' in scene and 'characters' in scene['state']:
-                for character in scene['state']['characters']:
-                    if 'injuries' in character:
-                        for injury in character['injuries']:
-                            if 'treatments_required' in injury:
-                                required = injury['treatments_required']
-                                type = injury['name']
-                                location = injury['location']
-                                # look for an injury type that doesn't support quantized injuries
-                                if required > 1 and not self.supports_quantized_injury(type, location):
-                                    self.logger.log(LogLevel.ERROR, f"Injuries requiring multiple treatments are only supported when the injury is treated by hemostatic gauze or pressure bandage, but not '{type}' injuries at '{location}' location in character '{character['id']}'.")
-                                    self.invalid_values += 1
-
-
     def validate_quantized_support(self):
         '''
         Flag if treatments_required > 1 for unsupported injures.
