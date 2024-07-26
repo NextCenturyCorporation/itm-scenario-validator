@@ -589,8 +589,8 @@ class YamlValidator:
         if injury_type == 'Laceration' and 'thigh' in location:
             return False # takes a Tourniquet
         if injury_type == 'Shrapnel' and 'face' in location:
-            return False # untreatable
-        if injury_type == 'Puncture' and 'bicep' in location or 'thigh' in location or 'calf' in location or 'chest' in location:
+            return False # take a Nasopharyngeal airway
+        if injury_type == 'Puncture' and ('bicep' in location or 'thigh' in location or 'calf' in location or 'chest' in location):
             return False # takes a Vented Chest Seal (chest) or Tourniquet (others)
         if injury_type not in ['Laceration', 'Shrapnel', 'Puncture']:
             return False # cannot take Hemostatic Gauze or Pressure Bandage
