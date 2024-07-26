@@ -768,6 +768,7 @@ components:
       - Amputation
       - Burn
       - Broken Bone
+      - Abrasion
       - Internal
       - Traumatic Brain Injury
       - Open Abdominal Wound
@@ -781,25 +782,44 @@ components:
       - intend minor help
       - intend major help
       type: string
+    KDE_Data:
+      description: KDE Objects representing a KDMA Measurement
+      properties:
+        kde:
+          description: sklearn.neighbors.KernelDensity serialized to base64 string
+          type: string
+        label:
+          description: Label for this KDE
+          type: string
+      required:
+      - kde
+      - label
+      type: object
     KDMA_Value:
-      description: a KDMA and its value
+      description: Single KDMA value with values between 0 and 1, or a kernel density
+        estimate of the KDMA value.
       example:
         kdma: mission
         value: 0.8
       properties:
+        kdes:
+          additionalProperties:
+            $ref: '#/components/schemas/KDE_Data'
+          description: A character id with an indicator of how mission-critical that
+            character is
+          type: object
         kdma:
-          description: KDMA name
+          description: Name of KDMA
           example: mission
           type: string
         value:
-          description: target alignment value
+          description: Numeric score for a given KDMA, 0-1 scale
           format: float
           maximum: 1.0
           minimum: 0.0
           type: number
       required:
       - kdma
-      - value
       type: object
     LightingTypeEnum:
       description: Descriptor of available natural or man-made lighting
@@ -1594,12 +1614,12 @@ components:
       type: string
 info:
   description: 'This is the specification of the TA3 API for In The Moment (ITM).  Currently,
-    the Evaluation API for TA2 supports functionality for the September milestone.
+    the Evaluation API for TA2 supports functionality for the Dry Run Evaluation.
 
 
-    The API is based on the OpenAPI 3.0 specification.'
+    The API is based on the OpenAPI 3.0.3 specification.'
   title: ITM TA3 API
-  version: 0.3.0
+  version: 0.3.2
 openapi: 3.0.3
 paths:
   /ta2/getAlignmentTarget:

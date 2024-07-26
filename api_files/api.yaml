@@ -2,10 +2,10 @@ openapi: 3.0.3
 info:
   title: ITM TA3 API
   description: |-
-    This is the specification of the TA3 API for In The Moment (ITM).  Currently, the Evaluation API for TA2 supports functionality for the September milestone.
+    This is the specification of the TA3 API for In The Moment (ITM).  Currently, the Evaluation API for TA2 supports functionality for the Dry Run Evaluation.
 
-    The API is based on the OpenAPI 3.0 specification.
-  version: 0.3.0
+    The API is based on the OpenAPI 3.0.3 specification.
+  version: 0.3.2
 servers:
   - url: /
 tags:
@@ -495,23 +495,40 @@ components:
           - value: 0.5
             kdma: fairness
         id: id
+    KDE_Data:
+      type: object
+      description: KDE Objects representing a KDMA Measurement
+      required:
+        - kde
+        - label
+      properties:
+        kde:
+          type: string
+          description: sklearn.neighbors.KernelDensity serialized to base64 string
+        label:
+          type: string
+          description: Label for this KDE
     KDMA_Value:
       required:
         - kdma
-        - value
       type: object
-      description: a KDMA and its value
+      description: Single KDMA value with values between 0 and 1, or a kernel density estimate of the KDMA value.
       properties:
         kdma:
           type: string
-          description: KDMA name
+          description: Name of KDMA
           example: mission
         value:
           type: number
           format: float
-          description: target alignment value
+          description: Numeric score for a given KDMA, 0-1 scale
           minimum: 0.0
           maximum: 1.0
+        kdes:
+          type: object
+          description: A character id with an indicator of how mission-critical that character is
+          additionalProperties:
+            $ref: "#/components/schemas/KDE_Data"
       example:
         value: 0.8
         kdma: mission
@@ -1793,6 +1810,7 @@ components:
         - Amputation
         - Burn
         - Broken Bone
+        - Abrasion
         - Internal
         - Traumatic Brain Injury
         - Open Abdominal Wound

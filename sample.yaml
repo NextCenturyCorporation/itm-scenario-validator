@@ -111,15 +111,15 @@ state:
         heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
         spo2: NORMAL # controlled vocab includes NORMAL, LOW, NONE
       injuries:
-        - name: Internal # controlled vocab includes Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
+        - name: Internal # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
           location: internal # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
           status: hidden # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
           source_character: Civilian_01 # The character id of the person responsible for the injury
-        - name: Puncture # controlled vocab includes Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
+        - name: Puncture # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
           location: right side # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
           status: discoverable # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
           treatments_required: 3 # How many successful treatments until fully treated?
-        - name: Laceration # controlled vocab includes Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
+        - name: Laceration # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
           location: left hand # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
           status: treated # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
     - id: Civilian_01
@@ -144,7 +144,7 @@ state:
         heart_rate: FAINT # controlled vocab includes NONE, FAINT, NORMAL, FAST
         spo2: NORMAL # controlled vocab includes NORMAL, LOW, NONE
       injuries:
-        - name: Laceration # controlled vocab includes Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
+        - name: Laceration # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
           location: left face # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
           status: visible
           severity: minor
@@ -351,8 +351,8 @@ scenes:
             heart_rate: FAST # controlled vocab includes NONE, FAINT, NORMAL, FAST
             spo2: NORMAL # controlled vocab includes NORMAL, LOW, NONE
           injuries:
-            - name: Burn # controlled vocab includes Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
-              location: unspecified # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
+            - name: Burn # controlled vocab includes Abrasion, Ear Bleed, Burn, Laceration, Asthmatic, Puncture, Shrapnel, Chest Collapse, Amputation, Internal, Broken Bone, Traumatic Brain Injury, Open Abdominal Wound
+              location: right chest # controlled vocab includes forearm, calf, hand, leg, thigh, stomach, bicep, shoulder, side, chest, wrist, face, neck, internal, head, unspecified.  Most locations allow a left and right designation.
               severity: substantial # controlled vocab: minor, moderate, substantial, major, extreme
               status: discoverable # controlled vocab: hidden, discoverable, discovered, partially treated, treated, visible
         - id: Captain_01
@@ -481,7 +481,7 @@ scenes:
           type: emphasize # The nature or type of the event; controlled vocab includes change, emphasize, inform, order, recommend
           source: Mike # The subject of the event; can be a character id or ally, adversary, civilian, commander, everybody, medic
           relevant_state: # string paths within the `State` object, with context-sensitive indexed lists
-          -  threat_state.threats[IED activity]
+          - threat_state.threats[IED activity]
     action_mapping:
       - action_id: recommend-treat-civilian
         action_type: MESSAGE
@@ -506,14 +506,17 @@ scenes:
     action_mapping:
       - action_id: justify-military-disposition
         action_type: MESSAGE
-        unstructured: You treated the civilian simply because he was a civilian.
-        parameters: {"type": "justify", "recipient": "commander", "relevant_state": "characters[Civilian_01].demographics.military_disposition"}
+        unstructured: You treated the civilian simply because he was a civilian and medical policies say to treat all neutrally.
+        parameters:
+          type: justify
+          recipient: commander
+          relevant_state: "[characters[Civilian_01].demographics.military_disposition], [mission.medical_policies]"
         probe_id: sample-probe-7
         choice: s1-p7-choice1
       - action_id: justify-vitals
         action_type: MESSAGE
-        unstructured: You treated the civilian due to his vital signs.
-        parameters: {"type": "justify", "recipient": "commander", "relevant_state": "characters[Civilian_01].vitals"}
+        unstructured: You treated the civilian due to his failing vital signs.
+        parameters: {"type": "justify", "recipient": "commander", "relevant_state": "[characters[Civilian_01].vitals]"}
         probe_id: sample-probe-7
         choice: s1-p7-choice2
     transitions:

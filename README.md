@@ -180,7 +180,7 @@ Any supply name placed in this array will be excluded from the allowed supplies 
     * This does not include "normal", which is the default level of importance. For example, a character may not specify `mission_importance` and `character_importance` may explicitly specify the character with importance "normal", or a character may specify `mission_importance` with "normal" and `character_importance` may not list that character 
 * If the scene is the first scene, `scenes[].state` should _not_ be provided
 * No blanket can appear on the character at the start. 
-
+* Quantized injuries (where `treatments_required` > 1) aren't supported for injuries that aren't successfully treated by hemostatic gauze or pressure bandage.
 
 #### Message/Event Rules
 * `source` is recommended for all events
@@ -216,13 +216,14 @@ When not running in training mode (-t), additional checks are implemented:
 | `Open Abdominal Wound` | `stomach` |
 | `Ear Bleed` | `left face` |
 | `Asthmatic` | `internal` |
+| `Abrasion` | `left face`, `right face`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left bicep`, `right bicep`, `left forearm`, `right forearm` |
 | `Laceration` | `left face`, `left forearm`, `right forearm`, `left stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist` |
-| `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest`, `left calf`, `right calf` |
+| `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left forearm`, `right forearm`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest`, `left calf`, `right calf` |
 | `Shrapnel` | `left face`, `right face`, `left calf`, `right calf` |
 | `Chest Collapse` | `left chest`, `right chest` |
 | `Amputation` | `left wrist`, `right wrist`, `left calf`, `right calf`, `left thigh`, `right thigh` |
 | `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `neck`, `right bicep`, `left biecp` |
-| `Broken Bone` | `right leg`, `left leg`, `right shoulder`, `left shoulder` |
+| `Broken Bone` | `right leg`, `left leg`, `right shoulder`, `left shoulder`, `right wrist`, `left wrist` |
 | `Internal` | `internal`, `unspecified` | 
 
 #### Military Branches, Ranks, and Rank Titles

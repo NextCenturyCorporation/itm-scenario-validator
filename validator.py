@@ -553,6 +553,48 @@ class YamlValidator:
         self.validate_events()
         self.validate_messages()
         self.are_all_scenes_reachable()
+        self.validate_quantized_support()
+
+
+    def validate_quantized_support(self):
+        '''
+        Flag if treatments_required > 1 for unsupported injures.
+        In general, these are injuries that aren't successfully treated by hemostatic gauze or pressure bandage.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        self.validate_quantized_support_in_characters(data['state']['characters'])
+
+        for scene in data['scenes']:
+            if 'state' in scene and 'characters' in scene['state']:
+                self.validate_quantized_support_in_characters(scene['state']['characters'])
+
+
+    def validate_quantized_support_in_characters(self, characters):
+        for character in characters:
+            for injury in character.get('injuries', []):
+                if 'treatments_required' in injury:
+                    required = injury['treatments_required']
+                    type = injury['name']
+                    location = injury['location']
+                    # look for an injury type that doesn't support quantized injuries
+                    if required > 1 and not self.supports_quantized_injury(type, location):
+                        self.logger.log(LogLevel.ERROR, f"Injuries requiring multiple treatments are only supported when the injury is treated by hemostatic gauze or pressure bandage, but not '{type}' injuries at '{location}' location in character '{character['id']}'.")
+                        self.invalid_values += 1
+
+
+    def supports_quantized_injury(self, injury_type, location):
+        '''
+        Returns whether the specified injury/location combination is successfully treated by a hemostatic gauze or pressure bandage.
+        '''
+        if injury_type == 'Laceration' and 'thigh' in location:
+            return False # takes a Tourniquet
+        if injury_type == 'Shrapnel' and 'face' in location:
+            return False # take a Nasopharyngeal airway
+        if injury_type == 'Puncture' and ('bicep' in location or 'thigh' in location or 'calf' in location or 'chest' in location):
+            return False # takes a Vented Chest Seal (chest) or Tourniquet (others)
+        if injury_type not in ['Laceration', 'Shrapnel', 'Puncture']:
+            return False # cannot take Hemostatic Gauze or Pressure Bandage
+        return True
 
 
     def simple_requirements(self):
@@ -896,7 +938,7 @@ class YamlValidator:
                 if loc[-2:] == '[]':
                     continue
                 v = self.get_value_at_key(loc.split('.'), copy.deepcopy(self.loaded_yaml))
-                if type(v) != list:
+                if not isinstance(v, list):
                     v = [v]
                 for v_element in v:
                     if v_element not in allowed_values:
@@ -1599,7 +1641,7 @@ class YamlValidator:
         3. 'when' cannot be 0
         '''
         data = copy.deepcopy(self.loaded_yaml)
-        entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic', 'tbd']
+        entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic']
         for scene in data['scenes'] + [data]:
             events = scene.get('state', {}).get('events', [])
             is_scenario_state = False
@@ -1673,7 +1715,7 @@ class YamlValidator:
         1. Object must be a valid character id or an EntityTypeEnum
         '''
         data = copy.deepcopy(self.loaded_yaml)
-        entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic', 'tbd']
+        entity_type_enum = ['ally', 'adversary', 'civilian', 'commander', 'everybody', 'medic']
         for scene in data['scenes']:
             for a in scene.get('action_mapping', []):
                 if a['action_type'] != 'MESSAGE':

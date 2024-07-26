@@ -57,6 +57,16 @@
                 ]
             }
         ],
+        "scenes[].state.characters[].demographics.military_disposition": [
+            {
+                "conditions": {
+                    "value": "Allied US"
+                },
+                "required": [
+                    "scenes[].state.characters[].demographics.military_branch"
+                ]
+            }
+        ],
         "scenes[].transitions": [
             {
                 "conditions": {
@@ -74,6 +84,16 @@
                 },
                 "required": [
                     "state.characters[].injuries[].severity"
+                ]
+            }
+        ],
+        "scenes[].state.characters[].injuries[].name": [
+            {
+                "conditions": {
+                    "value": "Burn"
+                },
+                "required": [
+                    "scenes[].state.characters[].injuries[].severity"
                 ]
             }
         ],
@@ -352,6 +372,48 @@
                 ]
             }
         ],
+        "scenes[].state.characters[].demographics.military_disposition": [
+            {
+                "conditions": {
+                    "value": "Allied"
+                },
+                "forbid": [
+                    "scenes[].state.characters[].demographics.military_branch"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "Civilian"
+                },
+                "forbid": [
+                    "scenes[].state.characters[].demographics.military_branch"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "Military Adversary"
+                },
+                "forbid": [
+                    "scenes[].state.characters[].demographics.military_branch"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "Military Neutral"
+                },
+                "forbid": [
+                    "scenes[].state.characters[].demographics.military_branch"
+                ]
+            },
+            {
+                "conditions": {
+                    "value": "Non-Military Adversary"
+                },
+                "forbid": [
+                    "scenes[].state.characters[].demographics.military_branch"
+                ]
+            }
+        ],
         "state.characters[].demographics.military_branch": [
             {
                 "conditions": {
@@ -360,6 +422,17 @@
                 "forbid": [
                     "state.characters[].demographics.rank",
                     "state.characters[].demographics.rank_title"
+                ]
+            }
+        ],
+        "scenes[].state.characters[].demographics.military_branch": [
+            {
+                "conditions": {
+                    "exists": false
+                },
+                "forbid": [
+                    "scenes[].state.characters[].demographics.rank",
+                    "scenes[].state.characters[].demographics.rank_title"
                 ]
             }
         ],
@@ -418,6 +491,20 @@
                     "left face"
                 ]
             },
+            "Abrasion": {
+                "state.characters[].injuries[].location": [
+                    "left face",
+                    "right face",
+                    "left thigh",
+                    "right thigh",
+                    "left calf",
+                    "right calf",
+                    "left bicep",
+                    "right bicep",
+                    "left forearm",
+                    "right forearm"
+                ]
+            },
             "Asthmatic": {
                 "state.characters[].injuries[].location": [
                     "internal"
@@ -443,6 +530,8 @@
                     "right neck",
                     "left bicep",
                     "right bicep",
+                    "left forearm",
+                    "right forearm",
                     "left shoulder",
                     "right shoulder",
                     "left stomach",
@@ -503,12 +592,144 @@
                 "state.characters[].injuries[].location": [
                     "right shoulder",
                     "left shoulder",
+                    "left wrist",
+                    "right wrist",
                     "left leg",
                     "right leg"
                 ]
             },
             "Internal": {
                 "state.characters[].injuries[].location": [
+                    "internal",
+                    "unspecified"
+                ]
+            }
+        },
+        "scenes[].state.characters[].injuries[].name": {
+            "Traumatic Brain Injury": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "head"
+                ]
+            },
+            "Open Abdominal Wound": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "stomach"
+                ]
+            },
+            "Ear Bleed": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "left face"
+                ]
+            },
+            "Abrasion": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "left face",
+                    "right face",
+                    "left thigh",
+                    "right thigh",
+                    "left calf",
+                    "right calf",
+                    "left bicep",
+                    "right bicep",
+                    "left forearm",
+                    "right forearm"
+                ]
+            },
+            "Asthmatic": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "internal"
+                ]
+            },
+            "Laceration": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "left face",
+                    "left forearm",
+                    "right forearm",
+                    "left stomach",
+                    "left thigh",
+                    "right thigh",
+                    "left calf",
+                    "right calf",
+                    "left hand",
+                    "right hand"
+                ]
+            },
+            "Puncture": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "left neck",
+                    "right neck",
+                    "left bicep",
+                    "right bicep",
+                    "left forearm",
+                    "right forearm",
+                    "left shoulder",
+                    "right shoulder",
+                    "left stomach",
+                    "right stomach",
+                    "left side",
+                    "right side",
+                    "left thigh",
+                    "right thigh",
+                    "left chest",
+                    "right chest",
+                    "center chest",
+                    "left calf",
+                    "right calf"
+                ]
+            },
+            "Shrapnel": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "left face",
+                    "right face",
+                    "left calf",
+                    "right calf"
+                ]
+            },
+            "Chest Collapse": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "left chest",
+                    "right chest"
+                ]
+            },
+            "Amputation": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "left wrist",
+                    "right wrist",
+                    "left calf",
+                    "right calf",
+                    "left thigh",
+                    "right thigh"
+                ]
+            },
+            "Burn": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "right forearm",
+                    "left forearm",
+                    "right calf",
+                    "left calf",
+                    "right thigh",
+                    "left thigh",
+                    "right side",
+                    "left side",
+                    "right chest",
+                    "left chest",
+                    "left bicep",
+                    "right bicep",
+                    "neck"
+                ]
+            },
+            "Broken Bone": {
+                "scenes[].state.characters[].injuries[].location": [
+                    "right shoulder",
+                    "left shoulder",
+                    "left wrist",
+                    "right wrist",
+                    "left leg",
+                    "right leg"
+                ]
+            },
+            "Internal": {
+                "scenes[].state.characters[].injuries[].location": [
                     "internal",
                     "unspecified"
                 ]
@@ -819,6 +1040,335 @@
                     "O-10"
                 ],
                 "state.characters[].demographics.rank_title": [
+                    "Specialist 1",
+                    "Specialist 2",
+                    "Specialist 3",
+                    "Specialist 4",
+                    "Staff Sergeant",
+                    "Technical Sergeant",
+                    "Master Sergeant",
+                    "Senior Master Sergeant",
+                    "Chief Master Sergeant",
+                    "Chief Master Sergeant of the Space Force",
+                    "2nd Lieutenant",
+                    "1st Lieutenant",
+                    "Captain",
+                    "Major",
+                    "Lieutenant Colonel",
+                    "Colonel",
+                    "Brigadier General",
+                    "Major General",
+                    "Lieutenant General",
+                    "Chief of Space Operations",
+                    "General"
+                ]
+            }
+        },
+        "scenes[].state.characters[].demographics.military_branch": {
+            "US Army": {
+                "scenes[].state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "E-9 (special)",
+                    "W-1",
+                    "W-2",
+                    "W-3",
+                    "W-4",
+                    "W-5",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "scenes[].state.characters[].demographics.rank_title": [
+                    "Private (Recruit)",
+                    "Private",
+                    "Private First Class",
+                    "Specialist",
+                    "Corporal",
+                    "Sergeant",
+                    "Staff Sergeant",
+                    "Sergeant First Class",
+                    "Master Sergeant",
+                    "First Sergeant",
+                    "Sergeant Major",
+                    "Command Sergeant Major",
+                    "Sergeant Major of the Army",
+                    "Warrant Officer 1",
+                    "Chief Warrant Officer 2",
+                    "Chief Warrant Officer 3",
+                    "Chief Warrant Officer 4",
+                    "Chief Warrant Officer 5",
+                    "2nd Lieutenant",
+                    "1st Lieutenant",
+                    "Captain",
+                    "Major",
+                    "Lieutenant Colonel",
+                    "Colonel",
+                    "Brigadier General",
+                    "Major General",
+                    "Lieutenant General",
+                    "Army Chief of Staff (special)",
+                    "General"
+                ]
+            },
+            "US Air Force": {
+                "scenes[].state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "Special",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "scenes[].state.characters[].demographics.rank_title": [
+                    "Airman Basic",
+                    "Airman",
+                    "Airman First Class",
+                    "Senior Airman",
+                    "Staff Sergeant",
+                    "Technical Sergeant",
+                    "Master Sergeant",
+                    "Senior Master Sergeant",
+                    "First Sergeant / Chief Master Sergeant",
+                    "Chief Master Sergeant of the Air Force",
+                    "2nd Lieutenant",
+                    "1st Lieutenant",
+                    "Captain",
+                    "Major",
+                    "Lieutenant Colonel",
+                    "Colonel",
+                    "Brigadier General",
+                    "Major General",
+                    "Lieutenant General",
+                    "Air Force Chief of Staff (special)",
+                    "General"
+                ]
+            },
+            "US Navy": {
+                "scenes[].state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "Special (Navy)",
+                    "W-1",
+                    "W-2",
+                    "W-3",
+                    "W-4",
+                    "W-5",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "scenes[].state.characters[].demographics.rank_title": [
+                    "Seaman Recruit",
+                    "Seaman Apprentice",
+                    "Seaman",
+                    "Petty Officer Third Class",
+                    "Petty Officer Second Class",
+                    "Petty Officer First Class",
+                    "Chief Petty Officer",
+                    "Senior Chief Petty Officer",
+                    "Master Chief Petty Officer",
+                    "Master Chief Petty Officer of the Navy",
+                    "Warrant Officer 1",
+                    "Chief Warrant Officer 2",
+                    "Chief Warrant Officer 3",
+                    "Chief Warrant Officer 4",
+                    "Chief Warrant Officer",
+                    "Ensign",
+                    "Lieutenant, Junior Grade",
+                    "Lieutenant",
+                    "Lieutenant Commander",
+                    "Commander",
+                    "Captain",
+                    "Rear Admiral (Lower Half)",
+                    "Rear Admiral (Upper Half)",
+                    "Vice Admiral",
+                    "Chief of Naval Operations (special)",
+                    "Admiral"
+                ]
+            },
+            "US Coast Guard": {
+                "scenes[].state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "Special (Coast Guard)",
+                    "W-1",
+                    "W-2",
+                    "W-3",
+                    "W-4",
+                    "W-5",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "scenes[].state.characters[].demographics.rank_title": [
+                    "Seaman Recruit",
+                    "Seaman Apprentice",
+                    "Seaman",
+                    "Petty Officer Third Class",
+                    "Petty Officer Second Class",
+                    "Petty Officer First Class",
+                    "Chief Petty Officer",
+                    "Senior Chief Petty Officer",
+                    "Master Chief Petty Officer",
+                    "Master Chief Petty Officer of the Coast Guard",
+                    "Warrant Officer 1",
+                    "Chief Warrant Officer 2",
+                    "Chief Warrant Officer 3",
+                    "Chief Warrant Officer 4",
+                    "Chief Warrant Officer",
+                    "Ensign",
+                    "Lieutenant, Junior Grade",
+                    "Lieutenant",
+                    "Lieutenant Commander",
+                    "Commander",
+                    "Captain",
+                    "Rear Admiral (Lower Half)",
+                    "Rear Admiral (Upper Half)",
+                    "Vice Admiral",
+                    "Commandant of the Coast Guard (special)",
+                    "Admiral"
+                ]
+            },
+            "US Marine Corps": {
+                "scenes[].state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "Special",
+                    "W-1",
+                    "W-2",
+                    "W-3",
+                    "W-4",
+                    "W-5",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "scenes[].state.characters[].demographics.rank_title": [
+                    "Private",
+                    "Private First Class",
+                    "Lance Corporal",
+                    "Corporal",
+                    "Sergeant",
+                    "Staff Sergeant",
+                    "Gunnery Sergeant",
+                    "Master Sergeant",
+                    "First Sergeant",
+                    "Master Gunnery Sergeant",
+                    "Sergeant Major",
+                    "Sergeant Major of the Marine Corps",
+                    "Warrant Officer",
+                    "Chief Warrant Officer 2",
+                    "Chief Warrant Officer 3",
+                    "Chief Warrant Officer 4",
+                    "Chief Warrant Officer 5",
+                    "2nd Lieutenant",
+                    "1st Lieutenant",
+                    "Captain",
+                    "Major",
+                    "Lieutenant Colonel",
+                    "Colonel",
+                    "Brigadier General",
+                    "Major General",
+                    "Lieutenant General",
+                    "Commandant of the Marine Corps",
+                    "General"
+                ]
+            },
+            "US Space Force": {
+                "scenes[].state.characters[].demographics.rank": [
+                    "E-1",
+                    "E-2",
+                    "E-3",
+                    "E-4",
+                    "E-5",
+                    "E-6",
+                    "E-7",
+                    "E-8",
+                    "E-9",
+                    "Special",
+                    "O-1",
+                    "O-2",
+                    "O-3",
+                    "O-4",
+                    "O-5",
+                    "O-6",
+                    "O-7",
+                    "O-8",
+                    "O-9",
+                    "O-10"
+                ],
+                "scenes[].state.characters[].demographics.rank_title": [
                     "Specialist 1",
                     "Specialist 2",
                     "Specialist 3",
@@ -2016,7 +2566,1179 @@
                     ]
                 }
             }
-        ]
+        ],
+        "scenes[].state.characters[].demographics": [
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army"
+                    ],
+                    "rank": [
+                        "E-1"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Private (Recruit)"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army"
+                    ],
+                    "rank": [
+                        "E-2"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Private"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army"
+                    ],
+                    "rank": [
+                        "E-3"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Private First Class"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army"
+                    ],
+                    "rank": [
+                        "E-4"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Specialist",
+                        "Corporal"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "E-5"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Sergeant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "E-6"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Staff Sergeant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army"
+                    ],
+                    "rank": [
+                        "E-7"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Sergeant First Class"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "E-8"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Master Sergeant",
+                        "First Sergeant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army"
+                    ],
+                    "rank": [
+                        "E-9"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Sergeant Major",
+                        "Command Sergeant Major"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army"
+                    ],
+                    "rank": [
+                        "E-9 (special)"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Sergeant Major of the Army"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "W-1"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Warrant Officer 1"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Coast Guard",
+                        "US Navy",
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "W-2"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Chief Warrant Officer 2"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Coast Guard",
+                        "US Navy",
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "W-3"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Chief Warrant Officer 3"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Coast Guard",
+                        "US Navy",
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "W-4"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Chief Warrant Officer 4"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "W-5"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Chief Warrant Officer 5"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps",
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "O-1"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "2nd Lieutenant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps",
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "O-2"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "1st Lieutenant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps",
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "O-3"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Captain"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps",
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "O-4"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Major"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps",
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "O-5"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Lieutenant Colonel"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps",
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "O-6"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Colonel"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps",
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "O-7"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Brigadier General"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps",
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "O-8"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Major General"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army",
+                        "US Marine Corps",
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "O-9"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Lieutenant General"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Army"
+                    ],
+                    "rank": [
+                        "O-10"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Army Chief of Staff (special)",
+                        "General"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force"
+                    ],
+                    "rank": [
+                        "E-1"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Airman Basic"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force"
+                    ],
+                    "rank": [
+                        "E-2"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Airman"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force"
+                    ],
+                    "rank": [
+                        "E-3"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Airman First Class"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force"
+                    ],
+                    "rank": [
+                        "E-4"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Senior Airman"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "E-5"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Staff Sergeant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "E-6"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Technical Sergeant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "E-7"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Master Sergeant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force",
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "E-8"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Senior Master Sergeant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force"
+                    ],
+                    "rank": [
+                        "E-9"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "First Sergeant / Chief Master Sergeant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force"
+                    ],
+                    "rank": [
+                        "Special"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Chief Master Sergeant of the Air Force"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Air Force"
+                    ],
+                    "rank": [
+                        "O-10"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Air Force Chief of Staff (special)",
+                        "General"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "E-1"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Seaman Recruit"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "E-2"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Seaman Apprentice"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "E-3"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Seaman"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "E-4"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Petty Officer Third Class"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "E-5"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Petty Officer Second Class"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "E-6"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Petty Officer First Class"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "E-7"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Chief Petty Officer"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "E-8"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Senior Chief Petty Officer"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "E-9"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Master Chief Petty Officer"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "Special (Navy)"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Master Chief Petty Officer of the Navy"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard"
+                    ],
+                    "rank": [
+                        "Special (Coast Guard)"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Master Chief Petty Officer of the Coast Guard"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "W-5"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Chief Warrant Officer"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "O-1"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Ensign"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "O-2"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Lieutenant, Junior Grade"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "O-3"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Lieutenant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "O-4"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Lieutenant Commander"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "O-5"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Commander"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "O-6"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Captain"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "O-7"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Rear Admiral (Lower Half)"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "O-8"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Rear Admiral (Upper Half)"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard",
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "O-9"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Rear Admiral (Vice Admiral)"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Navy"
+                    ],
+                    "rank": [
+                        "O-10"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Chief of Naval Operations",
+                        "Admiral"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Coast Guard"
+                    ],
+                    "rank": [
+                        "O-10"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Commandant of the Coast Guard (special",
+                        "Admiral"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "E-1"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Private"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "E-2"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Private First Class"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "E-3"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Lance Corporal"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "E-4"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Corporal"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "E-7"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Gunnery Sergeant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "E-9"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Master Gunnery Sergeant",
+                        "Sergeant Major of the Marine Corps"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "W-1"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Warrant Officer"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Marine Corps"
+                    ],
+                    "rank": [
+                        "O-10"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Commandant of the Marine Corps",
+                        "General"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "E-1"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Specialist 1"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "E-2"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Specialist 2"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "E-3"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Specialist 3"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "E-4"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Specialist 4"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "E-9"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Chief Master Sergeant"
+                    ]
+                }
+            },
+            {
+                "condition": {
+                    "military_branch": [
+                        "US Space Force"
+                    ],
+                    "rank": [
+                        "Special"
+                    ]
+                },
+                "requirement": {
+                    "rank_title": [
+                        "Chief Master Sergeant of the Space Force",
+                        "Chief of Space Operations"
+                    ]
+                }
+            }
+                ]
     },
     "valueMatch": {
         "state.characters[].injuries[].source_character": "state.characters[].id",
