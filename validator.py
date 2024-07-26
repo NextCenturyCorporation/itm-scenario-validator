@@ -571,16 +571,15 @@ class YamlValidator:
 
     def validate_quantized_support_in_characters(self, characters):
         for character in characters:
-            if 'injuries' in character:
-                for injury in character['injuries']:
-                    if 'treatments_required' in injury:
-                        required = injury['treatments_required']
-                        type = injury['name']
-                        location = injury['location']
-                        # look for an injury type that doesn't support quantized injuries
-                        if required > 1 and not self.supports_quantized_injury(type, location):
-                            self.logger.log(LogLevel.ERROR, f"Injuries requiring multiple treatments are only supported when the injury is treated by hemostatic gauze or pressure bandage, but not '{type}' injuries at '{location}' location in character '{character['id']}'.")
-                            self.invalid_values += 1
+            for injury in character.get('injuries', []):
+                if 'treatments_required' in injury:
+                    required = injury['treatments_required']
+                    type = injury['name']
+                    location = injury['location']
+                    # look for an injury type that doesn't support quantized injuries
+                    if required > 1 and not self.supports_quantized_injury(type, location):
+                        self.logger.log(LogLevel.ERROR, f"Injuries requiring multiple treatments are only supported when the injury is treated by hemostatic gauze or pressure bandage, but not '{type}' injuries at '{location}' location in character '{character['id']}'.")
+                        self.invalid_values += 1
 
 
     def supports_quantized_injury(self, injury_type, location):
@@ -588,11 +587,13 @@ class YamlValidator:
         Returns whether the specified injury/location combination is successfully treated by a hemostatic gauze or pressure bandage.
         '''
         if injury_type == 'Laceration' and 'thigh' in location:
-            return False
-        if injury_type == 'Shrapnel' and 'face' not in location:
-            return False
+            return False # takes a Tourniquet
+        if injury_type == 'Shrapnel' and 'face' in location:
+            return False # untreatable
         if injury_type == 'Puncture' and 'bicep' in location or 'thigh' in location or 'calf' in location or 'chest' in location:
-            return False
+            return False # takes a Vented Chest Seal (chest) or Tourniquet (others)
+        if injury_type not in ['Laceration', 'Shrapnel', 'Puncture']:
+            return False # cannot take Hemostatic Gauze or Pressure Bandage
         return True
 
 
