@@ -96,7 +96,7 @@ ALLOWED_INJURIES = [
     "L Chest Collapse",
     "R Chest Collapse",
     "Asthmatic",
-    "Hidden_StomachLaceration",
+    "L Stomach Laceration",
     "L Stomach Puncture",
     "R Stomach Puncture",
     "L Side Puncture",
@@ -602,7 +602,7 @@ class YamlConverter:
                     inj = 'L Body Burn'
             elif name == 'Laceration':
                 if loc == 'left stomach':
-                    inj = 'Hidden_StomachLaceration'
+                    inj = 'L Stomach Laceration'
                 if 'face' in loc:
                     inj = 'Forehead Scrape'
             elif name == 'Ear Bleed':
