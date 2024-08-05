@@ -37,13 +37,23 @@
                 ]
             }
         ],
-        "scenes[].action_mapping[].conditions": [
+        "scenes[].action_mapping[].action_conditions": [
             {
                 "conditions": {
                     "length": 2
                 },
                 "required": [
-                    "scenes[].action_mapping[].condition_semantics"
+                    "scenes[].action_mapping[].action_condition_semantics"
+                ]
+            }
+        ],
+        "scenes[].action_mapping[].probe_conditions": [
+            {
+                "conditions": {
+                    "length": 2
+                },
+                "required": [
+                    "scenes[].action_mapping[].probe_condition_semantics"
                 ]
             }
         ],
@@ -3754,7 +3764,8 @@
         "scenes[].action_mapping[].character_id",
         "scenes[].tagging.probe_responses[].character_id",
         "scenes[].transitions.character_vitals[].character_id",
-        "scenes[].action_mapping[].conditions.character_vitals[].character_id",
+        "scenes[].action_mapping[].action_conditions.character_vitals[].character_id",
+        "scenes[].action_mapping[].probe_conditions.character_vitals[].character_id",
         "scenes[].removed_characters[]",
         "scenes[].state.mission.character_importance[]"
     ],

@@ -108,7 +108,8 @@ In order for a yaml file to be considered "valid", the following conditions must
         
 ### Dependencies
 #### Conditional Requirements
-* If `scenes[n].action_mapping[m].conditions` has a length of 2 or more, `scenes[n].action_mapping[m].condition_semantics` is required
+* If `scenes[n].action_mapping[m].probe_conditions` has a length of 2 or more, `scenes[n].action_mapping[m].probe_condition_semantics` is required
+* If `scenes[n].action_mapping[m].action_conditions` has a length of 2 or more, `scenes[n].action_mapping[m].action_condition_semantics` is required
 * If `scenes[n].transitions` has a length of 2 or more, `scenes[n].transition_semantics` is required 
 * If `state.characters[n].demographics.military_disposition` is "Allied US", `state.characters[n].demographics.military_branch` is required 
 * If `state.characters[n].injuries[m].name` is "Burn", `state.characters[n].injuries[m].severity` is required 
@@ -147,12 +148,14 @@ If persist_characters is false:
 * `scenes[0].action_mapping[].character_id`: `state.characters[].id`,
 * `scenes[0].tagging.probe_responses[].character_id`: `state.characters[].id`,
 * `scenes[0].transitions.character_vitals[].character_id`: `state.characters[].id`,
-* `scenes[0].action_mapping[].conditions.character_vitals[].character_id`: `state.characters[].id`
+* `scenes[0].action_mapping[].action_conditions.character_vitals[].character_id`: `state.characters[].id`
+* `scenes[0].action_mapping[].probe_conditions.character_vitals[].character_id`: `state.characters[].id`
 * For scenes[n] where (n>0):
     * `scenes[n].action_mapping[].character_id`: `scenes[n].state.characters[].id`,
     * `scenes[n].tagging.probe_responses[].character_id`: `scenes[n].state.characters[].id`,
     * `scenes[n].transitions.character_vitals[].character_id`: `scenes[n].state.characters[].id`,
-    * `scenes[n].action_mapping[].conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
+    * `scenes[n].action_mapping[].probe_conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
+    * `scenes[n].action_mapping[].action_conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
 Otherwise, complete the same checks, but match it up against all characters defined throughout the scenario file. Note that this may give some false validity, as a character may end up being used before it is defined. Please be cautious when defining characters and using persist_characters. 
 In addition, if a character is removed anywhere throughout the scenario, a warning will be issued. Please make sure that your branching scenes do not cause a situation where a character has been removed and then used.
 

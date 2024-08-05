@@ -65,6 +65,10 @@ components:
     ActionMapping:
       description: Details for how a given action maps to a probe response
       properties:
+        action_condition_semantics:
+          $ref: '#/components/schemas/SemanticTypeEnum'
+        action_conditions:
+          $ref: '#/components/schemas/Conditions'
         action_id:
           description: A unique action ID within the scenario
           example: action_01
@@ -77,10 +81,6 @@ components:
         choice:
           description: A valid choice for the specified probe_id
           type: string
-        condition_semantics:
-          $ref: '#/components/schemas/SemanticTypeEnum'
-        conditions:
-          $ref: '#/components/schemas/Conditions'
         intent_action:
           default: false
           description: Whether this mapping is to take an action or to intend one
@@ -106,6 +106,10 @@ components:
           - treatment: Tourniquet
           - location: right forearm
           type: object
+        probe_condition_semantics:
+          $ref: '#/components/schemas/SemanticTypeEnum'
+        probe_conditions:
+          $ref: '#/components/schemas/Conditions'
         probe_id:
           description: A valid probe_id from the appropriate TA1
           type: string
@@ -767,8 +771,8 @@ components:
       - Chest Collapse
       - Amputation
       - Burn
-      - Broken Bone
       - Abrasion
+      - Broken Bone
       - Internal
       - Traumatic Brain Injury
       - Open Abdominal Wound
@@ -1619,7 +1623,7 @@ info:
 
     The API is based on the OpenAPI 3.0.3 specification.'
   title: ITM TA3 API
-  version: 0.3.2
+  version: 0.3.3
 openapi: 3.0.3
 paths:
   /ta2/getAlignmentTarget:
