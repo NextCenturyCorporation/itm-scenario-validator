@@ -5,7 +5,7 @@ info:
     This is the specification of the TA3 API for In The Moment (ITM).  Currently, the Evaluation API for TA2 supports functionality for the Dry Run Evaluation.
 
     The API is based on the OpenAPI 3.0.3 specification.
-  version: 0.3.2
+  version: 0.3.3
 servers:
   - url: /
 tags:
@@ -1135,9 +1135,13 @@ components:
           description: KDMA associations for this choice, if provided by TA1
           example:
             - Mission: 0.8
-        condition_semantics:
+        action_condition_semantics:
           $ref: "#/components/schemas/SemanticTypeEnum"
-        conditions:
+        action_conditions:
+          $ref: "#/components/schemas/Conditions"
+        probe_condition_semantics:
+          $ref: "#/components/schemas/SemanticTypeEnum"
+        probe_conditions:
           $ref: "#/components/schemas/Conditions"
     Conditions:
       type: object
@@ -1809,8 +1813,8 @@ components:
         - Chest Collapse
         - Amputation
         - Burn
-        - Broken Bone
         - Abrasion
+        - Broken Bone
         - Internal
         - Traumatic Brain Injury
         - Open Abdominal Wound

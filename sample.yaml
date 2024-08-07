@@ -163,7 +163,8 @@ state:
 #   - After that, characters can persist to the next scene if persist_characters is True.
 #   - If persist_characters is false (or omitted), then characters also must be supplied.
 # - Each action_mapping in a scene must have an associated probe response(s)
-#   - Those responses may have other conditions (e.g., certain amount of time passed, treatments already done, etc.)
+#   - Whether that action is exposed to ADMs can be conditionalized (e.g., actions already taken, probes have been sent, etc.).
+#   - Whether to send the probe response can be conditionalized.
 #   - Taking an action may change character vitals and supplies, but not other state (other than elapsed time)
 #   - If an action requires a change in other state, or the restricted actions, then that action starts a new scene.
 #   - The Scene specifies the default next scene in the scenario.
@@ -179,7 +180,7 @@ state:
 #   - an amount of time that has passed
 #   - a given supply (or supplies) reaches a threshhold
 #   - a given character's vitals reach a level (e.g., heart_rate = NONE, breathing = NONE, etc.)
-#   - combination of the above, with and/or
+#   - combination of the above, with and/or/not
 scenes:
   - id: opening_scene
     # The scene specified in first_scene uses the state defined at the scenario level
@@ -242,9 +243,14 @@ scenes:
         character_id: Mike
         probe_id: sample-probe-1
         choice: s1-p1-choice1
-        condition_semantics: not # 'not' semantics means that the probe is fired if all of the conditions are false
-        conditions:
-          # Action conditions are configured just like scene transitions below.  If the condition is met, the probe response is sent.
+        action_condition_semantics: or # 'or' semantics means that the action appears in the list if any of the conditions is true
+        # Action mapping action_conditions are configured just like scene transitions below.  If the condition is met, the action mapping appears in the list for ADMs.
+        action_conditions:
+          elapsed_time_lt: 100
+          probe_responses: [s1-p1-choice2]
+        probe_condition_semantics: not # 'not' semantics means that the probe is fired if all of the conditions are false
+        # Action mapping probe_conditions are configured just like scene transitions below.  If the condition is met, the probe response is sent.
+        probe_conditions:
           elapsed_time_gt: 3000
           elapsed_time_lt: 5
       - action_id: mike-vitals
