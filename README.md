@@ -94,6 +94,7 @@ In order for a yaml file to be considered "valid", the following conditions must
         * `breathing`
         * `heart_rate`
         * `spo2`
+        * `ambulatory`
     * `restricted_actions` cannot include `end_scene`
     * `session_complete` is a prohibited key in `scenario`
     * `scenario_complete` is a prohibited key in `state`
@@ -208,7 +209,7 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 #### Eval Mode
 When not running in training mode (-t), additional checks are implemented:
 * No supplies or treatments are allowed that are not in the simulator. Put the names of these treatments in the trainingOnlySupplies array in dependencies.json
-* No more than 8 injuries of types (puncture, burn, or laceration) may be given to a character at a time
+* No more than 12 injuries of types (abrasion, puncture, burn, or laceration) may be given to a character at a time
 
 
 #### Injury/Location Matches
@@ -220,12 +221,12 @@ When not running in training mode (-t), additional checks are implemented:
 | `Ear Bleed` | `left face` |
 | `Asthmatic` | `internal` |
 | `Abrasion` | `left face`, `right face`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left bicep`, `right bicep`, `left forearm`, `right forearm` |
-| `Laceration` | `left face`, `left forearm`, `right forearm`, `left stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist` |
+| `Laceration` | `left face`, `left forearm`, `right forearm`, `left stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left hand`, `right hand` |
 | `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left forearm`, `right forearm`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest`, `left calf`, `right calf` |
-| `Shrapnel` | `left face`, `right face`, `left calf`, `right calf` |
+| `Shrapnel` | `right face`, `left calf`, `right calf` |
 | `Chest Collapse` | `left chest`, `right chest` |
 | `Amputation` | `left wrist`, `right wrist`, `left calf`, `right calf`, `left thigh`, `right thigh` |
-| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `neck`, `right bicep`, `left biecp` |
+| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `neck`, `right bicep`, `left bicep` |
 | `Broken Bone` | `right leg`, `left leg`, `right shoulder`, `left shoulder`, `right wrist`, `left wrist` |
 | `Internal` | `internal`, `unspecified` | 
 
