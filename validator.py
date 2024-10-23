@@ -1866,7 +1866,8 @@ class YamlValidator:
                 # check that locations that can only have one injury do
                 for loc in single_only:
                     if len(single_only[loc]) > 1:
-                        self.logger.log(LogLevel.ERROR, f"Character '{c['id']}' has multiple injuries at the same location: '{loc}'.")
+                        scene_str = f"in scene '{scene.get('id')}'" if scene.get('id') is not None else 'at the state level'
+                        self.logger.log(LogLevel.ERROR, f"Character '{c['id']}' has multiple injuries at the same location: '{loc}' {scene_str}.")
                         self.invalid_values += 1   
                 
                 for i in injs:
