@@ -185,6 +185,8 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 * If the scene is the first scene, `scenes[].state` should _not_ be provided
 * No blanket can appear on the character at the start. 
 * Quantized injuries (where `treatments_required` > 1) aren't supported for injuries that aren't successfully treated by hemostatic gauze or pressure bandage.
+* No more than one injury can appear on the same limb or same side of the face
+* APPLY_TREATMENT actions must not contain locations that do not match the location of an injury on the specified character
 
 #### Message/Event Rules
 * `source` is recommended for all events
@@ -198,6 +200,7 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 * An injury may not be partially treated
 * An injury's treatments_applied property must either be 0 or equal to treatments_required
 * An injury's status must be 'treated' iff treatments_applied == treatments_required
+* An injury's status must be 'treated' if a relateed injury's status is treated (i.e. if R Bicep Puncture is treated, R Forearm Puncture must be treated)
 
 
 #### Unseen Characters
