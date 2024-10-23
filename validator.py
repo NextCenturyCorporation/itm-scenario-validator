@@ -1206,7 +1206,7 @@ class YamlValidator:
                         for key in params:
                             allowed_params = ['treatment', 'location', 'category', 'aid_id', 'type', 'object', 'action_type', 'relevant_state', 'recipient', 'character_id']
                             if key not in allowed_params:
-                                self.logger.log(LogLevel.ERROR, "'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(allowed_params) + " but has key '" + key + "'.")
+                                self.logger.log(LogLevel.ERROR, "'scenes[" + str(scene['id']) + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(allowed_params) + " but has key '" + str(key) + "'.")
                                 self.invalid_keys += 1 
                     j += 1
             i += 1
@@ -1456,11 +1456,11 @@ class YamlValidator:
             for sid in segment:
                 if sid == first_scene_id:
                     # get scenario characters from first scene
-                    injuries += get_basic_chars(data).get(char_id)
+                    injuries += get_basic_chars(data).get(char_id, [])
                 else:
                     # modify allowed characters up to this point
                     scene = self.get_scene_by_id(sid)
-                    tmp_inj = get_basic_chars(scene).get(char_id)
+                    tmp_inj = get_basic_chars(scene).get(char_id, [])
                     if tmp_inj is not None:
                         injuries = tmp_inj
         return injuries
@@ -1798,6 +1798,8 @@ class YamlValidator:
             for action in scene['action_mapping']:
                 if action.get('action_type') == 'APPLY_TREATMENT' and action.get('character_id', None) is not None and action.get('parameters', {}).get('location', None) is not None:
                     loc = action.get('parameters').get('location')
+                    if loc == 'internal' and action.get('parameters').get('treatment') in ['Blood', 'Pain Medications', 'Nasopharyngeal airway', 'IV Bag', 'Fentanyl Lollipop']:
+                          continue
                     char = action.get('character_id')
                     injuries = self.get_char_injuries_in_scene(data, scene['id'], char)
                     found = False
@@ -1806,8 +1808,8 @@ class YamlValidator:
                             found = True
                             break
                     if not found:
-                        self.logger.log(LogLevel.ERROR, f"Scene '{scene['id']}' has APPLY_TREATMENT action for '{char}' with location '{loc}', but that character has no injury at that location during this scene.")
-                        self.invalid_values += 1   
+                        self.logger.log(LogLevel.WARN, f"Scene '{scene['id']}' has APPLY_TREATMENT action for '{char}' with location '{loc}', but that character has no injury at that location during this scene.")
+                        self.warning_count += 1   
 
 
     def validate_injury_sets(self):
