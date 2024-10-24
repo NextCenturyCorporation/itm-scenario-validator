@@ -59,10 +59,11 @@ class ApiGenerator:
         # validator requires all vitals properties to be specified
         required_vitals = new_api['components']['schemas']['Vitals']['required'] if 'required' in new_api['components']['schemas']['Vitals'] else []
         required_vitals.append('avpu')
+        required_vitals.append('ambulatory')
         required_vitals.append('mental_status')
         required_vitals.append('breathing')
         required_vitals.append('heart_rate')
-        required_vitals.append('Spo2')
+        required_vitals.append('spo2')
         new_api['components']['schemas']['Vitals']['required'] = required_vitals
 
         # create a new enum for restricted_actions that doesn't include END_SCENE

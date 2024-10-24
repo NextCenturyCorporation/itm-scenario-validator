@@ -559,7 +559,6 @@
             },
             "Shrapnel": {
                 "state.characters[].injuries[].location": [
-                    "left face",
                     "right face",
                     "left calf",
                     "right calf"
@@ -689,7 +688,6 @@
             },
             "Shrapnel": {
                 "scenes[].state.characters[].injuries[].location": [
-                    "left face",
                     "right face",
                     "left calf",
                     "right calf"

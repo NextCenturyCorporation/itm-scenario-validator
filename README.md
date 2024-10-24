@@ -49,7 +49,8 @@ options:
   -h, --help                Show this help message and exit.
   -f PATH, --filepath PATH  The path to the yaml file. Required if -u is not specified.
   -u, --update              Switch to update the api files or not. Required if -f is not specified.
-  -t, --train               Validate a training scenario yaml.```
+  -t, --train               Validate a training scenario yaml.
+  ```
 
 ## API Changes
 - When the Swagger API changes, make sure you upload the newest version as `api.yaml` to the `api_files` directory.
@@ -94,6 +95,7 @@ In order for a yaml file to be considered "valid", the following conditions must
         * `breathing`
         * `heart_rate`
         * `spo2`
+        * `ambulatory`
     * `restricted_actions` cannot include `end_scene`
     * `session_complete` is a prohibited key in `scenario`
     * `scenario_complete` is a prohibited key in `state`
@@ -156,6 +158,7 @@ If persist_characters is false:
     * `scenes[n].transitions.character_vitals[].character_id`: `scenes[n].state.characters[].id`,
     * `scenes[n].action_mapping[].probe_conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
     * `scenes[n].action_mapping[].action_conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
+
 Otherwise, complete the same checks, but match it up against all characters defined throughout the scenario file. Note that this may give some false validity, as a character may end up being used before it is defined. Please be cautious when defining characters and using persist_characters. 
 In addition, if a character is removed anywhere throughout the scenario, a warning will be issued. Please make sure that your branching scenes do not cause a situation where a character has been removed and then used.
 
@@ -184,6 +187,8 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 * If the scene is the first scene, `scenes[].state` should _not_ be provided
 * No blanket can appear on the character at the start. 
 * Quantized injuries (where `treatments_required` > 1) aren't supported for injuries that aren't successfully treated by hemostatic gauze or pressure bandage.
+* No more than one injury can appear on the same limb or same side of the face
+* APPLY_TREATMENT actions must not contain locations that do not match the location of an injury on the specified character
 
 #### Message/Event Rules
 * `source` is recommended for all events
@@ -193,10 +198,11 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 * `when` cannot be 0
 
 
-#### Injury treatment rules
+#### Injury Treatment Rules
 * An injury may not be partially treated
 * An injury's treatments_applied property must either be 0 or equal to treatments_required
 * An injury's status must be 'treated' iff treatments_applied == treatments_required
+* An injury's status must be 'treated' if a relateed injury's status is treated (i.e. if R Bicep Puncture is treated, R Forearm Puncture must be treated)
 
 
 #### Unseen Characters
@@ -208,11 +214,12 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 #### Eval Mode
 When not running in training mode (-t), additional checks are implemented:
 * No supplies or treatments are allowed that are not in the simulator. Put the names of these treatments in the trainingOnlySupplies array in dependencies.json
-* No more than 8 injuries of types (puncture, burn, or laceration) may be given to a character at a time
+* No more than 12 injuries of types (abrasion, puncture, burn, or laceration) may be given to a character at a time
 
 
 #### Injury/Location Matches
-* Injuries are only allowed to have specific locations. Please follow the table to create valid matches. 
+* Injuries are only allowed to have specific locations. Please follow the table to create valid matches:
+
 | Injury name | Allowed Locations |
 | --- | --- |
 | `Traumatic Brain Injury` | `head` |
@@ -220,12 +227,12 @@ When not running in training mode (-t), additional checks are implemented:
 | `Ear Bleed` | `left face` |
 | `Asthmatic` | `internal` |
 | `Abrasion` | `left face`, `right face`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left bicep`, `right bicep`, `left forearm`, `right forearm` |
-| `Laceration` | `left face`, `left forearm`, `right forearm`, `left stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left wrist`, `right wrist` |
+| `Laceration` | `left face`, `left forearm`, `right forearm`, `left stomach`, `left thigh`, `right thigh`, `left calf`, `right calf`, `left hand`, `right hand` |
 | `Puncture` | `left neck`, `right neck`, `left bicep`, `right bicep`, `left forearm`, `right forearm`, `left shoulder`, `right shoulder`, `left stomach`, `right stomach`, `left side`, `right side`, `left thigh`, `right thigh`, `left chest`, `right chest`, `center chest`, `left calf`, `right calf` |
-| `Shrapnel` | `left face`, `right face`, `left calf`, `right calf` |
+| `Shrapnel` | `right face`, `left calf`, `right calf` |
 | `Chest Collapse` | `left chest`, `right chest` |
 | `Amputation` | `left wrist`, `right wrist`, `left calf`, `right calf`, `left thigh`, `right thigh` |
-| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `neck`, `right bicep`, `left biecp` |
+| `Burn` | `right forearm`, `left forearm`, `right calf`, `left calf`, `right thigh`, `left thigh`, `right side`, `left side`, `right chest`, `left chest`, `neck`, `right bicep`, `left bicep` |
 | `Broken Bone` | `right leg`, `left leg`, `right shoulder`, `left shoulder`, `right wrist`, `left wrist` |
 | `Internal` | `internal`, `unspecified` | 
 

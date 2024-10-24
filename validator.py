@@ -187,6 +187,10 @@ class YamlValidator:
         '''
         paths = []
         scene = self.get_scene_by_id(scene_id)
+        if scene is None:
+            self.logger.log(LogLevel.ERROR, f"Key 'next_scene' has value {scene_id}, which is not a valid scene.")
+            self.invalid_values += 1
+            return path
         next_scene_id = None
         if type(scene_id) is int and int(scene_id) >= 0:
             next_scene_id = int(scene_id) + 1
@@ -325,8 +329,8 @@ class YamlValidator:
         if level_name == 'characters':
             if 'injuries' in to_validate:
                 injury_count = sum(1 for injury in to_validate['injuries'] if injury['name'] not in ['Ear Bleed', 'Asthmatic', 'Internal'] and 'Broken' not in injury['name'])
-                if injury_count > 8 and not self.train_mode:
-                    self.logger.log(LogLevel.ERROR, f"Character '{to_validate.get('name')}' has {injury_count} 'masked' injuries (punctures, lacerations, burns), which exceeds the maximum of 8 allowed in the simulation.")
+                if injury_count > 12 and not self.train_mode:
+                    self.logger.log(LogLevel.ERROR, f"Character '{to_validate.get('name')}' has {injury_count} 'masked' injuries (abrasions, punctures, lacerations, burns), which exceeds the maximum of 12 allowed in the simulation.")
     
 
     def determine_first_scene(self, data):
@@ -339,7 +343,10 @@ class YamlValidator:
         if first_scene_id is None:
             return scenes[0]
         else:
-            return self.get_scene_by_id(first_scene_id)
+            first_scene = self.get_scene_by_id(first_scene_id)
+            if first_scene is None:
+                return scenes[0]
+            return first_scene
         
 
     def get_scene_by_id(self, scene_id):
@@ -554,6 +561,8 @@ class YamlValidator:
         self.validate_messages()
         self.are_all_scenes_reachable()
         self.validate_quantized_support()
+        self.validate_treatments_have_injuries()
+        self.validate_injury_sets()
 
 
     def validate_quantized_support(self):
@@ -1154,11 +1163,11 @@ class YamlValidator:
                     if found:
                         # found in at least one path, but not found in at least one path - warning
                         self.warning_count += 1
-                        self.logger.log(LogLevel.WARN, f"There might be an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS', but in at least one branching path, the pulse oximeter is missing. Please ensure that a pulse oximeter is always available for this scene.")
+                        self.logger.log(LogLevel.WARN, f"There might be an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN', but in at least one branching path, the pulse oximeter is missing. Please ensure that a pulse oximeter is always available for this scene.")
                     else:
                         # not found in any paths
                         self.invalid_values += 1
-                        self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' OR 'CHECK_ALL_VITALS' but is never available through any branching path. Please ensure that a pulse oximeter is always available for this scene.")
+                        self.logger.log(LogLevel.ERROR, f"There is an invalid action in scene '{scene['id']}'. A pulse oximeter must be available in order to have 'action type' equal to 'CHECK_BLOOD_OXYGEN' but is never available through any branching path. Please ensure that a pulse oximeter is always available for this scene.")
                     break
 
 
@@ -1197,7 +1206,7 @@ class YamlValidator:
                         for key in params:
                             allowed_params = ['treatment', 'location', 'category', 'aid_id', 'type', 'object', 'action_type', 'relevant_state', 'recipient', 'character_id']
                             if key not in allowed_params:
-                                self.logger.log(LogLevel.ERROR, "'scenes[" + scene['id'] + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(allowed_params) + " but has key '" + key + "'.")
+                                self.logger.log(LogLevel.ERROR, "'scenes[" + str(scene['id']) + "].action_mapping[" + str(j) + "].parameters' may only include the following keys: " + str(allowed_params) + " but has key '" + str(key) + "'.")
                                 self.invalid_keys += 1 
                     j += 1
             i += 1
@@ -1427,6 +1436,34 @@ class YamlValidator:
                         chars['seen'].append(x['id'])
             chars['possible'] = [chars['possible']]
         return chars
+
+
+    def get_char_injuries_in_scene(self, data, scene_id, char_id):
+        '''
+        Gets a character's injuries in a given scene
+        '''
+        def get_basic_chars(scene):
+            characters = {}
+            for c in scene.get('state', {}).get('characters', []):
+                characters[c['id']] = c.get('injuries', [])
+            return characters
+
+        first_scene_id = self.determine_first_scene(data)['id']
+        injuries = []
+        all_segs = self.get_branch_segments_for_scene(scene_id)
+        segments = all_segs['segments']
+        for segment in segments:
+            for sid in segment:
+                if sid == first_scene_id:
+                    # get scenario characters from first scene
+                    injuries += get_basic_chars(data).get(char_id, [])
+                else:
+                    # modify allowed characters up to this point
+                    scene = self.get_scene_by_id(sid)
+                    tmp_inj = get_basic_chars(scene).get(char_id, [])
+                    if tmp_inj is not None:
+                        injuries = tmp_inj
+        return injuries
 
 
     def get_supplies_in_scene(self, data, scene_id):
@@ -1748,6 +1785,115 @@ class YamlValidator:
             if scene['id'] not in all_scenes_hit:
                 self.logger.log(LogLevel.WARN, f"Scene '{scene['id']}' is unreachable.")
                 self.warning_count += 1     
+
+
+    def validate_treatments_have_injuries(self):
+        '''
+        Checks APPLY_TREATMENT actions to ensure that the character has an injury at
+        the specified location to match the action's location.
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+
+        for scene in data['scenes']:
+            for action in scene['action_mapping']:
+                if action.get('action_type') == 'APPLY_TREATMENT' and action.get('character_id', None) is not None and action.get('parameters', {}).get('location', None) is not None:
+                    loc = action.get('parameters').get('location')
+                    if action.get('parameters').get('treatment') in ['Epi Pen', 'Blanket', 'Blood', 'Pain Medications', 'IV Bag', 'Fentanyl Lollipop']:
+                        continue
+                    if action.get('parameters').get('treatment') == 'Nasopharyngeal airway' and loc not in ['right face', 'left face']:
+                        self.logger.log(LogLevel.ERROR, f"Scene '{scene['id']}' has APPLY_TREATMENT action with location '{loc}', but treatment type '{action.get('parameters').get('treatment')}' must have location of 'left face' or 'right face'.")
+                        self.invalid_values += 1   
+                        continue
+                    if loc == 'internal' or loc == 'unspecified':
+                        self.logger.log(LogLevel.ERROR, f"Scene '{scene['id']}' has APPLY_TREATMENT action with location '{loc}', but that location is invalid for the treatment type '{action.get('parameters').get('treatment')}'.")
+                        self.invalid_values += 1   
+                        continue
+                    char = action.get('character_id')
+                    injuries = self.get_char_injuries_in_scene(data, scene['id'], char)
+                    found = False
+                    for i in injuries:
+                        if i.get('location') == loc:
+                            found = True
+                            break
+                    if not found:
+                        self.logger.log(LogLevel.WARN, f"Scene '{scene['id']}' has APPLY_TREATMENT action for '{char}' with location '{loc}', but that character has no injury at that location during this scene.")
+                        self.warning_count += 1   
+
+
+    def validate_injury_sets(self):
+        '''
+        Validates that all injuries assigned to a character can coexist.
+        1. Ensure if an injury is pretreated with a tourniquet, tourniquet-treatable injuries lower on the same region are also pretreated
+        2. Ensure no impossible injury combinations (i.e. thigh amputation and any leg injuries on the same leg)
+        '''
+        data = copy.deepcopy(self.loaded_yaml)
+        '''
+        Flag impossible injury combinations, e.g.,
+
+        Thigh amputation and any other thigh, calf, or leg injury on the same leg;
+
+        Thighs, calves, biceps, wrists, and forearms can only have a single injury (except for burn? when are burns allowed?); and
+
+        A given side of the face can only have one of shrapnel, laceration, or abrasion.
+
+        '''
+        for scene in data['scenes'] + [{'state': data['state']}]:
+            for c in scene.get('state', {}).get('characters', []):
+                injs = c.get('injuries', [])
+                required_pretreated = []
+                has_left_thigh_amp = False
+                has_right_thigh_amp = False
+                single_only = {'left thigh': [], 'right thigh': [], 'left calf': [], 'right calf': [], 'left wrist': [], 
+                               'right wrist': [], 'left forearm': [], 'right forearm': [], 'left face': [], 'right face': []}
+                # get everything that must be pretreated if it exists, as well as a list of injuries that cannot be allowed given the existence of certain others
+                for i in injs:
+                    name = i.get('name')
+                    loc = i.get('location')
+                    side = loc.split(' ')[0]
+                    if loc in single_only and name not in ['Burn', 'Ear Bleed']:
+                        single_only[loc].append(name)
+                    if i.get('status') == 'treated':
+                        if name == 'Puncture':
+                            if 'bicep' in loc:
+                                required_pretreated.append({'name': 'Puncture', 'location': f'{side} forearm', 'reason': f'{side} bicep puncture'})
+                                required_pretreated.append({'name': 'Amputation', 'location': f'{side} wrist', 'reason': f'{side} bicep puncture'})
+                            if 'thigh' in loc:
+                                required_pretreated.append({'name': 'Puncture', 'location': f'{side} calf', 'reason': f'{side} thigh puncture'})
+                                required_pretreated.append({'name': 'Amputation', 'location': f'{side} calf', 'reason': f'{side} thigh puncture'})
+                            if 'forearm' in loc:
+                                required_pretreated.append({'name': 'Amputation', 'location': f'{side} wrist', 'reason': f'{side} forearm puncture'})
+                        if name == 'Laceration':
+                            if 'thigh' in loc:
+                                required_pretreated.append({'name': 'Puncture', 'location': f'{side} calf', 'reason': f'{side} thigh laceration'})
+                                required_pretreated.append({'name': 'Amputation', 'location': f'{side} calf', 'reason': f'{side} thigh laceration'})
+                        if name == 'Amputation' and 'thigh' in loc:
+                            if side == 'left':
+                                has_left_thigh_amp = True
+                            else:
+                                has_right_thigh_amp = True
+                # check that locations that can only have one injury do
+                for loc in single_only:
+                    if len(single_only[loc]) > 1:
+                        scene_str = f"in scene '{scene.get('id')}'" if scene.get('id') is not None else 'at the state level'
+                        self.logger.log(LogLevel.ERROR, f"Character '{c['id']}' has multiple injuries at the same location: '{loc}' {scene_str}.")
+                        self.invalid_values += 1   
+                
+                for i in injs:
+                    name = i.get('name')
+                    loc = i.get('location')
+                    # check for invalid leg injuries due to amputations
+                    if has_left_thigh_amp and loc in ['left thigh', 'left calf'] and not (loc == 'left thigh' and name == 'Amputation'):
+                        self.logger.log(LogLevel.ERROR, f"Character '{c['id']}' has injury '{name}' at location '{loc}', but also has a left thigh amputation. These injuries are incompatible.")
+                        self.invalid_values += 1   
+                    if has_right_thigh_amp and loc in ['right thigh', 'right calf'] and not (loc == 'right thigh' and name == 'Amputation'):
+                        self.logger.log(LogLevel.ERROR, f"Character '{c['id']}' has injury '{name}' at location '{loc}', but also has a right thigh amputation. These injuries are incompatible.")
+                        self.invalid_values += 1  
+                    # check if all required pretreated are pretreated
+                    for x in required_pretreated:
+                        if x['name'] == name and x['location'] == loc:
+                            if i.get('status') != 'treated':
+                                self.logger.log(LogLevel.ERROR, f"Character '{c['id']}' has injury '{name}' at location '{loc}' with status '{i.get('status')}', but the status must be 'treated' becausse injury '{x['reason']}' is treated.")
+                                self.invalid_values += 1   
 
 
 if __name__ == '__main__':
