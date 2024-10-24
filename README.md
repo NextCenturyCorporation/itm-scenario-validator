@@ -49,7 +49,8 @@ options:
   -h, --help                Show this help message and exit.
   -f PATH, --filepath PATH  The path to the yaml file. Required if -u is not specified.
   -u, --update              Switch to update the api files or not. Required if -f is not specified.
-  -t, --train               Validate a training scenario yaml.```
+  -t, --train               Validate a training scenario yaml.
+  ```
 
 ## API Changes
 - When the Swagger API changes, make sure you upload the newest version as `api.yaml` to the `api_files` directory.
@@ -157,6 +158,7 @@ If persist_characters is false:
     * `scenes[n].transitions.character_vitals[].character_id`: `scenes[n].state.characters[].id`,
     * `scenes[n].action_mapping[].probe_conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
     * `scenes[n].action_mapping[].action_conditions.character_vitals[].character_id`: `scenes[n].state.characters[].id`
+
 Otherwise, complete the same checks, but match it up against all characters defined throughout the scenario file. Note that this may give some false validity, as a character may end up being used before it is defined. Please be cautious when defining characters and using persist_characters. 
 In addition, if a character is removed anywhere throughout the scenario, a warning will be issued. Please make sure that your branching scenes do not cause a situation where a character has been removed and then used.
 
@@ -196,7 +198,7 @@ Any supply name placed in this array will be excluded from the allowed supplies 
 * `when` cannot be 0
 
 
-#### Injury treatment rules
+#### Injury Treatment Rules
 * An injury may not be partially treated
 * An injury's treatments_applied property must either be 0 or equal to treatments_required
 * An injury's status must be 'treated' iff treatments_applied == treatments_required
@@ -216,7 +218,8 @@ When not running in training mode (-t), additional checks are implemented:
 
 
 #### Injury/Location Matches
-* Injuries are only allowed to have specific locations. Please follow the table to create valid matches. 
+* Injuries are only allowed to have specific locations. Please follow the table to create valid matches:
+
 | Injury name | Allowed Locations |
 | --- | --- |
 | `Traumatic Brain Injury` | `head` |
