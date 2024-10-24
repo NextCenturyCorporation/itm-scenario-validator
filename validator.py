@@ -1799,7 +1799,11 @@ class YamlValidator:
                 if action.get('action_type') == 'APPLY_TREATMENT' and action.get('character_id', None) is not None and action.get('parameters', {}).get('location', None) is not None:
                     loc = action.get('parameters').get('location')
                     if action.get('parameters').get('treatment') in ['Epi Pen', 'Blanket', 'Blood', 'Pain Medications', 'IV Bag', 'Fentanyl Lollipop']:
-                          continue
+                        continue
+                    if action.get('parameters').get('treatment') == 'Nasopharyngeal airway' and loc not in ['right face', 'left face']:
+                        self.logger.log(LogLevel.ERROR, f"Scene '{scene['id']}' has APPLY_TREATMENT action with location '{loc}', but treatment type '{action.get('parameters').get('treatment')}' must have location of 'left face' or 'right face'.")
+                        self.invalid_values += 1   
+                        continue
                     if loc == 'internal' or loc == 'unspecified':
                         self.logger.log(LogLevel.ERROR, f"Scene '{scene['id']}' has APPLY_TREATMENT action with location '{loc}', but that location is invalid for the treatment type '{action.get('parameters').get('treatment')}'.")
                         self.invalid_values += 1   
