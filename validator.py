@@ -1798,8 +1798,12 @@ class YamlValidator:
             for action in scene['action_mapping']:
                 if action.get('action_type') == 'APPLY_TREATMENT' and action.get('character_id', None) is not None and action.get('parameters', {}).get('location', None) is not None:
                     loc = action.get('parameters').get('location')
-                    if loc == 'internal' and action.get('parameters').get('treatment') in ['Blood', 'Pain Medications', 'Nasopharyngeal airway', 'IV Bag', 'Fentanyl Lollipop']:
+                    if action.get('parameters').get('treatment') in ['Epi Pen', 'Blanket', 'Blood', 'Pain Medications', 'IV Bag', 'Fentanyl Lollipop']:
                           continue
+                    if loc == 'internal' or loc == 'unspecified':
+                        self.logger.log(LogLevel.ERROR, f"Scene '{scene['id']}' has APPLY_TREATMENT action with location '{loc}', but that location is invalid for the treatment type '{action.get('parameters').get('treatment')}'.")
+                        self.invalid_values += 1   
+                        continue
                     char = action.get('character_id')
                     injuries = self.get_char_injuries_in_scene(data, scene['id'], char)
                     found = False
