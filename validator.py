@@ -1447,23 +1447,81 @@ class YamlValidator:
             for c in scene.get('state', {}).get('characters', []):
                 characters[c['id']] = c.get('injuries', [])
             return characters
-
+        
+        def update_persistent_injuries(cur_inj, new_inj):
+            updated = []
+            new_copy = copy.deepcopy(new_inj)
+            for i1 in cur_inj:
+                added = False
+                to_remove = None
+                for i2 in new_copy:
+                    if i1['name'] == i2['name'] and i1['location'] == i2['location']:
+                        updated.append(i2)
+                        added = True
+                        to_remove = i2
+                        break
+                if not added:
+                    updated.append(i1)
+                else:
+                    new_copy.remove(to_remove)
+            for remainder in new_copy:
+                updated.append(remainder)
+            return updated
+        
         first_scene_id = self.determine_first_scene(data)['id']
         injuries = []
         all_segs = self.get_branch_segments_for_scene(scene_id)
         segments = all_segs['segments']
+        possible_injuries = []
         for segment in segments:
             for sid in segment:
                 if sid == first_scene_id:
                     # get scenario characters from first scene
-                    injuries += get_basic_chars(data).get(char_id, [])
+                    injuries = update_persistent_injuries(injuries, get_basic_chars(data).get(char_id, []))
                 else:
-                    # modify allowed characters up to this point
                     scene = self.get_scene_by_id(sid)
-                    tmp_inj = get_basic_chars(scene).get(char_id, [])
-                    if tmp_inj is not None:
-                        injuries = tmp_inj
-        return injuries
+                    if scene.get('persist_characters', False):
+                        # modify allowed characters' injuries to this point
+                        tmp_inj = get_basic_chars(scene).get(char_id, [])
+                        if tmp_inj is not None:
+                            injuries = update_persistent_injuries(injuries, tmp_inj)
+                    else:
+                        # no persist characters, so reset injuries
+                        tmp_inj = get_basic_chars(scene).get(char_id, [])
+                        if tmp_inj is not None:
+                            injuries = tmp_inj 
+
+            if len(injuries) > 0 and not self.is_obj_arr_in_arr(copy.deepcopy(possible_injuries), injuries):
+                possible_injuries.append(injuries)
+        return possible_injuries
+
+
+    def is_obj_arr_in_arr(self, list_of_lists, obj_arr):
+        '''
+        Returns true if the obj_arr is found in list_of_lists, false otherwise.
+        obj_arr is expected to be a list of objects
+        obj_arr may not be found exactly in list_of_lists, but if a list with
+        the same elements as obj_arr appears in list_of_lists, we will consider
+        it found
+        '''        
+        for lst2 in list_of_lists:
+            if len(lst2) != len(obj_arr):
+                continue
+            for obj1 in obj_arr:
+                found = False
+                to_remove = None
+                for obj2 in lst2:
+                    if obj1 == obj2:
+                        found = True
+                        to_remove = obj2
+                        break
+                if not found:
+                    break
+                else:
+                    lst2.remove(to_remove)
+            if len(lst2) == 0:
+                return True
+        return False
 
 
     def get_supplies_in_scene(self, data, scene_id):
@@ -1809,15 +1867,34 @@ class YamlValidator:
                         self.invalid_values += 1   
                         continue
                     char = action.get('character_id')
-                    injuries = self.get_char_injuries_in_scene(data, scene['id'], char)
+                    injury_sets = self.get_char_injuries_in_scene(data, scene['id'], char)
                     found = False
-                    for i in injuries:
-                        if i.get('location') == loc:
-                            found = True
-                            break
-                    if not found:
-                        self.logger.log(LogLevel.WARN, f"Scene '{scene['id']}' has APPLY_TREATMENT action for '{char}' with location '{loc}', but that character has no injury at that location during this scene.")
-                        self.warning_count += 1   
+                    if len(injury_sets) == 1:
+                        for i in injury_sets[0]:
+                            if i.get('location') == loc:
+                                found = True
+                                break
+                        if not found:
+                            self.logger.log(LogLevel.WARN, f"Scene '{scene['id']}' has APPLY_TREATMENT action for '{char}' with location '{loc}', but that character has no injury at that location during this scene.")
+                            self.warning_count += 1   
+                    else:
+                        found_count = 0
+                        for inj_set in injury_sets:
+                            for i in inj_set:
+                                if i.get('location') == loc:
+                                    found_count += 1
+                                    break 
+                        if found_count == len(injury_sets):
+                            # found a match in every set: no warning
+                            pass
+                        elif found_count > 0:
+                            # found a match in at least one set
+                            self.logger.log(LogLevel.WARN, f"Scene '{scene['id']}' has APPLY_TREATMENT action for '{char}' with location '{loc}', but that character may not have an injury at that location during this scene due to branching.")
+                            self.warning_count += 1   
+                        else:
+                            # no matches found
+                            self.logger.log(LogLevel.WARN, f"Scene '{scene['id']}' has APPLY_TREATMENT action for '{char}' with location '{loc}', but that character has no injury at that location during this scene.")
+                            self.warning_count += 1   
 
 
     def validate_injury_sets(self):
@@ -1892,7 +1969,7 @@ class YamlValidator:
                     for x in required_pretreated:
                         if x['name'] == name and x['location'] == loc:
                             if i.get('status') != 'treated':
-                                self.logger.log(LogLevel.ERROR, f"Character '{c['id']}' has injury '{name}' at location '{loc}' with status '{i.get('status')}', but the status must be 'treated' becausse injury '{x['reason']}' is treated.")
+                                self.logger.log(LogLevel.ERROR, f"Character '{c['id']}' has injury '{name}' at location '{loc}' with status '{i.get('status')}', but the status must be 'treated' because injury '{x['reason']}' is treated.")
                                 self.invalid_values += 1   
 
 
