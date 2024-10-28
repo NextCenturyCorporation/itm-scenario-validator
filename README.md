@@ -236,6 +236,11 @@ When not running in training mode (-t), additional checks are implemented:
 | `Broken Bone` | `right leg`, `left leg`, `right shoulder`, `left shoulder`, `right wrist`, `left wrist` |
 | `Internal` | `internal`, `unspecified` | 
 
+Also, in some cases, treatments are not allowed at specific locations:
+- `Nasopharyngeal airway` must be placed in left/right face;
+- `internal` and `unspecified` are only valid for treatments that do not actually treat injuries, e.g. `Epi Pen`, `Blanket`, `Blood`, `Pain Medications`, `IV Bag`, and `Fentanyl Lollipop`.
+Other treatments/locations might not be *successful*, but are not flagged by the validator as errors.
+
 #### Military Branches, Ranks, and Rank Titles
 * `military_branch` is only allowed if `military_disposition` is "Allied US"
 * `rank` and `rank_title` are not allowed if `military_branch` is not provided
