@@ -1598,10 +1598,11 @@ components:
           $ref: '#/components/schemas/BloodOxygenEnum'
       required:
       - avpu
+      - ambulatory
       - mental_status
       - breathing
       - heart_rate
-      - Spo2
+      - spo2
       type: object
     WeatherTypeEnum:
       description: Descriptor of the scenario weather

@@ -9,3 +9,6 @@ output/*
 participant-data/*
 test_yamls
 freeform_jsons
+extra_scripts
+dre_yamls
+jsons_from_yamls
