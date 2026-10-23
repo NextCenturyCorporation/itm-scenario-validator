@@ -28,7 +28,7 @@ class ApiGenerator:
         self.new_state_file = open(STATE_CHANGES, 'w')
         try:
             self.api_file = open(SWAGGER_YAML)
-            self.api_yaml = yaml.load(self.api_file, Loader=yaml.CLoader)
+            self.api_yaml = yaml.safe_load(self.api_file)
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
 
