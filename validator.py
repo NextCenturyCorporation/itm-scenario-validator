@@ -56,16 +56,16 @@ class YamlValidator:
         self.file = self.validate_file_location(filename)
         try:
             self.api_file = open(API_YAML, encoding='utf-8')
-            self.api_yaml = yaml.load(self.api_file, Loader=yaml.CLoader)
+            self.api_yaml = yaml.safe_load(self.api_file)
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         try:
             self.state_change_file = open(STATE_YAML, encoding='utf-8')
-            self.state_changes_yaml = yaml.load(self.state_change_file, Loader=yaml.CLoader)
+            self.state_changes_yaml = yaml.safe_load(self.state_change_file)
         except Exception as e:
             self.logger.log(LogLevel.FATAL, "Error while loading in state api yaml. Please check the .env to make sure the location is correct and try again.\n\n" + str(e) + "\n")
         try:
-            self.loaded_yaml = yaml.load(self.file, Loader=yaml.CLoader)
+            self.loaded_yaml = yaml.safe_load(self.file)
             try:
                 dup_check_file = open(filename, 'r', encoding='utf-8')
                 yaml.load(dup_check_file, Loader=UniqueKeyLoader)
